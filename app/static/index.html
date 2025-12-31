@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NeuroFlag - Upload</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2rem }
+    button { margin: 0.5rem 0; padding: 0.6rem 1rem }
+    #result { margin-top: 1rem; padding: 1rem; border: 1px solid #ddd }
+  </style>
+</head>
+<body>
+  <h1>NeuroFlag - Załaduj pliki</h1>
+
+  <div>
+    <label>Norma (pliki .edf):</label><br>
+    <input id="normFile" type="file" accept=".edf" />
+    <button id="btnNorm">Wczytaj Normę</button>
+  </div>
+
+  <div>
+    <label>Dane (plik .edf):</label><br>
+    <input id="dataFile" type="file" accept=".edf" />
+    <button id="btnData">Wczytaj Dane</button>
+  </div>
+
+  <div>
+    <button id="btnCompare" disabled>Porównaj (algorytm)</button>
+    <button id="btnDownloadPdf" disabled>Pobierz raport PDF</button>
+    <button id="btnDownloadJson" disabled>Pobierz wynik JSON</button>
+    <button id="btnPrint" disabled>Drukuj</button>
+  </div>
+
+  <div id="result">Wynik: <span id="resText">brak</span></div>
+
+<script>
+const el = id => document.getElementById(id);
+let lastResult = null;
+
+el('btnNorm').addEventListener('click', async () => {
+  const f = el('normFile').files[0];
+  if (!f) return alert('Wybierz plik .edf z normą');
+  const fd = new FormData(); fd.append('file', f);
+  const r = await fetch('/upload/norm', { method: 'POST', body: fd });
+  const j = await r.json();
+  if (!r.ok) return alert(j.detail || 'Błąd');
+  alert('Norma wczytana: ' + j.filename);
+});
+
+el('btnData').addEventListener('click', async () => {
+  const f = el('dataFile').files[0];
+  if (!f) return alert('Wybierz plik .edf z danymi');
+  const fd = new FormData(); fd.append('file', f);
+  const r = await fetch('/upload/data', { method: 'POST', body: fd });
+  const j = await r.json();
+  if (!r.ok) return alert(j.detail || 'Błąd');
+  alert('Dane wczytane: ' + j.filename);
+  el('btnCompare').disabled = false;
+});
+
+el('btnCompare').addEventListener('click', async () => {
+  const r = await fetch('/compare', { method: 'POST' });
+  const j = await r.json();
+  if (!r.ok) return alert(j.detail || 'Błąd');
+  lastResult = j;
+  el('resText').innerText = JSON.stringify(j);
+  el('btnDownloadPdf').disabled = false;
+  el('btnDownloadJson').disabled = false;
+  el('btnPrint').disabled = false;
+});
+
+el('btnDownloadPdf').addEventListener('click', async () => {
+  const res = await fetch('/report');
+  if (!res.ok) return alert('Nie udało się wygenerować PDF');
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'report.pdf'; a.click();
+});
+
+el('btnDownloadJson').addEventListener('click', () => {
+  if (!lastResult) return; const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(lastResult, null, 2));
+  const a = document.createElement('a'); a.href = dataStr; a.download = 'result.json'; a.click();
+});
+
+el('btnPrint').addEventListener('click', () => { window.print(); });
+</script>
+</body>
+</html>
