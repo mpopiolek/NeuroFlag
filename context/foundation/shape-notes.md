@@ -2,11 +2,11 @@
 project: "NeuroFlag"
 context_type: brownfield
 created: 2026-05-23
-updated: 2026-05-23
+updated: 2026-05-29
 checkpoint:
   current_phase: 7
   phases_completed: [1, 2, 3, 4, 5, 6]
-  frs_drafted: 8
+  frs_drafted: 10
   gray_areas_resolved:
     - topic: "preservation of existing prototype"
       decision: "Nic nie jest przenoszone. Aplikacja desktopowa to czysty start; prototyp webowy (FastAPI) służy jako wiedza dziedzinowa, nie jako baza kodu."
@@ -14,6 +14,20 @@ checkpoint:
       decision: "Pedagog szkolny/specjalny (primary); psycholog kliniczny (secondary). Pedagog jest twardszym ograniczeniem — jeśli obsłuży bez szkolenia, psycholog tym bardziej."
     - topic: "insight: dlaczego to nie istnieje"
       decision: "Kombinacja trzech barier: (1) istniejące narzędzia wymagają wysyłania danych medycznych do sieci; (2) każdy producent EEG ma własne oprogramowanie bez wspólnych norm; (3) brak publicznie dostępnej, wiarygodnej bazy norm dla dzieci w konkretnej grupie wiekowej."
+    - topic: "liczba elektrod i wartości analitycznych"
+      decision: "2 lokalizacje (C3 i O1), 10 kombinacji lokalizacja×zadanie×pasmo — nie 5 elektrod i 25 wartości jak zakładano pierwotnie. Potwierdzone przez eksperta domenowego 2026-05-29."
+    - topic: "wynik rekomendacji"
+      decision: "Trzy stany: Wskazanie do dalszej diagnozy / Brak wskazań / Uważna obserwacja — nie binarne TAK/NIE. Algorytm oparty na granicach Z (zaburzenia) i K (kontrolna). Potwierdzone przez eksperta domenowego 2026-05-29."
+    - topic: "protokół nagrania i wybór segmentu"
+      decision: "Jeden plik ciągły ze znacznikami OO/OZ/ZP. Jeśli brak znaczników — podział co 3 minuty. Potwierdzone przez eksperta domenowego 2026-05-29."
+    - topic: "jednostka wartości"
+      decision: "µV (mikrowolty) — potwierdzone przez eksperta domenowego 2026-05-29."
+    - topic: "widoczność surowych wartości dla użytkownika"
+      decision: "Surowe wartości µV NIE są widoczne dla użytkownika. Użytkownik widzi wyłącznie kolory (czerwony/żółty/zielony) i kategorię wyniku."
+    - topic: "metryczka pacjenta i kryteria wykluczenia"
+      decision: "Aplikacja zbiera metrykę (wiek, płeć, diagnozy) i ostrzega przed użyciem dla dzieci z urazem mózgu, niepełnosprawnością intelektualną lub padaczką — te grupy były wykluczone z badania normatywnego."
+    - topic: "uczenie maszynowe i rosnąca baza norm"
+      decision: "Funkcja lokalnej bazy wyników budowanej z każdym badaniem (własne normy placówki) odłożona do v2.0. MVP korzysta wyłącznie ze statycznego pliku norms.json."
   quality_check_status: pending
 ---
 
@@ -49,7 +63,7 @@ Insight: trzy bariery blokują powstanie takiego narzędzia jednocześnie — wy
 
 Pracuje w placówce edukacyjnej lub poradni psychologiczno-pedagogicznej. Ma dostęp do aparatu EEG lub urządzenia Biofeedback, eksportuje z niego pliki .edf. Nie jest lekarzem — jego/jej celem jest określenie, czy dziecko wymaga skierowania na pełną diagnozę wielospecjalistyczną, nie postawienie diagnozy klinicznej. Sięga po NeuroFlag w momencie, gdy chce szybko ocenić duży zestaw dzieci (np. cały rocznik szkolny) bez angażowania specjalistów na wstępnym etapie.
 
-Kluczowy moment: otwiera aplikację, przeciąga plik .edf, otrzymuje wydruk z odpowiedzią TAK/NIE dla skierowania — bez konfiguracji, bez sieci, bez szkolenia ponad instrukcję PDF.
+Kluczowy moment: otwiera aplikację, wypełnia metrykę dziecka (wiek, płeć, diagnozy), przeciąga plik .edf lub .vhdr, klika „Analizuj" i otrzymuje wynik w trzech kolorach (czerwony/żółty/zielony) z jedną z trzech kategorii: Wskazanie do diagnozy / Uważna obserwacja / Brak wskazań — bez konfiguracji, bez sieci, bez szkolenia ponad instrukcję PDF.
 
 ### Secondary persona
 
@@ -72,11 +86,11 @@ Zmiana względem obecnego systemu: brak (web prototype nie miał auth). Nowa dec
 ## Success Criteria
 
 ### Primary
-- Użytkownik może wczytać plik .edf metodą przeciągnięcia i upuszczenia, uruchomić analizę oraz otrzymać gotowy raport PDF z wykresem i rekomendacją TAK/NIE dla skierowania — cały flow w jednej sesji, bez żadnej konfiguracji sieciowej.
+- Użytkownik może wypełnić metrykę dziecka, wczytać plik .edf lub .vhdr i otrzymać wynik w jednej z trzech kategorii (Wskazanie / Uważna obserwacja / Brak wskazań) z wizualizacją kolorową — cały flow w jednej sesji, bez konfiguracji sieciowej.
 - Procedura analizy i generowania raportu trwa ≤ 10 minut na standardowym komputerze biurowym.
 
 ### Secondary
-- Aplikacja poprawnie interpretuje pliki .edf z minimum 3 różnych, popularnych aparatów EEG/Biofeedback dostępnych na rynku.
+- Aplikacja poprawnie wykrywa znaczniki zadań (OO/OZ/ZP) w plikach z minimum 3 różnych, popularnych aparatów EEG/Biofeedback dostępnych na rynku polskim; jeśli brak znaczników — dzieli nagranie co 3 minuty.
 
 ### Guardrails
 - Użytkownik (pedagog, psycholog) uruchamia i obsługuje aplikację wyłącznie na podstawie dołączonej instrukcji PDF — bez dodatkowych szkoleń.
@@ -89,24 +103,30 @@ Zmiana względem obecnego systemu: brak (web prototype nie miał auth). Nowa dec
 
 ### Import i analiza
 
-- FR-001: Użytkownik może wczytać plik .edf przyciskiem „Wczytaj plik" (akcja główna) lub metodą drag & drop (bonus). Priority: must-have
+- FR-001: Użytkownik może wczytać plik w formacie .edf lub BrainVision (.vhdr) przyciskiem „Wczytaj plik" (akcja główna) lub metodą drag & drop (bonus). Oba formaty są rekomendowane przez standard BIDS jako jedyne dwa zalecane formaty EEG. Priority: must-have
   > Socrates: Kontrargument rozważony: „pedagodzy mogą nie znać drag & drop". Rozwiązanie: przycisk jako akcja główna, drag & drop jako ułatwienie dla zaawansowanych.
+  > Zmiana 2026-05-24: rozszerzono MVP o format BrainVision (.vhdr + .vmrk + .eeg) na podstawie analizy standardu BIDS i MNE-Python. Koszt implementacyjny minimalny (mne.io.read_raw_brainvision()). Formaty .bdf i .set odłożone do v2.0.
 
-- FR-002: Aplikacja automatycznie usuwa podstawowe artefakty sygnału (ruch, bicie serca, zakłócenia sieciowe 50Hz), a następnie oblicza średnią amplitudę w 5 pasmach (Delta, Theta, Alpha, Beta, Gamma) dla 5 predefiniowanych lokalizacji elektrod — tworząc macierz 5×5 wartości [µV]. Segment analizy: ~3 minuty (sposób wyboru segmentu — patrz Open Questions). Priority: must-have
-  > Socrates: Kontrargument rozważony: automatyczne usuwanie może zniekształcić sygnał bez wiedzy użytkownika. Decyzja: FR stoi — SciPy/MNE-Python mają sprawdzone algorytmy; w v2.0 można dodać raport jakości artefaktów.
+- FR-002: Aplikacja automatycznie przetwarza wczytany plik w następującej kolejności: (1) wykrycie znaczników zadań OO/OZ/ZP — jeśli brak znaczników, podział nagrania co 3 minuty; (2) selekcja kanałów C3 i O1 (system 10-20) z wykluczeniem kanałów EOG, ECG, EMG; (3) usunięcie artefaktów: zakłócenia sieciowe (notch 50 Hz — konfigurowalne w norms.json), artefakty ruchowe, mrugania, napięcia mięśni, artefakty padaczkowe; (4) obliczenie średniej amplitudy [µV] dla 10 kombinacji lokalizacja×zadanie×pasmo zgodnie z macierzą norm. Priority: must-have
+  > Socrates: Kontrargument rozważony: automatyczne usuwanie może zniekształcić sygnał bez wiedzy użytkownika. Decyzja: FR stoi — MNE-Python ma sprawdzone algorytmy; w v2.0 można dodać raport jakości artefaktów.
+  > Zmiana 2026-05-24: selekcja kanałów według typów BIDS (EEG/EOG/ECG/EMG). Częstotliwość sieciowa konfigurowalna.
+  > Zmiana 2026-05-29 (ekspert domenowy): TYLKO 2 lokalizacje (C3, O1) — nie 5. Jeden plik ciągły ze znacznikami OO/OZ/ZP. Jednostka: µV. 10 kombinacji do analizy (nie 25).
 
-- FR-003: Aplikacja porównuje macierz 25 wartości amplitud z domyślną bazą norm (wiek 6–10 lat; 200 osób) zawierającą obszary normy dla każdej z 25 komórek macierzy. Baza może być zastąpiona przez użytkownika (FR-008). Priority: must-have
-  > Socrates: Kontrargument rozważony: „wbudowana" baza norm sugeruje brak możliwości aktualizacji. Rozwiązanie: „domyślna baza norm" — zawsze nadpisywalna. Baza norm definiuje też, które lokalizacje elektrod i pasma są brane pod uwagę. Zgodne z modelem laboratoriów diagnostycznych.
+- FR-003: Aplikacja porównuje 10 obliczonych wartości µV z bazą norm (plik norms.json). Każda z 10 kombinacji ma dwie granice: Średnią Z (grupa z zaburzeniami) i Średnią K (grupa kontrolna). Dla każdej wartości wyznaczany jest kolor: 🔴 a ≤ Z, 🟡 Z < a < K, 🟢 a ≥ K. Na podstawie rozkładu kolorów algorytm wystawia jeden z trzech wyników: **Wskazanie do dalszej diagnozy** (≥5 wartości ≤Z i ≤3 wartości ≥K; lub wszystkie ≤Z) / **Brak wskazań** (≥4 wartości ≥K i ≤3 wartości ≤Z; lub wszystkie ≥K) / **Uważna obserwacja** (wszystkie pozostałe kombinacje). Surowe wartości µV nie są wyświetlane użytkownikowi. Priority: must-have
+  > Socrates: Kontrargument rozważony: „wbudowana" baza norm sugeruje brak możliwości aktualizacji. Rozwiązanie: „domyślna baza norm" — zawsze nadpisywalna przez podmianę norms.json.
+  > Zmiana 2026-05-29 (ekspert domenowy): algorytm trójstanowy zamiast binarnego TAK/NIE. Dwie granice (Z i K) zamiast jednej. 10 wartości zamiast 25. Rzeczywiste wartości norm wpisane do norms.json (patrz sekcja Business Logic).
 
 ### Prezentacja wyników
 
-- FR-004: Użytkownik może wyświetlić wykres profilowy z odchyleniami metryk EEG od normy (słupkowy lub radarowy). Priority: must-have
-  > Socrates: Kontrargument rozważony: „czy pedagog odczyta wykres bez opisu?" Decyzja: FR stoi — opis metryk w instrukcji PDF; w MVP wykres z podpisanymi osiami wystarczy.
+- FR-004: Aplikacja wyświetla wizualizację wyników jako siatkę 10 komórek (2 lokalizacje × zadania × pasma), gdzie każda komórka zabarwiona jest kolorem 🔴/🟡/🟢. Surowe wartości µV nie są widoczne dla użytkownika. Pod siatką wyświetlana jest kategoria wynikowa (Wskazanie / Uważna obserwacja / Brak wskazań) z krótkim opisem słownym. Priority: must-have
+  > Socrates: Kontrargument rozważony: „czy pedagog zrozumie siatkę kolorów?" Decyzja: FR stoi — trzy kolory są intuicyjne; legenda i opis w instrukcji PDF. Ekspert domenowy potwierdził: surowe µV NIE mogą być widoczne dla użytkownika.
+  > Zmiana 2026-05-29: zmieniono z wykresu słupkowego/radarowego na siatkę kolorową 10 komórek zgodnie z wytyczną eksperta.
 
 ### Raport
 
-- FR-005: Aplikacja generuje raport PDF zawierający: dane analizy, wykres profilowy, rekomendację skierowania TAK/NIE (opartą na regule progowej — patrz Open Questions). Priority: must-have
-  > Socrates: Kontrargument rozważony: ryzyko odpowiedzialności prawnej jeśli raport traktowany jako dokument medyczny. Decyzja: FR stoi — raport to „narzędzie przesiewowe", nie diagnoza; klauzula ograniczenia odpowiedzialności wchodzi do treści raportu.
+- FR-005: Aplikacja generuje raport PDF zawierający: dane metryki dziecka (wiek, płeć), datę badania, siatkę kolorową 10 komórek, kategorię wynikową (Wskazanie / Uważna obserwacja / Brak wskazań) oraz klauzulę ograniczenia odpowiedzialności. Surowe wartości µV nie są zamieszczane w raporcie. Priority: must-have
+  > Socrates: Kontrargument rozważony: ryzyko odpowiedzialności prawnej jeśli raport traktowany jako dokument medyczny. Decyzja: FR stoi — raport to „narzędzie przesiewowe", nie diagnoza; klauzula wchodzi do raportu.
+  > Zmiana 2026-05-29: zaktualizowano zawartość raportu — wynik trójstanowy zamiast TAK/NIE, siatka kolorowa zamiast tabeli µV.
 
 - FR-006: Użytkownik może zapisać wygenerowany raport PDF na dysk lokalny. Priority: must-have
   > Socrates: Brak kontrargumentu. FR stoi.
@@ -115,8 +135,14 @@ Zmiana względem obecnego systemu: brak (web prototype nie miał auth). Nowa dec
 
 ### Konfiguracja norm
 
-- FR-008: Użytkownik może zastąpić domyślną bazę norm poprzez ręczną podmianę pliku .json w określonym folderze aplikacji (format opisany w dokumentacji). Priority: must-have
+- FR-008: Użytkownik może zastąpić domyślną bazę norm poprzez ręczną podmianę pliku .json w określonym folderze aplikacji (format opisany w dokumentacji). Plik norm zawiera m.in. pole `recommendation_threshold` (domyślnie 3) oraz `power_line_frequency` (domyślnie 50). Priority: must-have
   > Socrates: Kontrargument rozważony: walidacja wgranego pliku przez UI to duży zakres. Decyzja: podmiana ręczna (bez UI formularza) — mniejszy scope, prostsze wdrożenie. UI formularz do v2.0. Obsługa .xlsx odłożona do v2.0 (unika zależności openpyxl).
+  > Zmiana 2026-05-24: dodano pole `power_line_frequency` (50/60 Hz) umożliwiające użycie aplikacji na rynkach spoza Europy. Dodano pole `recommendation_threshold` jako parametr konfigurowalny przez badacza bez zmiany kodu.
+
+### Metryczka pacjenta
+
+- FR-010: Przed wczytaniem pliku EEG użytkownik wypełnia metrykę dziecka: wiek (6–10 lat), płeć, aktualne lub podejrzewane diagnozy (wielokrotny wybór: ASD/Asperger, ADHD, depresja/lęki, dysleksja, inne). Aplikacja wyświetla ostrzeżenie i blokuje analizę jeśli zaznaczono: uraz/uszkodzenie mózgu, niepełnosprawność intelektualna lub padaczka — te grupy były wykluczone z badania normatywnego i wynik byłby niewiarygodny. Dane metryki zapisywane są wyłącznie lokalnie i trafiają do raportu PDF. Priority: must-have
+  > Zmiana 2026-05-29 (ekspert domenowy): nowy FR. Metryczka umożliwia przyszłe uczenie maszynowe (v2.0) i stanowi zabezpieczenie kliniczne przed użyciem narzędzia w wykluczonych grupach.
 
 ### Bezpieczeństwo
 
@@ -130,13 +156,15 @@ Zmiana względem obecnego systemu: brak (web prototype nie miał auth). Nowa dec
 ### US-01: Pedagog przeprowadza badanie przesiewowe dziecka
 
 - **Given** pedagog otworzył aplikację NeuroFlag na lokalnym komputerze Windows
-- **When** przeciąga lub wczytuje przyciskiem plik .edf wyeksportowany z aparatu EEG/Biofeedback
-- **Then** aplikacja przetwarza plik, wyświetla wykres profilowy z odchyleniami od normy oraz generuje raport PDF z rekomendacją TAK/NIE dla skierowania na pełną diagnozę
+- **When** wypełnia metrykę dziecka (wiek, płeć, diagnozy), wczytuje plik .edf lub .vhdr wyeksportowany z aparatu EEG i klika „Analizuj"
+- **Then** aplikacja przetwarza plik, wyświetla siatkę 10 kolorowych komórek z kategorią wynikową (Wskazanie / Uważna obserwacja / Brak wskazań) oraz generuje raport PDF
 
 #### Acceptance Criteria
-- Cały flow (import → analiza → wykres → PDF) kończy się w ≤ 10 minut
-- Jeśli plik .edf jest nieobsługiwany lub uszkodzony, użytkownik widzi czytelny komunikat błędu (nie crash)
-- Raport PDF zawiera: datę badania, wykres profilowy, tabelę metryk vs. norma, rekomendację z klauzulą ograniczenia odpowiedzialności
+- Cały flow (metryka → import → analiza → siatka → PDF) kończy się w ≤ 10 minut
+- Jeśli zaznaczono wykluczające diagnozy (uraz mózgu, niepełnosprawność intelektualna, padaczka) — aplikacja wyświetla ostrzeżenie i blokuje analizę
+- Jeśli plik jest nieobsługiwany lub uszkodzony, użytkownik widzi czytelny komunikat błędu (nie crash)
+- Raport PDF zawiera: metrykę dziecka, datę badania, siatkę kolorową, kategorię wynikową i klauzulę ograniczenia odpowiedzialności
+- Surowe wartości µV nie są widoczne nigdzie w UI ani w raporcie
 
 ---
 
@@ -144,15 +172,40 @@ Zmiana względem obecnego systemu: brak (web prototype nie miał auth). Nowa dec
 
 ## Business Logic
 
-Aplikacja automatycznie wybiera 5 (lub 3, jeśli tyle dostępnych) standardowych lokalizacji elektrod z pliku .edf (zestaw predefiniowany w bazie norm), a następnie dla wybranego segmentu nagrania oblicza średnią amplitudę w 5 klasycznych pasmach częstotliwości EEG (Delta, Theta, Alpha, Beta, Gamma). Wynikiem jest macierz 5 lokalizacji × 5 pasm = 25 wartości średnich [µV], które porównywane są z odpowiednim obszarem normy dla grupy wiekowej dziecka. Na tej podstawie wystawiana jest binarna rekomendacja przesiewowa TAK/NIE.
+**Dane wejściowe:** plik EEG (.edf lub .vhdr) zawierający ciągłe nagranie z trzema zadaniami (OO = oczy otwarte, OZ = oczy zamknięte, ZP = zadanie pamięciowe/obliczenia) oraz metryka dziecka (wiek, płeć, diagnozy).
 
-**Dane wejściowe (z perspektywy użytkownika):** plik .edf z nagraniem EEG (dowolna długość) oraz wiek dziecka.
+**Pipeline przetwarzania:**
+1. Wykrycie znaczników OO/OZ/ZP w pliku; jeśli brak — podział co 3 minuty
+2. Selekcja kanałów C3 i O1 (system 10-20); wykluczenie EOG/ECG/EMG
+3. Usunięcie artefaktów: notch 50 Hz, ICA lub metoda progowa dla ruchów/mrugań/mięśni/padaczkowych
+4. Obliczenie średniej amplitudy [µV] dla każdego z 10 aktywnych okien: lokalizacja × zadanie × pasmo
 
-**Przetwarzanie:** usunięcie artefaktów → wybór segmentu analizy (~3 minuty; patrz Open Questions) → obliczenie średniej amplitudy per pasmo per lokalizacja → macierz 25 wartości.
+**Macierz norm (10 kombinacji) — wartości z badania 200 dzieci (6–10 lat):**
 
-**Wynik:** macierz 5×5 z wartościami vs. norma + profil odchyleń + rekomendacja TAK/NIE z klauzulą „narzędzie przesiewowe, nie diagnoza".
+| # | Lokalizacja | Zadanie | Pasmo | Średnia Z (zaburzenia) | Średnia K (kontrolna) |
+|---|---|---|---|---|---|
+| 1 | C3 | OZ | Theta | 30,35 µV | 35,44 µV |
+| 2 | C3 | ZP | Theta | 20,32 µV | 25,25 µV |
+| 3 | C3 | ZP | Beta1 | 5,26 µV | 6,56 µV |
+| 4 | C3 | OO | Beta2 | 5,18 µV | 6,29 µV |
+| 5 | O1 | OO | Delta | 25,5 µV | 28,63 µV |
+| 6 | O1 | OO | Theta | 18,23 µV | 21,95 µV |
+| 7 | O1 | OZ | Theta | 27,02 µV | 42,18 µV |
+| 8 | O1 | ZP | Theta | 18,04 µV | 26,39 µV |
+| 9 | O1 | OO | Beta2 | 3,51 µV | 5,36 µV |
+| 10 | O1 | ZP | Beta2 | 6,22 µV | 7,95 µV |
 
-**Otwarte pytania:** (1) reguła TAK/NIE — próg liczby/wagi odchyleń w macierzy; (2) wybór segmentu 3-minutowego — pełna automatyka vs. manualne wskazanie — patrz Open Questions.
+**Kolorowanie każdej z 10 wartości (a = obliczona średnia):**
+- 🔴 Czerwony: a ≤ Średnia Z → wynik jak u dzieci z zaburzeniami
+- 🟡 Żółty: Średnia Z < a < Średnia K → strefa nieokreślona
+- 🟢 Zielony: a ≥ Średnia K → wynik jak u dzieci bez zaburzeń
+
+**Algorytm trójstanowy (na podstawie 10 wartości):**
+- **WSKAZANIE DO DALSZEJ DIAGNOZY:** wszystkie 10 wartości czerwone LUB ≥5 czerwonych i ≤3 zielonych
+- **BRAK WSKAZAŃ:** wszystkie 10 wartości zielone LUB ≥4 zielonych i ≤3 czerwonych
+- **UWAŻNA OBSERWACJA:** wszystkie pozostałe kombinacje
+
+**Wynik dla użytkownika:** siatka 10 kolorowych komórek + nazwa kategorii + krótki opis słowny. Surowe wartości µV niewidoczne dla użytkownika.
 
 ---
 
@@ -173,10 +226,10 @@ Zmiana: prototyp webowy zastępowany jest w całości aplikacją desktopową.
 **Brak zobowiązań do zachowania:** prototyp FastAPI nie ma użytkowników produkcyjnych ani kontraktów API do utrzymania.
 
 **Nowe ograniczenia techniczne:**
-- Format danych wejściowych: tylko .edf (otwarty standard — wspólny mianownik dla wielu producentów EEG)
+- Format danych wejściowych: `.edf` oraz BrainVision (`.vhdr` + `.vmrk` + `.eeg`) — oba rekomendowane przez standard BIDS; formaty .bdf i .set w v2.0
 - Środowisko docelowe: Windows 10/11, 64-bit (PyInstaller .exe)
 - Brak dostępu do sieci w trakcie pracy (wymaganie prywatności)
-- Baza norm: domyślny plik .json dostarczany z aplikacją; nadpisywalny przez użytkownika
+- Baza norm: domyślny plik `norms.json` dostarczany z aplikacją; nadpisywalny przez użytkownika; zawiera: 10 par wartości (Średnia Z, Średnia K) dla kombinacji lokalizacja×zadanie×pasmo, pole `power_line_frequency` (domyślnie 50), zakresy częstotliwości pasm
 
 ---
 
@@ -193,14 +246,24 @@ Acknowledged on 2026-05-23: 8-tygodniowy MVP wymaga konsekwentnej pracy wieczora
 - **Brak asystenta LLM do generowania opisów klinicznych** — automatyczne opisy prozą (dla lekarza / rodzica) to v2.0; MVP = reguła progowa + wykres.
 - **Brak automatycznego pobierania norm z serwera** — normy podmieniane ręcznie przez użytkownika; brak zależności sieciowej.
 - **Brak gromadzenia statystyk neuroatypowości do celów badawczych** — funkcja wymaga audytu RODO i jest odłożona; MVP nie loguje żadnych zagregowanych danych.
+- **Brak rosnącej lokalnej bazy norm** — mechanizm budowania własnych norm placówki z każdym wgranym badaniem (uczenie) planowany w v2.0; MVP korzysta ze statycznego norms.json.
+- **Brak zróżnicowania norm wiekowo** — jednolity zestaw norm dla grupy 6–10 lat w MVP; interpolacja wiekowa w v2.0.
 
 ---
 
 ## Open Questions
 
-1. **Jaka jest dokładna reguła wyznaczania rekomendacji TAK/NIE?** — Macierz 25 wartości vs. norma. Próg: czy wystarczy 1 odchylenie z 25? Określona liczba? Odchylenia tylko w wybranych komórkach macierzy (kluczowe pary lokalizacja+pasmo)? Właściciel: użytkownik / ekspert domenowy. Blokuje: implementację FR-005 i treść raportu PDF. Do rozwiązania przed rozpoczęciem implementacji.
+~~1. Jaka jest dokładna reguła wyznaczania rekomendacji TAK/NIE?~~ — **ZAMKNIĘTE 2026-05-29.** Algorytm trójstanowy z granicami Z i K. Patrz Business Logic.
 
-2. **Jak wybierany jest segment ~3 minut do analizy?** — Nagranie może być dłuższe niż 3 minuty. Opcje: (a) pełna automatyka — aplikacja wybiera najczystszy 3-minutowy segment po artefaktach; (b) manualne wskazanie startu przez użytkownika; (c) średnia z całego nagrania po usunięciu artefaktów. Właściciel: użytkownik (do dopytania). Wpływa na: złożoność FR-002 i czas przetwarzania.
+~~2. Jak wybierany jest segment ~3 minut do analizy?~~ — **ZAMKNIĘTE 2026-05-29.** Jeden plik ciągły ze znacznikami OO/OZ/ZP; jeśli brak znaczników — podział co 3 minuty.
+
+~~3. Które lokalizacje elektrod?~~ — **ZAMKNIĘTE 2026-05-29.** C3 i O1 (system 10-20).
+
+~~4. Jednostka: µV czy µV²?~~ — **ZAMKNIĘTE 2026-05-29.** µV (mikrowolty).
+
+~~5. Normy jednolite czy zróżnicowane wiekowo?~~ — **CZĘŚCIOWO ZAMKNIĘTE 2026-05-29.** MVP używa jednego zestawu norm dla grupy 6–10 lat. Zróżnicowanie wiekowe planowane w v2.0 wraz z mechanizmem uczenia (rosnąca lokalna baza norm).
+
+6. **Jakie są dokładne zakresy częstotliwości pasm?** — Delta, Theta, Beta1, Beta2 — standardowe zakresy (np. Delta: 0,5–4 Hz, Theta: 4–8 Hz, Beta1: 12–18 Hz, Beta2: 18–30 Hz) czy specyficzne dla badania? Właściciel: ekspert domenowy. Wpływa na: implementację FR-002 (filtracja pasmowa). Do potwierdzenia przed implementacją.
 
 ---
 
