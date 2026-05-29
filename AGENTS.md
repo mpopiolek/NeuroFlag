@@ -1,25 +1,16 @@
 # AGENTS.md
 
-## Cursor Cloud specific instructions
-
-### Project overview
-
 NeuroFlag to aplikacja desktopowa dla Windows (Python), która analizuje pliki EEG (.edf / BrainVision .vhdr) i generuje wynik przesiewowy dla dzieci w wieku 6–10 lat. Nie ma bazy danych, nie ma połączeń sieciowych, nie ma Docker. Dystrybuowana jako single-dir `.exe` (PyInstaller).
 
-> ⚠️ Prototyp webowy (FastAPI) jest zastępowany w całości. Stare komendy uvicorn / curl są nieaktualne.
+---
 
-### Uruchamianie i testy
+## Kluczowe reguły domenowe
 
-- **Testy:** `pytest -q`
-- **Build .exe:** `pyinstaller neuroflag.spec --clean` (plik `.spec` tworzony w trakcie implementacji)
-- Brak serwera deweloperskiego — aplikacja uruchamia się jako okno GUI
-
-### Kluczowe uwagi
-
+- Surowe wartości µV **nigdy** nie są widoczne dla użytkownika — tylko kolory RAG i kategoria wynikowa
+- UI i komunikaty są w języku polskim
+- > ⚠️ Prototyp webowy (FastAPI) jest zastępowany w całości. Stare komendy uvicorn / curl są nieaktualne.
 - Python 3.11 w CI (`.github/workflows/python-app.yml`); lokalnie działa 3.12+
 - Biblioteka `mne` jest najcięższą zależnością (najdłuższy czas instalacji)
-- UI i komunikaty są w języku polskim
-- Surowe wartości µV **nigdy** nie są widoczne dla użytkownika — tylko kolory RAG i kategoria wynikowa
 - Cała logika domenowa opisana w `context/foundation/prd.md` i `context/foundation/stack-assessment.md`
 
 ---
@@ -39,6 +30,36 @@ Przykłady wymaganych adnotacji:
     w `app/domain/types.py` — agent powinien je importować, nie tworzyć ad hoc
 
 Nigdy nie używaj `Any` bez wyraźnego komentarza `# type: ignore[<kod>]` z uzasadnieniem.
+
+---
+
+## MNE-Python — idiomy specyficzne dla projektu
+
+Projekt używa MNE-Python do analizy EEG. Kluczowe konwencje:
+
+Ładowanie pliku (obsługiwane formaty):
+  raw_edf  = mne.io.read_raw_edf(path, preload=True, verbose=False)
+  raw_bv   = mne.io.read_raw_brainvision(vhdr_path, preload=True, verbose=False)
+
+Selekcja kanałów domenowych (ZAWSZE przed przetwarzaniem):
+  raw.pick(['C3', 'O1'])  # system 10-20; wyklucz EOG/ECG/EMG przez pick_types()
+
+Znaczniki zadań (mapowanie na segmenty):
+  events, event_id = mne.events_from_annotations(raw)
+  # Szukaj: 'OO' (oczy otwarte), 'OZ' (oczy zamknięte), 'ZP' (zadanie pamięciowe)
+  # Fallback jeśli brak znaczników: dziel na segmenty co 180 s (3 minuty)
+
+Usuwanie zakłóceń sieciowych:
+  raw.notch_filter(freqs=config.power_line_frequency)  # domyślnie 50 Hz
+
+Obliczanie pasma (przykład dla Theta 4–8 Hz):
+  raw_theta = raw.copy().filter(l_freq=4.0, h_freq=8.0)
+  # Nie hardkoduj wartości pasm — ładuj z norms.json (config.band_ranges["Theta"])
+
+Jednostka wynikowa: µV (mikrowolty).
+  data_uv = raw.get_data(units='uV')  # zawsze konwertuj do µV przed obliczeniami
+
+Agent NIE wyświetla surowych wartości µV użytkownikowi — tylko kolory RAG i kategorię.
 
 ---
 
@@ -95,36 +116,6 @@ Przy dodawaniu nowej zależności:
 
 ---
 
-## MNE-Python — idiomy specyficzne dla projektu
-
-Projekt używa MNE-Python do analizy EEG. Kluczowe konwencje:
-
-Ładowanie pliku (obsługiwane formaty):
-  raw_edf  = mne.io.read_raw_edf(path, preload=True, verbose=False)
-  raw_bv   = mne.io.read_raw_brainvision(vhdr_path, preload=True, verbose=False)
-
-Selekcja kanałów domenowych (ZAWSZE przed przetwarzaniem):
-  raw.pick(['C3', 'O1'])  # system 10-20; wyklucz EOG/ECG/EMG przez pick_types()
-
-Znaczniki zadań (mapowanie na segmenty):
-  events, event_id = mne.events_from_annotations(raw)
-  # Szukaj: 'OO' (oczy otwarte), 'OZ' (oczy zamknięte), 'ZP' (zadanie pamięciowe)
-  # Fallback jeśli brak znaczników: dziel na segmenty co 180 s (3 minuty)
-
-Usuwanie zakłóceń sieciowych:
-  raw.notch_filter(freqs=config.power_line_frequency)  # domyślnie 50 Hz
-
-Obliczanie pasma (przykład dla Theta 4–8 Hz):
-  raw_theta = raw.copy().filter(l_freq=4.0, h_freq=8.0)
-  # Nie hardkoduj wartości pasm — ładuj z norms.json (config.band_ranges["Theta"])
-
-Jednostka wynikowa: µV (mikrowolty).
-  data_uv = raw.get_data(units='uV')  # zawsze konwertuj do µV przed obliczeniami
-
-Agent NIE wyświetla surowych wartości µV użytkownikowi — tylko kolory RAG i kategorię.
-
----
-
 ## Build: PyInstaller (.exe)
 
 Aplikacja dystrybuowana jako single-dir .exe dla Windows 10/11 64-bit.
@@ -146,3 +137,11 @@ Testowanie buildu (uruchom po każdej zmianie deps):
 
 Agent modyfikuje .spec przy dodaniu nowych zależności domenowych.
 Agent NIE używa --onefile dla MNE-Python (zbyt długi czas startu) — używa --onedir.
+
+---
+
+## Uruchamianie i testy
+
+- **Testy:** `pytest -q`
+- **Build .exe:** `pyinstaller neuroflag.spec --clean` (plik `.spec` tworzony w trakcie implementacji)
+- Brak serwera deweloperskiego — aplikacja uruchamia się jako okno GUI

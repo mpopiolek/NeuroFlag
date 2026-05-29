@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=72.0", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "neuroflag"
+version = "0.1.0"
+description = "Aplikacja desktopowa do przesiewowej analizy EEG dla dzieci 6–10 lat"
+requires-python = ">=3.11"
+dependencies = [
+    "customtkinter==5.2.2",
+    "mne==1.8.0",
+    "scipy==1.14.1",
+    "numpy==2.2.0",
+    "reportlab==4.2.5",
+    "mypy==1.13.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==8.3.4",
+    "pip-tools>=7.4.1",
+    "ruff>=0.4.0",
+    "pip-audit>=2.7.0",
+    "fastapi",
+    "uvicorn[standard]",
+    "python-multipart",
+    "httpx",
+    "pandas",
+    "scikit-learn",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+ignore_missing_imports = true
+files = ["app"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
