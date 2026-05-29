@@ -50,3 +50,46 @@ jobs:
       - name: Run tests
         run: |
           pytest -q
+
+  build:
+    name: Build Windows .exe
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~\AppData\Local\pip\Cache
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+          pip install pyinstaller
+
+      - name: Build .exe
+        run: |
+          pyinstaller neuroflag.spec --clean
+
+      - name: Smoke-test .exe
+        run: |
+          dist\neuroflag\neuroflag.exe --smoke-test
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: neuroflag-win64
+          path: dist\neuroflag\
+          retention-days: 30
