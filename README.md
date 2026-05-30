@@ -1,17 +1,77 @@
 # NeuroFlag
-This project analyzes input data files to identity patterns that may indicate a potential naurological issue. The result is not a medical diagnosis, but an initial screening indicator that may suggest the need for futher clinical evaluation.
 
-## FastAPI (lokalnie)
+Aplikacja desktopowa dla Windows do przesiewowej analizy sygnału EEG dzieci w wieku 6–10 lat.
+Wczytuje pliki `.edf` / BrainVision `.vhdr`, porównuje wyniki z empiryczną bazą norm i zwraca
+jedną z trzech kategorii: **Wskazanie do diagnozy / Uważna obserwacja / Brak wskazań**.
 
-Prosty szablon FastAPI z plikiem [app/main.py](app/main.py#L1).
+Działa w trybie w pełni offline — żadne dane nie opuszczają urządzenia.
 
-Instrukcje uruchomienia (Windows PowerShell):
+> Wynik nie jest diagnozą medyczną. To narzędzie przesiewowe wskazujące potrzebę dalszej oceny klinicznej.
+
+---
+
+## Wymagania
+
+- Windows 10 / 11, 64-bit
+- Brak wymagań instalacji Pythona — aplikacja dystrybuowana jako `.exe`
+
+---
+
+## Uruchomienie (środowisko deweloperskie)
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-uvicorn app.main:app --reload
+pip install -e ".[dev]"
 ```
 
-Odwiedź po uruchomieniu: http://127.0.0.1:8000/ i http://127.0.0.1:8000/health
+Uruchomienie aplikacji:
+
+```powershell
+python app/main.py
+```
+
+Testy i sprawdzenie typów:
+
+```powershell
+pytest -q
+mypy app/ --strict
+```
+
+---
+
+## Build (.exe)
+
+```powershell
+pyinstaller neuroflag.spec --clean
+```
+
+Artefakt: `dist\neuroflag\neuroflag.exe`
+
+Przed przekazaniem placówce wykonaj smoke-test zgodnie z `context/foundation/distribution.md`.
+
+---
+
+## Struktura projektu
+
+```
+app/
+  main.py              # Punkt wejścia GUI
+  domain/              # Logika domenowa (pipeline EEG, algorytm, normy)
+  ui/                  # Widoki i komponenty CustomTkinter
+  reports/             # Generowanie PDF (ReportLab)
+  config/              # Ustawienia, ścieżka norms.json
+norms.json             # Baza norm (nadpisywalna)
+tests/                 # Testy jednostkowe i integracyjne
+neuroflag.spec         # Konfiguracja PyInstaller
+pyproject.toml         # Zależności i konfiguracja narzędzi
+```
+
+---
+
+## Dokumentacja projektu
+
+- `context/foundation/prd.md` — wymagania produktowe
+- `context/foundation/stack-assessment.md` — ocena stosu technologicznego
+- `context/foundation/distribution.md` — procedura dystrybucji do placówek
+- `AGENTS.md` — reguły dla agentów AI pracujących w projekcie
