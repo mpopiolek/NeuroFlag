@@ -416,14 +416,14 @@ Brak danych do migracji — prototyp FastAPI nie miał persystentnych danych. St
 
 #### Automated
 
-- [ ] 3.1 `mypy app/main.py --strict --ignore-missing-imports` — 0 błędów
-- [ ] 3.2 `ruff check app/main.py` — 0 błędów
-- [ ] 3.3 `pytest -q` — wszystkie testy przechodzą
+- [x] 3.1 `mypy app/main.py --strict --ignore-missing-imports` — 0 błędów
+- [x] 3.2 `ruff check app/main.py` — 0 błędów
+- [x] 3.3 `pytest -q` — wszystkie testy przechodzą
 
 #### Manual
 
-- [ ] 3.4 `python app/main.py --smoke-test` kończy bez błędu (exit code 0)
-- [ ] 3.5 `python app/main.py` otwiera okno "NeuroFlag" 800×600 bez crashu
+- [x] 3.4 `python app/main.py --smoke-test` kończy bez błędu (exit code 0)
+- [x] 3.5 `python app/main.py` otwiera okno "NeuroFlag" 800×600 bez crashu
 
 ### Phase 4: Testy i porządki
 
