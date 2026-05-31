@@ -1,9 +1,9 @@
 ---
 id: project-foundation
 title: "Fundament projektu desktopowego"
-status: plan_reviewed
+status: implementing
 created: 2026-05-30
-updated: 2026-05-30
+updated: 2026-05-31
 roadmap_ref: F-01
 prd_refs: [FR-008]
 unlocks: [metadata-and-import, norms-replacement]
