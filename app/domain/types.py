@@ -23,10 +23,15 @@ class ScreeningCategory(Enum):
     BRAK = "Brak wskazań"
 
 
+class Sex(Enum):
+    Z = "Z"
+    M = "M"
+
+
 @dataclass(frozen=True)
 class PatientMetadata:
     age: int
-    sex: str
+    sex: Sex
     exclusions: frozenset[ExclusionDiagnosis] = field(default_factory=frozenset)
 
     def is_excluded(self) -> bool:
@@ -35,7 +40,7 @@ class PatientMetadata:
 
 @dataclass(frozen=True)
 class CellResult:
-    id: int
+    cell_id: int
     channel: str
     task: str
     band: str
@@ -58,7 +63,7 @@ class BandRange:
 
 @dataclass(frozen=True)
 class NormEntry:
-    id: int
+    norm_id: int
     channel: str
     task: str
     band: str

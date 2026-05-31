@@ -1,7 +1,7 @@
 ---
 id: project-foundation
 title: "Fundament projektu desktopowego"
-status: implementing
+status: impl_reviewed
 created: 2026-05-30
 updated: 2026-05-31
 roadmap_ref: F-01

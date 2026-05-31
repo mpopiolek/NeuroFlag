@@ -392,13 +392,13 @@ Brak danych do migracji — prototyp FastAPI nie miał persystentnych danych. St
 
 #### Automated
 
-- [x] 1.1 `mypy app/domain/types.py --strict --ignore-missing-imports` — 0 błędów
-- [x] 1.2 `ruff check app/domain/types.py` — 0 błędów
+- [x] 1.1 `mypy app/domain/types.py --strict --ignore-missing-imports` — 0 błędów — b747733
+- [x] 1.2 `ruff check app/domain/types.py` — 0 błędów — b747733
 
 #### Manual
 
-- [x] 1.3 Importy działają: `from app.domain.types import PatientMetadata, AnalysisResult, NormsConfig` bez błędu
-- [x] 1.4 Instancjacja `PatientMetadata(age=8, sex="Z")` — `.is_excluded()` zwraca `False`
+- [x] 1.3 Importy działają: `from app.domain.types import PatientMetadata, AnalysisResult, NormsConfig` bez błędu — b747733
+- [x] 1.4 Instancjacja `PatientMetadata(age=8, sex="Z")` — `.is_excluded()` zwraca `False` — b747733
 
 ### Phase 2: Loader norm
 
