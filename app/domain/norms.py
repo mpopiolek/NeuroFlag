@@ -20,6 +20,20 @@ class NormsLoadError(Exception):
     pass
 
 
+def _as_float(value: object, label: str) -> float:
+    try:
+        return float(value)  # type: ignore[arg-type]
+    except (ValueError, TypeError) as exc:
+        raise NormsLoadError(f"'{label}' must be a number, got {value!r}") from exc
+
+
+def _as_int(value: object, label: str) -> int:
+    try:
+        return int(float(value))  # type: ignore[arg-type]
+    except (ValueError, TypeError) as exc:
+        raise NormsLoadError(f"'{label}' must be an integer, got {value!r}") from exc
+
+
 def resolve_norms_path() -> Path:
     base = Path(getattr(sys, "_MEIPASS", None) or Path(__file__).parent.parent.parent)
     return base / "norms.json"
@@ -35,7 +49,10 @@ def _parse_band_ranges(raw: Any) -> dict[str, BandRange]:
         for key in ("l_freq", "h_freq"):
             if key not in entry:
                 raise NormsLoadError(f"band_ranges['{name}'] missing key '{key}'")
-        result[name] = BandRange(l_freq=float(entry["l_freq"]), h_freq=float(entry["h_freq"]))
+        result[name] = BandRange(
+            l_freq=_as_float(entry["l_freq"], f"band_ranges.{name}.l_freq"),
+            h_freq=_as_float(entry["h_freq"], f"band_ranges.{name}.h_freq"),
+        )
     return result
 
 
@@ -46,17 +63,13 @@ def _parse_norm_entry(raw: Any, index: int) -> NormEntry:
         if key not in raw:
             raise NormsLoadError(f"norms[{index}] missing key '{key}'")
     band = raw["band"]
-    if band not in VALID_BANDS:
-        raise NormsLoadError(
-            f"norms[{index}] has unknown band '{band}'; valid: {sorted(VALID_BANDS)}"
-        )
     return NormEntry(
-        norm_id=int(raw["id"]),
+        norm_id=_as_int(raw["id"], f"norms[{index}].id"),
         channel=str(raw["channel"]),
         task=str(raw["task"]),
         band=str(band),
-        mean_z=float(raw["mean_z"]),
-        mean_k=float(raw["mean_k"]),
+        mean_z=_as_float(raw["mean_z"], f"norms[{index}].mean_z"),
+        mean_k=_as_float(raw["mean_k"], f"norms[{index}].mean_k"),
     )
 
 
@@ -89,10 +102,18 @@ def load(path: Path | None = None) -> NormsConfig:
     band_ranges = _parse_band_ranges(data["band_ranges"])
     norm_entries = tuple(_parse_norm_entry(entry, i) for i, entry in enumerate(raw_norms))
 
+    for i, entry in enumerate(norm_entries):
+        if entry.band not in band_ranges:
+            raise NormsLoadError(
+                f"norms[{i}] references band '{entry.band}' not defined in band_ranges"
+            )
+
     return NormsConfig(
-        version=int(data["version"]),
-        power_line_frequency=float(data["power_line_frequency"]),
-        recommendation_threshold=int(data["recommendation_threshold"]),
+        version=_as_int(data["version"], "version"),
+        power_line_frequency=_as_float(data["power_line_frequency"], "power_line_frequency"),
+        recommendation_threshold=_as_int(
+            data["recommendation_threshold"], "recommendation_threshold"
+        ),
         band_ranges=band_ranges,
         norms=norm_entries,
     )

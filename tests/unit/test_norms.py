@@ -94,3 +94,8 @@ def test_invalid_json(tmp_path: Path) -> None:
     p.write_text("{not valid json", encoding="utf-8")
     with pytest.raises(NormsLoadError, match="Invalid JSON"):
         load(p)
+
+
+def test_file_not_found(tmp_path: Path) -> None:
+    with pytest.raises(NormsLoadError, match="Cannot read"):
+        load(tmp_path / "nonexistent.json")

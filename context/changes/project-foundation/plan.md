@@ -404,13 +404,13 @@ Brak danych do migracji — prototyp FastAPI nie miał persystentnych danych. St
 
 #### Automated
 
-- [x] 2.1 `mypy app/domain/norms.py --strict --ignore-missing-imports` — 0 błędów
-- [x] 2.2 `ruff check app/domain/norms.py` — 0 błędów
-- [x] 2.3 `pytest tests/unit/test_norms.py -q` — wszystkie testy zielone
+- [x] 2.1 `mypy app/domain/norms.py --strict --ignore-missing-imports` — 0 błędów — 568aa49
+- [x] 2.2 `ruff check app/domain/norms.py` — 0 błędów — 568aa49
+- [x] 2.3 `pytest tests/unit/test_norms.py -q` — wszystkie testy zielone — 568aa49
 
 #### Manual
 
-- [x] 2.4 `python -c "from app.domain import norms; c = norms.load(); print(c.version, len(c.norms))"` wypisuje `1 10`
+- [x] 2.4 `python -c "from app.domain import norms; c = norms.load(); print(c.version, len(c.norms))"` wypisuje `1 10` — 568aa49
 
 ### Phase 3: Nowy app/main.py (desktop stub)
 
