@@ -8,7 +8,6 @@ from typing import Any
 from app.domain.types import BandRange, NormEntry, NormsConfig
 
 REQUIRED_NORM_COUNT = 10
-VALID_BANDS: frozenset[str] = frozenset({"Delta", "Theta", "Beta1", "Beta2"})
 
 _TOP_LEVEL_KEYS = frozenset(
     {"version", "power_line_frequency", "recommendation_threshold", "band_ranges", "norms"}
@@ -29,9 +28,12 @@ def _as_float(value: object, label: str) -> float:
 
 def _as_int(value: object, label: str) -> int:
     try:
-        return int(float(value))  # type: ignore[arg-type]
+        f = float(value)  # type: ignore[arg-type]
     except (ValueError, TypeError) as exc:
         raise NormsLoadError(f"'{label}' must be an integer, got {value!r}") from exc
+    if f != int(f):
+        raise NormsLoadError(f"'{label}' must be an integer, got {value!r}")
+    return int(f)
 
 
 def resolve_norms_path() -> Path:

@@ -54,6 +54,12 @@ class AnalysisResult:
     description: str
     analyzed_at: datetime
 
+    def __post_init__(self) -> None:
+        if len(self.cells) != 10:
+            raise ValueError(
+                f"AnalysisResult.cells must contain exactly 10 elements, got {len(self.cells)}"
+            )
+
 
 @dataclass(frozen=True)
 class BandRange:
@@ -71,7 +77,7 @@ class NormEntry:
     mean_k: float
 
 
-@dataclass
+@dataclass(frozen=True)
 class NormsConfig:
     version: int
     power_line_frequency: float
