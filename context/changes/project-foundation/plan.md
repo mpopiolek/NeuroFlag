@@ -416,25 +416,25 @@ Brak danych do migracji — prototyp FastAPI nie miał persystentnych danych. St
 
 #### Automated
 
-- [x] 3.1 `mypy app/main.py --strict --ignore-missing-imports` — 0 błędów
-- [x] 3.2 `ruff check app/main.py` — 0 błędów
-- [x] 3.3 `pytest -q` — wszystkie testy przechodzą
+- [x] 3.1 `mypy app/main.py --strict --ignore-missing-imports` — 0 błędów — a2b38ef
+- [x] 3.2 `ruff check app/main.py` — 0 błędów — a2b38ef
+- [x] 3.3 `pytest -q` — wszystkie testy przechodzą — a2b38ef
 
 #### Manual
 
-- [x] 3.4 `python app/main.py --smoke-test` kończy bez błędu (exit code 0)
-- [x] 3.5 `python app/main.py` otwiera okno "NeuroFlag" 800×600 bez crashu
+- [x] 3.4 `python app/main.py --smoke-test` kończy bez błędu (exit code 0) — a2b38ef
+- [x] 3.5 `python app/main.py` otwiera okno "NeuroFlag" 800×600 bez crashu — a2b38ef
 
 ### Phase 4: Testy i porządki
 
 #### Automated
 
-- [ ] 4.1 `pytest -q` — 0 błędów, nowe testy domenowe przechodzą
-- [ ] 4.2 `mypy app/ --strict --ignore-missing-imports` — 0 błędów w całym `app/`
-- [ ] 4.3 `ruff check app/` — 0 błędów
-- [ ] 4.4 `tests/test_app_endpoints.py` nie istnieje; `tests/test_imports.py` nie istnieje
+- [x] 4.1 `pytest -q` — 0 błędów, nowe testy domenowe przechodzą
+- [x] 4.2 `mypy app/ --strict --ignore-missing-imports` — 0 błędów w całym `app/`
+- [x] 4.3 `ruff check app/` — 0 błędów
+- [x] 4.4 `tests/test_app_endpoints.py` nie istnieje; `tests/test_imports.py` nie istnieje
 
 #### Manual
 
-- [ ] 4.5 Przejrzyj `tests/unit/test_norms.py` — każda ścieżka `NormsLoadError` ma własny test case
-- [ ] 4.6 `pytest tests/unit/ -v` — czytelne nazwy testów, wszystkie zielone
+- [x] 4.5 Przejrzyj `tests/unit/test_norms.py` — każda ścieżka `NormsLoadError` ma własny test case
+- [x] 4.6 `pytest tests/unit/ -v` — czytelne nazwy testów, wszystkie zielone
