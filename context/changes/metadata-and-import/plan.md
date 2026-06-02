@@ -531,15 +531,15 @@ Brak w S-01. Pełne testy E2E (wczytanie pliku .edf do siatki wyników) należą
 
 #### Automated
 
-- [x] 2.1 `mypy app/ --strict` bez błędów dla `metadata_form.py`
-- [x] 2.2 `pytest -q` zielony
+- [x] 2.1 `mypy app/ --strict` bez błędów dla `metadata_form.py` — 4ebce96
+- [x] 2.2 `pytest -q` zielony — 4ebce96
 
 #### Manual
 
-- [x] 2.3 MetadataFormView wyświetla się jako pierwszy ekran; CTkOptionMenu pokazuje wartości 6–10
-- [x] 2.4 Zaznaczenie wykluczenia → komunikat ostrzegawczy widoczny, 'Dalej →' wyszarzony
-- [x] 2.5 Odznaczenie → komunikat znika, 'Dalej →' aktywny
-- [x] 2.6 Kliknięcie 'Dalej →' z poprawnymi danymi (wiek=8, płeć=Z) → otwiera FileImportView
+- [x] 2.3 MetadataFormView wyświetla się jako pierwszy ekran; CTkOptionMenu pokazuje wartości 6–10 — 4ebce96
+- [x] 2.4 Zaznaczenie wykluczenia → komunikat ostrzegawczy widoczny, 'Dalej →' wyszarzony — 4ebce96
+- [x] 2.5 Odznaczenie → komunikat znika, 'Dalej →' aktywny — 4ebce96
+- [x] 2.6 Kliknięcie 'Dalej →' z poprawnymi danymi (wiek=8, płeć=Z) → otwiera FileImportView — 4ebce96
 
 ### Phase 3: EEG file validator + FileImportView
 
