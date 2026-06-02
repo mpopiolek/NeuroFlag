@@ -3,7 +3,7 @@ project: "NeuroFlag"
 version: 1
 status: draft
 created: 2026-05-30
-updated: 2026-06-01  # Formularz GUI norm → Parked (decyzja S-04 plan review)
+updated: 2026-06-02
 prd_version: 1
 main_goal: low-complexity
 top_blocker: decisions
@@ -30,7 +30,7 @@ NeuroFlag to aplikacja desktopowa dla Windows, która pozwala pedagogom szkolnym
 | ID   | Change ID                  | Outcome (użytkownik może …)                                                                          | Prerequisites | PRD refs                      | Status   |
 |------|----------------------------|------------------------------------------------------------------------------------------------------|---------------|-------------------------------|----------|
 | F-01 | project-foundation         | (foundation) środowisko gotowe: pyproject.toml z przypiętymi zależnościami, norms.json z 10 normami, typy domenowe w app/domain/types.py | —             | FR-008                        | ready    |
-| S-01 | metadata-and-import        | wypełnić metrykę dziecka (z wykluczeniami klinicznymi) i wczytać plik .edf lub .vhdr gotowy do analizy | F-01          | FR-001, FR-010, US-01         | proposed |
+| S-01 | metadata-and-import        | wypełnić metrykę dziecka (z wykluczeniami klinicznymi) i wczytać plik .edf lub .vhdr gotowy do analizy | F-01          | FR-001, FR-010, US-01         | done     |
 | S-02 | eeg-pipeline-and-results   | uruchomić analizę i zobaczyć siatkę 10 kolorowych komórek z kategorią wynikową                       | S-01          | FR-002, FR-003, FR-004, US-01 | proposed |
 | S-03 | pdf-report-and-save        | wygenerować raport PDF i zapisać go na dysk lokalny                                                  | S-02          | FR-005, FR-006, US-01         | proposed |
 | S-04 | norms-replacement          | zastąpić plik norms.json własnym plikiem i mieć pewność, że aplikacja wczytuje nowe normy i waliduje schemat | F-01          | FR-008                        | proposed |
@@ -83,7 +83,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Decyzja GUI (CustomTkinter 5.2.2) jest zamknięta — architektura widoków jest określona. Główne ryzyko to poprawna struktura nawigacji CTk (widoki jako ramki przełączane w CTkFrame) zgodna z układem z AGENTS.md.
-- **Status:** proposed
+- **Status:** done
 
 ### S-02: Pipeline EEG + klasyfikacja + siatka wyników
 
@@ -156,4 +156,4 @@ Foundations below assume these are present and do NOT re-scaffold them.
 
 (Empty on first generation. `/10x-archive` appends an entry here — and flips that item's `Status` to `done` — when a change whose `Change ID` matches the item is archived. Format:)
 
-- **<Slice ID>: <Outcome>** — Archived <YYYY-MM-DD> → `context/archive/<YYYY-MM-DD-change-id>/`. Lesson: <pointer to lessons.md if any, or `—`>.
+- **S-01: użytkownik może otworzyć aplikację, wypełnić metrykę dziecka (wiek 6–10 lat, płeć, diagnozy), zobaczyć ostrzeżenie i blokadę analizy dla wykluczonych grup klinicznych (uraz/uszkodzenie mózgu, niepełnosprawność intelektualna, padaczka) oraz wczytać plik `.edf` lub `.vhdr` przyciskiem „Wczytaj plik" (drag & drop jako bonus) z wyraźnym komunikatem błędu jeśli plik jest nieobsługiwany lub uszkodzony.** — Archived 2026-06-02 → `context/archive/2026-06-01-metadata-and-import/`. Lesson: —.

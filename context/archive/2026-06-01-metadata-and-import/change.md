@@ -1,9 +1,10 @@
 ---
 id: metadata-and-import
 title: "Formularz metryki dziecka + import pliku EEG"
-status: impl_reviewed
+status: archived
 created: 2026-06-01
 updated: 2026-06-02
+archived_at: 2026-06-02T12:00:00Z
 roadmap_ref: S-01
 prd_refs: [FR-001, FR-010, US-01]
 unlocks: [eeg-pipeline-and-results]
