@@ -103,6 +103,18 @@ class MetadataFormView(ctk.CTkFrame):
         )
         self._next_button.grid(row=8, column=0, columnspan=2, sticky="w", pady=(16, 0))
 
+        self._restore_from_state()
+
+    def _restore_from_state(self) -> None:
+        metadata = self._app_state.metadata
+        if metadata is None:
+            return
+        self._age_var.set(str(metadata.age))
+        self._sex_var.set(metadata.sex.value)
+        for diagnosis, var in self._exclusion_vars.items():
+            var.set(diagnosis in metadata.exclusions)
+        self._on_exclusion_change()
+
     def _on_exclusion_change(self) -> None:
         any_checked = any(var.get() for var in self._exclusion_vars.values())
         if any_checked:
