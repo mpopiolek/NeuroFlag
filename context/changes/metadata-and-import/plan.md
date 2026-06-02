@@ -545,17 +545,17 @@ Brak w S-01. Pełne testy E2E (wczytanie pliku .edf do siatki wyników) należą
 
 #### Automated
 
-- [x] 3.1 `mypy app/ --strict` bez błędów dla `eeg_file.py` i `file_import.py`
-- [x] 3.2 `pytest -q` zielony
+- [x] 3.1 `mypy app/ --strict` bez błędów dla `eeg_file.py` i `file_import.py` — 06d9647
+- [x] 3.2 `pytest -q` zielony — 06d9647
 
 #### Manual
 
-- [x] 3.3 Dialog pliku otwiera się z filtrami .edf i .vhdr
-- [x] 3.4 Poprawny plik .edf → "✓ Plik wczytany poprawnie"; 'Analizuj' aktywny
-- [x] 3.5 Plik .txt → komunikat błędu "✗ Nieobsługiwane rozszerzenie"
-- [x] 3.6 Plik .vhdr bez .eeg → komunikat błędu "✗ Brak pliku .eeg..."
-- [x] 3.7 UI nie zamraża się podczas walidacji (progress bar widoczny)
-- [x] 3.8 Przycisk '← Wróć' → powrót do MetadataFormView z zachowanymi danymi w AppState
+- [x] 3.3 Dialog pliku otwiera się z filtrami .edf i .vhdr — 06d9647
+- [x] 3.4 Poprawny plik .edf → "✓ Plik wczytany poprawnie"; 'Analizuj' aktywny — 06d9647
+- [x] 3.5 Plik .txt → komunikat błędu "✗ Nieobsługiwane rozszerzenie" — 06d9647
+- [x] 3.6 Plik .vhdr bez .eeg → komunikat błędu "✗ Brak pliku .eeg..." — 06d9647
+- [x] 3.7 UI nie zamraża się podczas walidacji (progress bar widoczny) — 06d9647
+- [x] 3.8 Przycisk '← Wróć' → powrót do MetadataFormView z zachowanymi danymi w AppState — 06d9647
 
 ### Phase 4: Testy jednostkowe
 
