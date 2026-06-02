@@ -172,6 +172,27 @@ CTk appearance mode i color theme: `"light"` / `"blue"` (ustawiane przed `__init
 **Contract**: Import `AppWindow` z `app.ui.app_window`; import `MetadataFormView`
 z `app.ui.views.metadata_form`. Sygnatura `main()` bez zmian.
 
+---
+
+#### 4. mypy override dla CustomTkinter *(addendum — impl-review Phase 1)*
+
+**File**: `pyproject.toml`
+
+**Intent**: Zezwolić na dziedziczenie po `ctk.CTk` / `ctk.CTkFrame` przy `mypy --strict`.
+CustomTkinter nie dostarcza stubów typów; bez override mypy zgłasza `[misc] Class cannot subclass "CTk" (has type "Any")`.
+
+**Contract**: Dodać w `[tool.mypy]`:
+
+```toml
+[[tool.mypy.overrides]]
+module = ["customtkinter", "customtkinter.*"]
+disallow_subclassing_any = false
+
+[[tool.mypy.overrides]]
+module = ["app.ui", "app.ui.*"]
+disallow_subclassing_any = false
+```
+
 ### Success Criteria
 
 #### Automated Verification
@@ -497,28 +518,28 @@ Brak w S-01. Pełne testy E2E (wczytanie pliku .edf do siatki wyników) należą
 
 #### Automated
 
-- [x] 1.1 `python -m app.main --smoke-test` kończy się kodem 0
-- [x] 1.2 `mypy app/ --strict` bez błędów dla nowych plików Phase 1
-- [x] 1.3 `pytest -q` zielony (brak regresji)
+- [x] 1.1 `python -m app.main --smoke-test` kończy się kodem 0 — a255733
+- [x] 1.2 `mypy app/ --strict` bez błędów dla nowych plików Phase 1 — a255733
+- [x] 1.3 `pytest -q` zielony (brak regresji) — a255733
 
 #### Manual
 
-- [x] 1.4 Aplikacja uruchamia się, wyświetla okno 900×650 z tytułem "NeuroFlag — Badanie przesiewowe EEG"
-- [x] 1.5 Okno zamyka się przez przycisk X bez błędów w konsoli
+- [x] 1.4 Aplikacja uruchamia się, wyświetla okno 900×650 z tytułem "NeuroFlag — Badanie przesiewowe EEG" — a255733
+- [x] 1.5 Okno zamyka się przez przycisk X bez błędów w konsoli — a255733
 
 ### Phase 2: MetadataFormView
 
 #### Automated
 
-- [ ] 2.1 `mypy app/ --strict` bez błędów dla `metadata_form.py`
-- [ ] 2.2 `pytest -q` zielony
+- [x] 2.1 `mypy app/ --strict` bez błędów dla `metadata_form.py`
+- [x] 2.2 `pytest -q` zielony
 
 #### Manual
 
-- [ ] 2.3 MetadataFormView wyświetla się jako pierwszy ekran; CTkOptionMenu pokazuje wartości 6–10
-- [ ] 2.4 Zaznaczenie wykluczenia → komunikat ostrzegawczy widoczny, 'Dalej →' wyszarzony
-- [ ] 2.5 Odznaczenie → komunikat znika, 'Dalej →' aktywny
-- [ ] 2.6 Kliknięcie 'Dalej →' z poprawnymi danymi (wiek=8, płeć=Z) → otwiera FileImportView
+- [x] 2.3 MetadataFormView wyświetla się jako pierwszy ekran; CTkOptionMenu pokazuje wartości 6–10
+- [x] 2.4 Zaznaczenie wykluczenia → komunikat ostrzegawczy widoczny, 'Dalej →' wyszarzony
+- [x] 2.5 Odznaczenie → komunikat znika, 'Dalej →' aktywny
+- [x] 2.6 Kliknięcie 'Dalej →' z poprawnymi danymi (wiek=8, płeć=Z) → otwiera FileImportView
 
 ### Phase 3: EEG file validator + FileImportView
 

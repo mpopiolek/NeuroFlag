@@ -3,7 +3,7 @@ project: "NeuroFlag"
 version: 1
 status: draft
 created: 2026-05-30
-updated: 2026-05-30  # CTk decision → F-01 ready; band ranges confirmed → S-02 unblocked
+updated: 2026-06-01  # Formularz GUI norm → Parked (decyzja S-04 plan review)
 prd_version: 1
 main_goal: low-complexity
 top_blocker: decisions
@@ -149,6 +149,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Statystyki neuroatypowości do celów badawczych** — Why parked: PRD §Non-Goals; wymaga audytu RODO.
 - **Rosnąca lokalna baza norm (uczenie z każdego badania)** — Why parked: PRD §Non-Goals; v2.0.
 - **Zróżnicowanie norm wiekowo (interpolacja 6–10 lat)** — Why parked: PRD §Non-Goals; v2.0.
+- **Formularz GUI do wprowadzania norm (psycholog-administrator, bez edycji JSON)** — Why parked: S-04 (FR-008) dostarcza ręczną podmianę `norms.json` + walidację CLI/docs; widok CTk wymaga S-01 (`AppWindow`) i znacząco poszerza scope MVP — odłożone na v2.0 / osobny slice po S-01.
 - **Formaty .bdf i .set** — Why parked: PRD §Constraints; v2.0.
 
 ## Done
