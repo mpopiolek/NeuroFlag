@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import sys
 
-import customtkinter as ctk
-
 from app.domain import norms
 from app.domain.norms import NormsLoadError
+from app.ui.app_window import AppWindow
+from app.ui.views.metadata_form import MetadataFormView
 
 
 def main() -> None:
@@ -16,9 +16,8 @@ def main() -> None:
         sys.exit(f"Błąd ładowania norm: {exc}")
     if smoke_test:
         sys.exit(0)
-    app = ctk.CTk()
-    app.title("NeuroFlag")
-    app.geometry("800x600")
+    app = AppWindow()
+    app.show_view(MetadataFormView)
     app.mainloop()
 
 
