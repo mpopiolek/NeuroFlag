@@ -25,6 +25,24 @@ def test_patient_metadata_single_exclusion() -> None:
     assert p.is_excluded() is True
 
 
+def test_patient_metadata_brain_injury_excluded() -> None:
+    p = PatientMetadata(
+        age=8,
+        sex=Sex.Z,
+        exclusions=frozenset({ExclusionDiagnosis.BRAIN_INJURY}),
+    )
+    assert p.is_excluded() is True
+
+
+def test_patient_metadata_intellectual_disability_excluded() -> None:
+    p = PatientMetadata(
+        age=9,
+        sex=Sex.M,
+        exclusions=frozenset({ExclusionDiagnosis.INTELLECTUAL_DISABILITY}),
+    )
+    assert p.is_excluded() is True
+
+
 def test_patient_metadata_multiple_exclusions() -> None:
     p = PatientMetadata(
         age=10,

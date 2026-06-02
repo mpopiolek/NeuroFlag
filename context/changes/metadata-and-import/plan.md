@@ -561,10 +561,10 @@ Brak w S-01. Pełne testy E2E (wczytanie pliku .edf do siatki wyników) należą
 
 #### Automated
 
-- [ ] 4.1 `pytest tests/unit/test_eeg_file.py -v` — wszystkie testy zielone
-- [ ] 4.2 `pytest -q --tb=short` — 0 FAILED, 0 ERROR
-- [ ] 4.3 `mypy app/ --strict` — 0 błędów
+- [x] 4.1 `pytest tests/unit/test_eeg_file.py -v` — wszystkie testy zielone
+- [x] 4.2 `pytest -q --tb=short` — 0 FAILED, 0 ERROR
+- [x] 4.3 `mypy app/ --strict` — 0 błędów
 
 #### Manual
 
-- [ ] 4.4 `pytest -q` wypisuje podsumowanie bez FAILED ani ERROR
+- [x] 4.4 `pytest -q` wypisuje podsumowanie bez FAILED ani ERROR
