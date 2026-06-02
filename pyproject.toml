@@ -1,6 +1,6 @@
 [build-system]
 requires = ["setuptools>=72.0", "wheel"]
-build-backend = "setuptools.backends.legacy:build"
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "neuroflag"
@@ -39,6 +39,14 @@ python_version = "3.11"
 strict = true
 ignore_missing_imports = true
 files = ["app"]
+
+[[tool.mypy.overrides]]
+module = ["customtkinter", "customtkinter.*"]
+disallow_subclassing_any = false
+
+[[tool.mypy.overrides]]
+module = ["app.ui", "app.ui.*"]
+disallow_subclassing_any = false
 
 [tool.ruff]
 line-length = 100
