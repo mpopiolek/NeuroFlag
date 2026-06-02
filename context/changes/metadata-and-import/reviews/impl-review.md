@@ -2,18 +2,18 @@
 # Implementation Review: S-01 — Formularz metryki + import EEG
 
 - **Plan**: context/changes/metadata-and-import/plan.md
-- **Scope**: Phases 1–3 of 4 (Phase 4 pending)
+- **Scope**: Phases 1–4 of 4 (full plan)
 - **Date**: 2026-06-02
-- **Commits**: a255733, 4ebce96, 6c97834, 06d9647
-- **Verdict**: APPROVED (with Phase 4 outstanding)
-- **Findings**: 0 critical, 1 warning, 3 observations
+- **Commits**: a255733, 4ebce96, 06d9647, a2143b1, 91875d0 (+ chore 6c97834, d369633)
+- **Verdict**: APPROVED
+- **Findings**: 0 critical, 0 warnings, 3 observations
 
 ## Verdicts
 
 | Dimension | Verdict |
 |-----------|---------|
-| Plan Adherence | WARNING |
-| Scope Discipline | WARNING |
+| Plan Adherence | PASS |
+| Scope Discipline | PASS |
 | Safety & Quality | PASS |
 | Architecture | PASS |
 | Pattern Consistency | PASS |
@@ -21,76 +21,83 @@
 
 ## Findings
 
-### F1 — Phase 4 niezaimplementowana (planowane)
-
-- **Severity**: ⚠️ WARNING
-- **Impact**: 🏃 LOW — quick decision; fix is obvious and narrowly scoped
-- **Dimension**: Plan Adherence
-- **Location**: tests/unit/test_eeg_file.py (brak), tests/unit/test_types.py
-- **Detail**: Progress Phase 4 ma wszystkie `[ ]`. Brakuje `test_eeg_file.py` oraz dwóch testów `is_excluded()` dla `BRAIN_INJURY` i `INTELLECTUAL_DISABILITY` solo (plan 4.2). Fazy 1–3 są kompletne; to oczekiwany następny krok, nie regresja.
-- **Fix**: Uruchomić `/10x-implement metadata-and-import phase 4` z mockami MNE (`patch` na `mne.io.read_raw_edf` / `read_raw_brainvision` w module `app.domain.eeg_file` po `_load_mne()`).
-- **Decision**: SKIPPED — Phase 4
-
-### F2 — Szeroki commit 4ebce96 (norms-replacement)
+### F1 — `_restore_from_state` poza planem (korzystny dodatek)
 
 - **Severity**: 💡 OBSERVATION
 - **Impact**: 🏃 LOW — quick decision; fix is obvious and narrowly scoped
 - **Dimension**: Scope Discipline
-- **Location**: commit 4ebce96
-- **Detail**: W historii S-01 jest commit z `context/changes/norms-replacement/*` i `roadmap.md` poza zakresem S-01. Świadoma decyzja użytkownika przy „stage all”; nie blokuje jakości kodu UI.
-- **Fix**: Kolejne commity trzymać w touched-set per faza.
-- **Decision**: ACCEPTED
+- **Location**: app/ui/views/metadata_form.py:108–116
+- **Detail**: Plan Phase 2 nie opisuje przywracania pól z `AppState.metadata` po powrocie z FileImportView. Implementacja wypełnia wiek/płeć/wykluczenia z istniejącego stanu — wspiera manual 3.8 (zachowane dane metryki) bez zmiany kontraktu domenowego.
+- **Fix**: Opcjonalnie dopisać addendum w plan.md Phase 2; kod zostawić.
+- **Decision**: FIXED — addendum w plan.md Phase 2
 
-### F3 — `plan.md` z SHA poza ostatnim commitem kodu
+### F2 — Zakres commitów obejmuje `norms-replacement`
+
+- **Severity**: 💡 OBSERVATION
+- **Impact**: 🏃 LOW — quick decision; fix is obvious and narrowly scoped
+- **Dimension**: Scope Discipline
+- **Location**: git range a255733^..91875d0
+- **Detail**: W historii gałęzi obok plików S-01 pojawiają się `context/changes/norms-replacement/*` i `roadmap.md` (m.in. commit 4ebce96). Nie wpływa na jakość kodu S-01; warto trzymać touched-set per fazę w kolejnych zmianach.
+- **Fix**: Kolejne slice’y commitować z wąskim `git add` (jak Phase 4 / epilogue).
+- **Decision**: ACCEPTED-AS-RULE: Touched-set per phase (git commit scope)
+
+### F3 — Dokumentacja testów: `pytest` vs `python -m pytest`
 
 - **Severity**: 💡 OBSERVATION
 - **Impact**: 🏃 LOW — quick decision; fix is obvious and narrowly scoped
 - **Dimension**: Success Criteria
-- **Location**: context/changes/metadata-and-import/plan.md
-- **Detail**: Wiersze Progress 3.x mają suffix `06d9647` w working tree; `git status` pokazuje zmodyfikowany `plan.md` niezcommitowany po `06d9647`. Spójność tracking: chore commit lub epilogue.
-- **Fix**: Zacommitować `plan.md` przy starcie Phase 4 lub w epilogue.
-- **Decision**: FIXED — commit plan.md
+- **Location**: context/changes/metadata-and-import/plan.md (Progress 4.4), AGENTS.md
+- **Detail**: Plan i Progress używają `pytest -q`; na Windows bez Scripts w PATH polecenie pada (`pytest` not recognized). `python -m pytest -q` działa i jest zgodne z CI-style uruchomieniem.
+- **Fix**: W AGENTS.md sekcji „Uruchamianie i testy” dopisać `python -m pytest -q` jako domyślne na Windows.
+- **Decision**: FIXED — AGENTS.md zaktualizowany
 
-### F4 — Mock MNE w testach Phase 4
-
-- **Severity**: 💡 OBSERVATION
-- **Impact**: 🏃 LOW — quick decision; fix is obvious and narrowly scoped
-- **Dimension**: Pattern Consistency
-- **Location**: app/domain/eeg_file.py:29–48
-- **Detail**: `validate_eeg_header` ładuje MNE przez `_load_mne()` wewnątrz funkcji. Plan Phase 4 wskazuje `patch("mne.io.read_raw_edf")` — działa, o ile patch trafia przed wywołaniem w teście; alternatywnie `patch.object` na module po imporcie. Nie wymaga zmiany produkcyjnego kodu.
-- **Fix**: W `test_eeg_file.py` użyć `@patch("mne.io.read_raw_edf")` / `@patch("mne.io.read_raw_brainvision")` — import w `_load_mne` widzi zamockowany moduł.
-- **Decision**: SKIPPED — notatka na Phase 4
-
-## Plan drift matrix (Phases 1–3)
+## Plan drift matrix (Phases 1–4)
 
 | Plik | Plan | Implementacja | Werdykt |
 |------|------|---------------|---------|
-| `app/ui/app_window.py` | AppState, show_view destroy+create | Zgodne | MATCH |
-| `app/main.py` | AppWindow + MetadataFormView | Zgodne | MATCH |
-| `pyproject.toml` | mypy overrides CTk | + `build_meta` fix | MATCH (addendum) |
-| `metadata_form.py` | Formularz, lazy import, wykluczenia | + `_restore_from_state` | MATCH |
-| `file_import.py` | Dialog, thread, progress, Analizuj stub | Zgodne | MATCH |
-| `eeg_file.py` | Walidacja ext/companions/header | + lazy MNE | MATCH |
+| `app/ui/app_window.py` | AppState, show_view destroy+create, 900×650 | Zgodne | MATCH |
+| `app/main.py` | AppWindow + MetadataFormView, smoke-test | Zgodne | MATCH |
+| `pyproject.toml` | mypy overrides CTk | Zgodne | MATCH |
+| `metadata_form.py` | Formularz, lazy import, wykluczenia, blokada | + `_restore_from_state` | MATCH+ |
+| `eeg_file.py` | ext, companions, header, lazy MNE | Zgodne | MATCH |
+| `file_import.py` | Dialog, thread+after, progress, stub Analizuj | Zgodne | MATCH |
+| `test_eeg_file.py` | mock MNE, tmp_path BV | 9 testów, patch `mne.io.*` | MATCH |
+| `test_types.py` | BRAIN_INJURY + INTELLECTUAL_DISABILITY solo | Dodane; EPILEPSY bez duplikatu | MATCH |
 
 ## Success criteria verification
 
-### Automated (Phases 1–3)
+### Automated (all phases)
 
 | Check | Result |
 |-------|--------|
-| `python -m app.main --smoke-test` | PASS |
-| `mypy app/ --strict` | PASS (11 files) |
-| `pytest -q` | PASS (17 tests) |
+| `python -m app.main --smoke-test` | PASS (exit 0) |
+| `python -m mypy app/ --strict` | PASS (11 files) |
+| `python -m pytest -q --tb=short` | PASS (28 tests) |
+| `python -m pytest tests/unit/test_eeg_file.py -v` | PASS (9/9) |
 
-### Manual (Progress 1.4–3.8)
+### Manual (Progress)
 
-All `[x]` with SHAs — potwierdzone w sesji (w tym fix 3.8 `_restore_from_state`, 3.5 dowolne nieobsługiwane rozszerzenie np. `.css`).
+| Phase | Status |
+|-------|--------|
+| 1.4–1.5 | `[x]` + SHA a255733 |
+| 2.3–2.6 | `[x]` + SHA 4ebce96 |
+| 3.3–3.8 | `[x]` + SHA 06d9647 |
+| 4.4 | `[x]` + SHA a2143b1 (potwierdzone `python -m pytest -q` przez użytkownika) |
 
-### Phase 4
+Wszystkie wiersze Progress `[x]` z SHA (fazy 1–4).
 
-Pending — brak `test_eeg_file.py`.
+## What We're NOT Doing — guardrails
 
-## Cross-phase notes
+| Wykluczenie (plan) | Stan |
+|--------------------|------|
+| Drag & drop | Brak — OK |
+| Pipeline EEG / siatka / PDF | Brak — OK |
+| Persystencja sesji | AppState tylko w RAM — OK |
+| Walidacja kanałów/znaczników w imporcie | Tylko header MNE — OK |
+| Surowe µV w UI | Brak — OK |
 
-- Lazy import `mne` + `eeg_file` w wątku: poprawia UX gdy MNE nie zainstalowane; po `pip install -e .` walidacja działa (potwierdzone EEGBCI + BrainVision manual).
-- `FileImportView.__init__` resetuje `eeg_path` — zgodne z planem, zapobiega fałszywemu `ready_for_analysis()`.
+## Prior review resolution
+
+- F1 (Phase 4 brak) z przeglądu 2026-06-02 → **rozwiązane** w a2143b1.
+- F3 (plan.md SHA) → **rozwiązane** w 91875d0 epilogue.
+- F4 (mock MNE) → **zaimplementowane** zgodnie z notatką.

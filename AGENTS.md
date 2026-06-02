@@ -142,6 +142,6 @@ Agent NIE używa --onefile dla MNE-Python (zbyt długi czas startu) — używa -
 
 ## Uruchamianie i testy
 
-- **Testy:** `pytest -q`
+- **Testy:** `python -m pytest -q` (zalecane na Windows, gdy `pytest` nie jest w PATH; alias `pytest -q` działa po aktywacji venv z `Scripts` w PATH)
 - **Build .exe:** `pyinstaller neuroflag.spec --clean` (plik `.spec` tworzony w trakcie implementacji)
 - Brak serwera deweloperskiego — aplikacja uruchamia się jako okno GUI

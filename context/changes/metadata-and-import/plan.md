@@ -277,6 +277,10 @@ Kliknięcie 'Dalej →' (gdy aktywny):
       self._app_window.show_view(FileImportView)
   ```
 
+**Addendum (impl-review 2026-06-02):** Po powrocie z FileImportView (`← Wróć`) formularz
+przywraca pola z `app_state.metadata` metodą `_restore_from_state()` wywoływaną na końcu
+`__init__` — wspiera zachowanie danych metryki (manual 3.8) bez mutacji `PatientMetadata`.
+
 ### Success Criteria
 
 #### Automated Verification
