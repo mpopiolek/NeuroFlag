@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 import pytest
 
-from app.domain.norms import NormsLoadError, load
+from app.domain.norms import NormsLoadError, load, resolve_norms_path
 
 def _valid_norms() -> list[dict[str, object]]:
     return [
@@ -104,3 +105,59 @@ def test_invalid_json(tmp_path: Path) -> None:
 def test_file_not_found(tmp_path: Path) -> None:
     with pytest.raises(NormsLoadError, match="Cannot read"):
         load(tmp_path / "nonexistent.json")
+
+
+def test_resolve_norms_path_prefers_exe_dir_when_frozen(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    exe_path = tmp_path / "neuroflag.exe"
+    exe_path.touch()
+    norms_file = tmp_path / "norms.json"
+    norms_file.write_text("{}", encoding="utf-8")
+
+    monkeypatch.setattr(sys, "frozen", True, raising=False)
+    monkeypatch.setattr(sys, "executable", str(exe_path))
+    monkeypatch.setattr(sys, "_MEIPASS", str(tmp_path / "_internal"), raising=False)
+
+    assert resolve_norms_path() == norms_file
+
+
+def test_resolve_norms_path_falls_back_to_meipass_when_frozen(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    exe_path = tmp_path / "neuroflag.exe"
+    exe_path.touch()
+    meipass = tmp_path / "_internal"
+    meipass.mkdir()
+    bundled = meipass / "norms.json"
+    bundled.write_text("{}", encoding="utf-8")
+
+    monkeypatch.setattr(sys, "frozen", True, raising=False)
+    monkeypatch.setattr(sys, "executable", str(exe_path))
+    monkeypatch.setattr(sys, "_MEIPASS", str(meipass), raising=False)
+
+    assert resolve_norms_path() == bundled
+
+
+def test_load_prefers_exe_dir_norms_when_frozen(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    exe_path = tmp_path / "neuroflag.exe"
+    exe_path.touch()
+    meipass = tmp_path / "_internal"
+    meipass.mkdir()
+
+    bundled_payload = _valid_payload()
+    bundled_payload["version"] = 99
+    (meipass / "norms.json").write_text(json.dumps(bundled_payload), encoding="utf-8")
+
+    exe_payload = _valid_payload()
+    exe_payload["version"] = 1
+    (tmp_path / "norms.json").write_text(json.dumps(exe_payload), encoding="utf-8")
+
+    monkeypatch.setattr(sys, "frozen", True, raising=False)
+    monkeypatch.setattr(sys, "executable", str(exe_path))
+    monkeypatch.setattr(sys, "_MEIPASS", str(meipass), raising=False)
+
+    cfg = load()
+    assert cfg.version == 1

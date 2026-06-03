@@ -12,6 +12,8 @@ frustrację przy ręcznej podmiance przez psychologa-administratora.
 
 ## Current State Analysis
 
+> **Stan przed implementacją S-04 (historyczny).** Phase 1–2 adresują poniższe luki; po implementacji patrz sekcję Progress.
+
 F-01 dostarczył kompletną logikę domenową:
 - `app/domain/norms.py` — `load()` z pełną walidacją schematu; wszystkie ścieżki błędów
   owijają wyjątek jako `NormsLoadError` (w tym `FileNotFoundError` przez `except OSError`,
@@ -117,6 +119,10 @@ Wymaga importu `sys` (już obecny). Nie zmienia sygnatury publicznej `load()`.
 mock `sys.frozen = True`, `sys.executable` wskazuje na `tmp_path/neuroflag.exe`,
 plik `tmp_path/norms.json` istnieje → `resolve_norms_path()` zwraca `tmp_path/norms.json`.
 Drugi przypadek: brak pliku obok exe → fallback na `_MEIPASS/norms.json`.
+
+Opcjonalny test integracyjny `test_load_prefers_exe_dir_norms_when_frozen`:
+gdy obok `.exe` i w `_MEIPASS` są różne pliki `norms.json`, `load()` bez `path=`
+wczytuje wersję z katalogu `.exe`.
 
 #### 3. Aktualizacja app/main.py
 
@@ -280,6 +286,12 @@ Opcjonalnie: krok post-build w CI kopiuje domyślny `norms.json` obok `.exe`
 Zaktualizować `context/foundation/distribution.md` — sekcja artefaktu dystrybucyjnego
 wymienia `norms.json.template` i `docs/README-norms.md`.
 
+**CI contract (Windows build):** po `pyinstaller neuroflag.spec --clean` job CI
+weryfikuje obecność `dist/neuroflag/norms.json.template` i
+`dist/neuroflag/docs/README-norms.md` obok `.exe`. Jeśli PyInstaller 6 umieści
+pliki w `_internal/`, krok post-build kopiuje je do root dystrybucji przed
+asercją (patrz `.github/workflows/python-app.yml`).
+
 ### Success Criteria
 
 #### Automated Verification
@@ -345,13 +357,13 @@ Brak. S-04 nie zmienia schematu `norms.json` — istniejący plik pozostaje bez 
 
 #### Automated
 
-- [ ] 1.1 `mypy app/ --strict --ignore-missing-imports` — 0 błędów
-- [ ] 1.2 `mypy app/main.py --strict --ignore-missing-imports` — 0 błędów
-- [ ] 1.3 `ruff check app/main.py app/domain/norms.py` — 0 błędów
-- [ ] 1.4 `pytest tests/unit/test_norms.py -q` — test path resolution zielony
-- [ ] 1.5 `pytest tests/unit/test_main_cli.py -q` — wszystkie 4 testy zielone
-- [ ] 1.6 `pytest tests/unit/test_main_messages.py -q` — test formatowania zielony
-- [ ] 1.7 `pytest -q` — brak regresji
+- [x] 1.1 `mypy app/ --strict --ignore-missing-imports` — 0 błędów
+- [x] 1.2 `mypy app/main.py --strict --ignore-missing-imports` — 0 błędów
+- [x] 1.3 `ruff check app/main.py app/domain/norms.py` — 0 błędów
+- [x] 1.4 `pytest tests/unit/test_norms.py -q` — test path resolution zielony
+- [x] 1.5 `pytest tests/unit/test_main_cli.py -q` — wszystkie 4 testy zielone
+- [x] 1.6 `pytest tests/unit/test_main_messages.py -q` — test formatowania zielony
+- [x] 1.7 `pytest -q` — brak regresji
 
 #### Manual
 
@@ -363,10 +375,10 @@ Brak. S-04 nie zmienia schematu `norms.json` — istniejący plik pozostaje bez 
 
 #### Automated
 
-- [ ] 2.1 `python -c "import json; json.load(open('norms.json.template'))"` — plik jest poprawnym JSON
-- [ ] 2.2 `python app/main.py --validate-norms norms.json.template` → exit 0, stdout "OK"
+- [x] 2.1 `python -c "import json; json.load(open('norms.json.template'))"` — plik jest poprawnym JSON
+- [x] 2.2 `python app/main.py --validate-norms norms.json.template` → exit 0, stdout "OK"
 - [ ] 2.3 Po buildzie PyInstaller: `norms.json.template` i `docs/README-norms.md` istnieją w `dist/neuroflag/`
-- [ ] 2.4 `pytest -q` — brak regresji
+- [x] 2.4 `pytest -q` — brak regresji
 
 #### Manual
 

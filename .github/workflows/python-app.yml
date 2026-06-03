@@ -83,6 +83,27 @@ jobs:
         run: |
           pyinstaller neuroflag.spec --clean
 
+      - name: Verify and publish dist docs beside .exe
+        shell: pwsh
+        run: |
+          $dist = "dist/neuroflag"
+          foreach ($rel in @("norms.json.template", "docs/README-norms.md")) {
+            $beside = Join-Path $dist $rel
+            if (-not (Test-Path $beside)) {
+              $internal = Join-Path $dist "_internal/$rel"
+              if (Test-Path $internal) {
+                $destDir = Split-Path $beside -Parent
+                if ($destDir -and -not (Test-Path $destDir)) {
+                  New-Item -ItemType Directory -Force -Path $destDir | Out-Null
+                }
+                Copy-Item $internal $beside -Force
+              }
+            }
+            if (-not (Test-Path $beside)) {
+              throw "Missing dist artifact beside exe: $rel"
+            }
+          }
+
       - name: Smoke-test .exe
         run: |
           dist\neuroflag\neuroflag.exe --smoke-test

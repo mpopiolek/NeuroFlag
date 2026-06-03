@@ -2,96 +2,98 @@
 # Plan Review: S-04 — Wymiana bazy norm
 
 - **Plan**: `context/changes/norms-replacement/plan.md`
-- **Mode**: Deep
-- **Date**: 2026-06-01
-- **Verdict**: SOUND (after triage fixes)
-- **Findings**: 1 critical, 3 warnings, 2 observations
+- **Mode**: Deep (post-implementation refresh)
+- **Date**: 2026-06-03
+- **Verdict**: SOUND (after triage fixes 2026-06-03)
+- **Findings**: 0 critical, 2 warnings, 3 observations
 
 ## Verdicts
 
 | Dimension | Verdict |
 |-----------|---------|
-| End-State Alignment | FAIL |
-| Lean Execution | WARNING |
+| End-State Alignment | PASS |
+| Lean Execution | PASS |
 | Architectural Fitness | PASS |
-| Blind Spots | WARNING |
-| Plan Completeness | WARNING |
+| Blind Spots | PASS |
+| Plan Completeness | PASS |
 
 ## Grounding
 
-Grounding: 5/5 paths ✓ (`app/main.py`, `app/domain/norms.py`, `tests/unit/test_norms.py`, `norms.json`, `neuroflag.spec`), 3/3 symbols ✓ (`NormsLoadError`, `_TOP_LEVEL_KEYS`, `--smoke-test`), brief↔plan ✓. New files to create (`test_main_cli.py`, `norms.json.template`, `docs/README-norms.md`) correctly absent pre-implementation.
+Grounding: 7/7 paths ✓ (`app/main.py`, `app/domain/norms.py`, `tests/unit/test_norms.py`, `norms.json`, `neuroflag.spec`, `norms.json.template`, `docs/README-norms.md`), 3/3 symbols ✓ (`NormsLoadError`, `resolve_norms_path`, `--validate-norms`), brief↔plan ✓. Implementacja Phase 1–2 w kodzie jest zgodna z planem po triage z 2026-06-01.
 
 ## Findings
 
-### F1 — Podmiana norms.json obok .exe nie zadziała
-
-- **Severity**: ❌ CRITICAL
-- **Impact**: 🔬 HIGH — architectural stakes; think carefully before deciding
-- **Dimension**: End-State Alignment
-- **Location**: Current State Analysis; Phase 2 README; „What We're NOT Doing"
-- **Detail**: Plan zakłada, że administrator podmienia `dist/neuroflag/norms.json` obok `neuroflag.exe` (`distribution.md:25`, `distribution.md:82`, plan Phase 2). Tymczasem `resolve_norms_path()` (`app/domain/norms.py:39-41`) w trybie PyInstaller zwraca `Path(sys._MEIPASS) / "norms.json"` — w PyInstaller 6 onedir to `dist/neuroflag/_internal/norms.json`, nie katalog obok `.exe`. Plik obok `.exe` jest ignorowany; podmiana zgodnie z dokumentacją nie zmieni norm używanych przez aplikację. Cały cel FR-008/S-04 jest zagrożony mimo poprawnej walidacji i dialogu błędu.
-- **Fix A ⭐ Recommended**: Rozszerzyć S-04 o fazę (lub wpis w Phase 1) modyfikującą `resolve_norms_path()`: gdy `getattr(sys, "frozen", False)` — preferuj `Path(sys.executable).parent / "norms.json"` jeśli plik istnieje; fallback na `_MEIPASS/norms.json`. Dodać test w `test_norms.py` z mockiem `sys.frozen`/`sys.executable`. Zaktualizować `neuroflag.spec` lub krok CI build tak, by domyślny `norms.json` lądował obok `.exe` (np. post-build copy). Usunąć z „What We're NOT Doing" wpis o braku zmian w `norms.py`.
-  - Strength: Zgodne z `distribution.md`, PRD FR-008 i Desired End State S-04; podmiana bez rebuildu działa naprawdę.
-  - Tradeoff: Dotyka loadera z F-01; wymaga testu PyInstaller path + ewentualnie kroku build.
-  - Confidence: HIGH — kod i dokumentacja dystrybucji są sprzeczne; `_MEIPASS`-only to znany antywzorzec dla plików nadpisywalnych.
-  - Blind spot: Dokładna lokalizacja `datas` w PyInstaller 6 warto potwierdzić jednym buildem lokalnym.
-- **Fix B**: Udokumentować podmianę w `_internal/norms.json`
-  - Strength: Zero zmian w kodzie.
-  - Tradeoff: Sprzeczne z `distribution.md`, ukryte dla administratora, ryzyko uszkodzenia bundla przy edycji `_internal/`.
-  - Confidence: LOW — odrzuca wymaganie produktowe.
-  - Blind spot: Brak.
-- **Decision**: FIXED via Fix A — exe-dir-first `resolve_norms_path()`; formularz UI → osobny slice po S-01
-
-### F2 — Artefakty docs nie trafią do dystrybucji
+### F1 — Progress 2.3 bez enforcement w CI
 
 - **Severity**: ⚠️ WARNING
 - **Impact**: 🔎 MEDIUM — real tradeoff; pause to reason through it
 - **Dimension**: Blind Spots
-- **Location**: Phase 2; Desired End State #3–4
-- **Detail**: Plan tworzy `norms.json.template` i `docs/README-norms.md` w repozytorium, ale nie wspomina `neuroflag.spec:64-66` (`datas`). Bez bundlingu placówka dostaje tylko `.exe` + `_internal/` — szablon i instrukcja nie będą obok aplikacji, mimo że error dialog (`plan.md:137`) odsyła do `norms.json.template`.
-- **Fix**: Dodać do Phase 2 wpis w `neuroflag.spec` `datas`: `(norms.json.template, ".")` i `(docs/README-norms.md, "docs")`; zaktualizować `distribution.md` o te pliki w artefakcie. Dodać do Progress automated check: pliki istnieją w `dist/neuroflag/` po buildzie.
-  - Strength: Administrator ma template i README tam, gdzie pracuje — zgodne z error dialog i FR-008.
-  - Tradeoff: Wymaga rebuildu `.exe` i aktualizacji smoke-test checklist.
-  - Confidence: HIGH — obecny spec bundluje tylko `norms.json`.
-  - Blind spot: Rozmiar dist/ — marginalny.
-- **Decision**: FIXED — dodano bundling w `neuroflag.spec` Phase 2
-
-### F3 — Sprzeczność: „norms.py bez zmian" vs podmiana użytkownika
+- **Location**: Phase 2 Automated Verification (2.3); `.github/workflows/python-app.yml`
+- **Detail**: Plan wymaga, by po buildzie PyInstaller istniały `dist/neuroflag/norms.json.template` i `dist/neuroflag/docs/README-norms.md`. CI buduje `.exe` (job `build`, linie 82–84) i uruchamia tylko `--smoke-test` (86–88), bez sprawdzenia obecności artefaktów docs. Regresja w `neuroflag.spec` (np. usunięcie wpisu z `datas`) nie zostanie złapana automatycznie; implementer musi ręcznie domknąć 2.3.
+- **Fix**: Dodać krok CI po `pyinstaller`: `Test-Path dist\neuroflag\norms.json.template` oraz `Test-Path dist\neuroflag\docs\README-norms.md` (fail build jeśli brak). Opcjonalnie dopisać ten krok do planu Phase 2 jako „CI contract”.
+  - Strength: Zamknięcie luki między planem a pipeline; zgodne z triage F2 z poprzedniego review.
+  - Tradeoff: Build Windows musi przejść na gałęzi z aktualnym spec — już i tak jest gate na `main`.
+  - Confidence: HIGH — workflow czytany linia po linii; brak assertów na dist.
+  - Blind spot: Dokładna ścieżka w PyInstaller 6 onedir — patrz F2.
+- **Decision**: FIXED — dodano krok CI `Verify and publish dist docs beside .exe` w `.github/workflows/python-app.yml` + wpis CI contract w planie Phase 2
 
 - **Severity**: ⚠️ WARNING
-- **Impact**: 🏃 LOW — quick decision; fix is obvious and narrowly scoped
-- **Dimension**: Lean Execution
-- **Location**: What We're NOT Doing; Implementation Approach
-- **Detail**: Plan trzy razy stwierdza, że `norms.py` nie wymaga zmian, podczas gdy bez poprawki `resolve_norms_path()` podmiana norm jest iluzoryczna (F1). Implementer traktujący „What We're NOT Doing" dosłownie dostarczy dialog i CLI, ale nie spełni FR-008.
-- **Fix**: Usunąć „Zmian w norms.py" z out-of-scope; dodać Phase 1 (lub podfazę) z intentem „exe-dir-first path resolution" w `app/domain/norms.py` + test jednostkowy.
-- **Decision**: FIXED — Phase 1 rozszerzona o `resolve_norms_path()`
+- **Impact**: 🔬 HIGH — architectural stakes; think carefully before deciding
+- **Dimension**: Blind Spots
+- **Location**: Phase 2 bundling; `distribution.md`; error dialog (`norms.json.template`)
+- **Detail**: Plan, README i `format_norms_error_message()` zakładają, że `norms.json.template` leży obok `neuroflag.exe`. `neuroflag.spec` bundluje template z dest `"."`, ale PyInstaller 6 onedir często umieszcza `datas` w `_internal/` (obok bibliotek), nie w root folderze dystrybucji. `resolve_norms_path()` ma exe-dir-first dla `norms.json` (podmiana działa), lecz template/README mogą być niewidoczne dla administratora tam, gdzie wskazuje instrukcja. Progress 2.3 jest `[ ]` — luka nie jest jeszcze zamknięta jednym buildem.
+- **Fix A ⭐ Recommended**: Po buildzie zweryfikować faktyczne ścieżki w `dist/neuroflag/`; jeśli template ląduje w `_internal/`, dodać post-build copy (PowerShell w CI) do root obok `.exe` ALBO zaktualizować `docs/README-norms.md` i komunikat błędu do realnej ścieżki. Dopisać w planie Phase 2 jawny krok weryfikacji layoutu.
+  - Strength: Dokumentacja i artefakty zgodne z rzeczywistością dystrybucji; administrator znajdzie pliki.
+  - Tradeoff: Post-build copy = dodatkowy krok w CI/spec; aktualizacja docs = mniej wygodna podmiana.
+  - Confidence: MED — zachowanie PyInstaller 6 wymaga potwierdzenia jednym lokalnym/CI buildem (2.3).
+  - Blind spot: Wersja PyInstaller w `[dev]` extras nie była w tej sesji uruchomiona lokalnie.
+- **Fix B**: Zaakceptować lokalizację w `_internal/` i wskazać w README pełną ścieżkę `_internal/norms.json.template`
+  - Strength: Zero zmian w buildzie.
+  - Tradeoff: Sprzeczne z obecnym `distribution.md` i komunikatem error dialog; gorsze UX dla administratora.
+  - Confidence: LOW — odrzuca intencję produktową FR-008.
+  - Blind spot: Brak.
+- **Decision**: FIXED via Fix A — CI kopiuje z `_internal/` do root obok `.exe` gdy trzeba; plan Phase 2 uzupełniony
 
-### F4 — `_comment` w `band_ranges` może złamać walidację
+### F3 — „Current State Analysis” opisuje stan sprzed implementacji
 
-- **Severity**: ⚠️ WARNING
+- **Severity**: 💡 OBSERVATION
 - **Impact**: 🏃 LOW — quick decision; fix is obvious and narrowly scoped
 - **Dimension**: Plan Completeness
-- **Location**: Phase 2 — norms.json.template Contract
-- **Detail**: Plan mówi o `"_comment"` „przy każdym polu band_ranges". `_parse_band_ranges()` (`norms.py:48-53`) iteruje **wszystkie** klucze w `band_ranges` — klucz `"_comment"` jako string (nie obiekt z `l_freq`/`h_freq`) rzuci `NormsLoadError`. Bezpieczne są tylko: `_comment` na root OR `_comment` **wewnątrz** obiektów pasma (np. `Delta._comment`), nie jako sibling `Delta`/`Theta`.
-- **Fix**: W Contract Phase 2 doprecyzować: `_comment` dozwolony wyłącznie na root i wewnątrz każdego wpisu pasma (`Delta`, `Theta`, …); **zakaz** `_comment` jako bezpośredniego klucza w `band_ranges`. Dodać przykład JSON w planie.
-- **Decision**: FIXED — Contract Phase 2 doprecyzowany
+- **Location**: Current State Analysis; Key Discoveries (linie 29–41 planu)
+- **Detail**: Sekcja nadal opisuje `resolve_norms_path()` jako `_MEIPASS`-only i `sys.exit()` jako jedyny gap — to było prawdą przed S-04, ale Phase 1 już to adresuje, a kod jest zaimplementowany. Może mylić czytelników planu i agenta przy `/10x-archive`.
+- **Fix**: Dodać nagłówek „Stan przed implementacją S-04 (historyczny)” lub zaktualizować bullet na „było: _MEIPASS-only; Phase 1: exe-dir-first”.
+- **Decision**: FIXED — nagłówek historyczny w plan.md Current State Analysis
 
-### F5 — `mypy app/ --strict` w Desired End State bez Progress item
+### F4 — Brak testu end-to-end `load()` z exe-dir vs `_MEIPASS`
 
-- **Severity**: 👁 OBSERVATION
+- **Severity**: 💡 OBSERVATION
 - **Impact**: 🏃 LOW — quick decision; fix is obvious and narrowly scoped
-- **Dimension**: Plan Completeness
-- **Location**: Desired End State #5; Progress Phase 1
-- **Detail**: Desired End State obiecuje `mypy app/ --strict`, Progress Phase 1 sprawdza tylko `mypy app/main.py`. Po S-04 (bez nowych modułów poza testami) regresja mało prawdopodobna, ale promise gap istnieje.
-- **Fix**: Dodać Progress item `1.x mypy app/ --strict — 0 błędów` lub zawęzić Desired End State do `mypy app/main.py`.
-- **Decision**: FIXED — Progress 1.1 `mypy app/ --strict`
+- **Dimension**: Blind Spots
+- **Location**: Phase 1 test path resolution
+- **Detail**: Testy mockują `resolve_norms_path()` w izolacji; brak testu, że `load()` wczytuje **inną treść** z pliku obok `.exe` niż z bundla `_MEIPASS` gdy oba istnieją. Regresja w `load()` (ignorowanie `resolve_norms_path()`) nie zostałaby złapana.
+- **Fix**: Opcjonalny test integracyjny: dwa różne JSON-y w exe-dir vs meipass, `load()` bez `path=` zwraca wartość z exe-dir.
+- **Decision**: FIXED — `test_load_prefers_exe_dir_norms_when_frozen` w `test_norms.py`
 
-### F6 — Dialog błędu GUI bez testu automatycznego
+### F5 — Dialog GUI nadal tylko manual (akceptowane)
 
-- **Severity**: 👁 OBSERVATION
+- **Severity**: 💡 OBSERVATION
 - **Impact**: 🏃 LOW — quick decision; fix is obvious and narrowly scoped
 - **Dimension**: Blind Spots
 - **Location**: Phase 1 Manual Verification
-- **Detail**: `_show_norms_error()` woła `tkinter.Tk()` — nie da się łatwo przetestować w headless CI. Plan polega na manual verification; akceptowalne dla MVP, ale regresja (np. import przed withdraw) nie zostanie złapana.
-- **Fix**: Opcjonalnie wyekstrahować logikę do funkcji testowalnej bez GUI (`_format_norms_error_message`) + test jednostkowy treści komunikatu; messagebox zostaje manual.
-- **Decision**: FIXED — `format_norms_error_message()` + `test_main_messages.py`
+- **Detail**: `_show_norms_error()` woła `tkinter.Tk()` — bez testu automatycznego (plan świadomie polega na manual + `format_norms_error_message()` w `test_main_messages.py`). Zgodne z triage F6 z 2026-06-01.
+- **Fix**: Brak wymaganej zmiany planu; utrzymać w manual checklist przy archiwizacji.
+- **Decision**: ACCEPTED — manual wystarczy dla MVP
+
+| Plan item | Status w kodzie |
+|-----------|-----------------|
+| exe-dir-first `resolve_norms_path()` | ✅ `norms.py:39-46` + 2 testy |
+| `--validate-norms` CLI | ✅ `main.py:47-52` + 4 testy subprocess |
+| `format_norms_error_message()` | ✅ + `test_main_messages.py` |
+| `norms.json.template` + README | ✅ pliki istnieją, `--validate-norms template` OK |
+| `neuroflag.spec` datas | ✅ wpisy dodane |
+| Progress manual 1.8–1.10, 2.5–2.6 | ⏳ oczekuje potwierdzenia użytkownika |
+| Progress 2.3 PyInstaller dist | ⏳ niezweryfikowane (brak PyInstaller lokalnie / brak assertu CI) |
+
+## Triage z poprzedniego review (2026-06-01)
+
+Wszystkie F1–F6 z pierwszego review oznaczone FIXED w planie — implementacja potwierdza poprawki (path resolution, bundling w spec, `_comment` contract, testy CLI/messages).

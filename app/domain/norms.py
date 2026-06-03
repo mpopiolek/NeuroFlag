@@ -37,8 +37,13 @@ def _as_int(value: object, label: str) -> int:
 
 
 def resolve_norms_path() -> Path:
-    base = Path(getattr(sys, "_MEIPASS", None) or Path(__file__).parent.parent.parent)
-    return base / "norms.json"
+    if getattr(sys, "frozen", False):
+        exe_norms = Path(sys.executable).parent / "norms.json"
+        if exe_norms.is_file():
+            return exe_norms
+        meipass = getattr(sys, "_MEIPASS")
+        return Path(str(meipass)) / "norms.json"
+    return Path(__file__).parent.parent.parent / "norms.json"
 
 
 def _parse_band_ranges(raw: Any) -> dict[str, BandRange]:

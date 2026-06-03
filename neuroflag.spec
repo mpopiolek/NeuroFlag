@@ -64,6 +64,8 @@ hidden_imports = [
 datas = [
     # Baza norm — nadpisywalna przez użytkownika
     (str(ROOT / "norms.json"), "."),
+    (str(ROOT / "norms.json.template"), "."),
+    (str(ROOT / "docs" / "README-norms.md"), "docs"),
     # Czcionki i ikony GUI (katalog tworzony podczas implementacji UI)
     # (str(ROOT / "app" / "ui" / "assets"), "app/ui/assets"),
     # Moduły CustomTkinter zawierają zasoby (motywy, czcionki)

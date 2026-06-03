@@ -23,6 +23,9 @@ dist/
   neuroflag/
     neuroflag.exe       ← punkt wejścia (uruchamia GUI)
     norms.json          ← baza norm, nadpisywalna przez użytkownika
+    norms.json.template ← wzór schematu z komentarzami (informacyjny)
+    docs/
+      README-norms.md   ← instrukcja wymiany norm dla administratora
     _internal/          ← biblioteki Python (mne, scipy, numpy itd.)
 ```
 
