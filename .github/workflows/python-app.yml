@@ -88,7 +88,7 @@ jobs:
           dist\neuroflag\neuroflag.exe --smoke-test
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: neuroflag-win64
           path: dist\neuroflag\
