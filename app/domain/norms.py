@@ -5,12 +5,46 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from app.domain.types import BandRange, NormEntry, NormsConfig
+from app.domain.types import (
+    BandRange,
+    CategoryDescriptions,
+    NormEntry,
+    NormsConfig,
+    RecommendationRules,
+)
 
 REQUIRED_NORM_COUNT = 10
 
-_TOP_LEVEL_KEYS = frozenset(
-    {"version", "power_line_frequency", "recommendation_threshold", "band_ranges", "norms"}
+_DEFAULT_RECOMMENDATION_RULES = RecommendationRules(
+    indication_min_red=5,
+    indication_max_green=3,
+    no_indication_min_green=4,
+    no_indication_max_red=3,
+)
+
+_DEFAULT_CATEGORY_DESCRIPTIONS = CategoryDescriptions(
+    wskazanie=(
+        "Profil EEG dziecka wykazuje istotne odchylenia od norm grupy kontrolnej"
+        " w wielu analizowanych kombinacjach lokalizacja–zadanie–pasmo."
+        " Zaleca się konsultację ze specjalistą (neurologiem dziecięcym lub"
+        " neuropsychologiem) w celu pogłębionej diagnostyki."
+    ),
+    obserwacja=(
+        "Profil EEG dziecka wykazuje odchylenia od norm w części analizowanych"
+        " kombinacji. Zaleca się uważną obserwację funkcjonowania dziecka oraz"
+        " ponowne badanie przesiewowe po 3–6 miesiącach lub wcześniej w przypadku"
+        " zauważalnych trudności."
+    ),
+    brak=(
+        "Profil EEG dziecka pozostaje w granicach normy grupy kontrolnej"
+        " w przeważającej liczbie analizowanych kombinacji. Na podstawie tego"
+        " badania przesiewowego brak aktualnych wskazań do dalszej diagnostyki"
+        " neurologicznej."
+    ),
+)
+
+_REQUIRED_TOP_LEVEL_KEYS = frozenset(
+    {"version", "power_line_frequency", "band_ranges", "norms"}
 )
 _NORM_ENTRY_KEYS = frozenset({"id", "channel", "task", "band", "mean_z", "mean_k"})
 
@@ -80,6 +114,49 @@ def _parse_norm_entry(raw: Any, index: int) -> NormEntry:
     )
 
 
+def _parse_recommendation_rules(raw: Any) -> RecommendationRules:
+    if not isinstance(raw, dict):
+        raise NormsLoadError("'recommendation_rules' must be a JSON object")
+    fields = (
+        "indication_min_red",
+        "indication_max_green",
+        "no_indication_min_green",
+        "no_indication_max_red",
+    )
+    for field in fields:
+        if field not in raw:
+            raise NormsLoadError(f"recommendation_rules missing key '{field}'")
+    values = {f: _as_int(raw[f], f"recommendation_rules.{f}") for f in fields}
+    for f, v in values.items():
+        if v < 0:
+            raise NormsLoadError(
+                f"recommendation_rules.{f} must be >= 0, got {v}"
+            )
+    return RecommendationRules(
+        indication_min_red=values["indication_min_red"],
+        indication_max_green=values["indication_max_green"],
+        no_indication_min_green=values["no_indication_min_green"],
+        no_indication_max_red=values["no_indication_max_red"],
+    )
+
+
+def _parse_category_descriptions(raw: Any) -> CategoryDescriptions:
+    if not isinstance(raw, dict):
+        raise NormsLoadError("'category_descriptions' must be a JSON object")
+    for field in ("wskazanie", "obserwacja", "brak"):
+        if field not in raw:
+            raise NormsLoadError(f"category_descriptions missing key '{field}'")
+        if not isinstance(raw[field], str) or not raw[field].strip():
+            raise NormsLoadError(
+                f"category_descriptions.{field} must be a non-empty string"
+            )
+    return CategoryDescriptions(
+        wskazanie=str(raw["wskazanie"]),
+        obserwacja=str(raw["obserwacja"]),
+        brak=str(raw["brak"]),
+    )
+
+
 def load(path: Path | None = None) -> NormsConfig:
     resolved = path if path is not None else resolve_norms_path()
     try:
@@ -94,7 +171,7 @@ def load(path: Path | None = None) -> NormsConfig:
     if not isinstance(data, dict):
         raise NormsLoadError("norms.json root must be a JSON object")
 
-    for key in _TOP_LEVEL_KEYS:
+    for key in _REQUIRED_TOP_LEVEL_KEYS:
         if key not in data:
             raise NormsLoadError(f"norms.json missing required key '{key}'")
 
@@ -115,12 +192,27 @@ def load(path: Path | None = None) -> NormsConfig:
                 f"norms[{i}] references band '{entry.band}' not defined in band_ranges"
             )
 
+    if "recommendation_rules" in data:
+        rec_rules = _parse_recommendation_rules(data["recommendation_rules"])
+    elif "recommendation_threshold" in data:
+        # Migracja ze starego schematu — mapuj na domyślne progi 5/3/4/3
+        rec_rules = _DEFAULT_RECOMMENDATION_RULES
+    else:
+        raise NormsLoadError(
+            "norms.json missing 'recommendation_rules'"
+            " (or legacy 'recommendation_threshold' for migration)"
+        )
+
+    if "category_descriptions" in data:
+        cat_desc = _parse_category_descriptions(data["category_descriptions"])
+    else:
+        cat_desc = _DEFAULT_CATEGORY_DESCRIPTIONS
+
     return NormsConfig(
         version=_as_int(data["version"], "version"),
         power_line_frequency=_as_float(data["power_line_frequency"], "power_line_frequency"),
-        recommendation_threshold=_as_int(
-            data["recommendation_threshold"], "recommendation_threshold"
-        ),
         band_ranges=band_ranges,
         norms=norm_entries,
+        recommendation_rules=rec_rules,
+        category_descriptions=cat_desc,
     )

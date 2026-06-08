@@ -2,7 +2,17 @@
   "version": 1,
   "description": "NeuroFlag — domyślna baza norm. Badanie N=200, wiek 6–10 lat. Wartości potwierdzone przez eksperta domenowego 2026-05-29. Zakresy pasm potwierdzone 2026-05-30.",
   "power_line_frequency": 50,
-  "recommendation_threshold": 3,
+  "recommendation_rules": {
+    "indication_min_red": 5,
+    "indication_max_green": 3,
+    "no_indication_min_green": 4,
+    "no_indication_max_red": 3
+  },
+  "category_descriptions": {
+    "wskazanie": "Profil EEG dziecka wykazuje istotne odchylenia od norm grupy kontrolnej w wielu analizowanych kombinacjach lokalizacja–zadanie–pasmo. Zaleca się konsultację ze specjalistą (neurologiem dziecięcym lub neuropsychologiem) w celu pogłębionej diagnostyki.",
+    "obserwacja": "Profil EEG dziecka wykazuje odchylenia od norm w części analizowanych kombinacji. Zaleca się uważną obserwację funkcjonowania dziecka oraz ponowne badanie przesiewowe po 3–6 miesiącach lub wcześniej w przypadku zauważalnych trudności.",
+    "brak": "Profil EEG dziecka pozostaje w granicach normy grupy kontrolnej w przeważającej liczbie analizowanych kombinacji. Na podstawie tego badania przesiewowego brak aktualnych wskazań do dalszej diagnostyki neurologicznej."
+  },
   "band_ranges": {
     "Delta": { "l_freq": 0.5,  "h_freq": 4.0  },
     "Theta": { "l_freq": 4.0,  "h_freq": 8.0  },

@@ -78,9 +78,25 @@ class NormEntry:
 
 
 @dataclass(frozen=True)
+class RecommendationRules:
+    indication_min_red: int
+    indication_max_green: int
+    no_indication_min_green: int
+    no_indication_max_red: int
+
+
+@dataclass(frozen=True)
+class CategoryDescriptions:
+    wskazanie: str
+    obserwacja: str
+    brak: str
+
+
+@dataclass(frozen=True)
 class NormsConfig:
     version: int
     power_line_frequency: float
-    recommendation_threshold: int
     band_ranges: dict[str, BandRange]
     norms: tuple[NormEntry, ...]
+    recommendation_rules: RecommendationRules
+    category_descriptions: CategoryDescriptions
