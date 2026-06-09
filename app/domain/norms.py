@@ -10,6 +10,8 @@ from app.domain.types import (
     CategoryDescriptions,
     NormEntry,
     NormsConfig,
+    ObservationCategory,
+    ObservationChecklist,
     RecommendationRules,
 )
 
@@ -20,6 +22,53 @@ _DEFAULT_RECOMMENDATION_RULES = RecommendationRules(
     indication_max_green=3,
     no_indication_min_green=4,
     no_indication_max_red=3,
+)
+
+_DEFAULT_OBSERVATION_CHECKLIST = ObservationChecklist(
+    title="Co obserwować — wskazówki dla pedagoga i rodzica",
+    intro=(
+        "Poniższe obszary funkcjonowania warto śledzić niezależnie od wyniku"
+        " badania przesiewowego. Trudności w kilku kategoriach jednocześnie"
+        " mogą uzasadniać konsultację ze specjalistą."
+    ),
+    categories=(
+        ObservationCategory(
+            title="Uwaga i koncentracja",
+            items=(
+                "Trudności z utrzymaniem uwagi na zadaniu przez 15–20 minut",
+                "Łatwe rozpraszanie przez bodźce w otoczeniu (dźwięki, ruch)",
+                "Potrzeba wielokrotnego powtarzania poleceń",
+                "Kłopoty z powróceniem do przerwanego zadania",
+            ),
+        ),
+        ObservationCategory(
+            title="Pamięć robocza",
+            items=(
+                "Trudności z zapamiętaniem instrukcji złożonych z kilku kroków",
+                "Szybkie zapominanie materiału omówionego na lekcji",
+                "Kłopoty z liczeniem w pamięci bez pomocy palców lub kartki",
+                "Konieczność wielokrotnego czytania tego samego fragmentu",
+            ),
+        ),
+        ObservationCategory(
+            title="Przetwarzanie wzrokowo-przestrzenne",
+            items=(
+                "Mylenie podobnych liter lub cyfr (np. b/d, p/q, 6/9)",
+                "Trudności z orientacją na kartce — gubienie miejsca w tekście",
+                "Wolne tempo przepisywania z tablicy lub z książki",
+                "Kłopoty z zadaniami geometrycznymi, mapami i schematami",
+            ),
+        ),
+        ObservationCategory(
+            title="Tempo pracy i zmęczenie poznawcze",
+            items=(
+                "Wolniejsze tempo wykonywania zadań niż rówieśnicy",
+                "Szybkie zmęczenie podczas intensywnej pracy umysłowej",
+                "Trudności z nadążaniem podczas dyktanda lub szybkich instrukcji",
+                "Wahania jakości pracy w ciągu dnia szkolnego",
+            ),
+        ),
+    ),
 )
 
 _DEFAULT_CATEGORY_DESCRIPTIONS = CategoryDescriptions(
@@ -140,6 +189,42 @@ def _parse_recommendation_rules(raw: Any) -> RecommendationRules:
     )
 
 
+def _parse_observation_checklist(raw: Any) -> ObservationChecklist:
+    if not isinstance(raw, dict):
+        raise NormsLoadError("'observation_checklist' must be a JSON object")
+    for key in ("title", "intro", "categories"):
+        if key not in raw:
+            raise NormsLoadError(f"observation_checklist missing key '{key}'")
+    if not isinstance(raw["title"], str) or not raw["title"].strip():
+        raise NormsLoadError("observation_checklist.title must be a non-empty string")
+    if not isinstance(raw["intro"], str) or not raw["intro"].strip():
+        raise NormsLoadError("observation_checklist.intro must be a non-empty string")
+    cats_raw = raw["categories"]
+    if not isinstance(cats_raw, list) or len(cats_raw) == 0:
+        raise NormsLoadError("observation_checklist.categories must be a non-empty array")
+    categories: list[ObservationCategory] = []
+    for idx, cat in enumerate(cats_raw):
+        if not isinstance(cat, dict):
+            raise NormsLoadError(f"observation_checklist.categories[{idx}] must be an object")
+        for key in ("title", "items"):
+            if key not in cat:
+                raise NormsLoadError(
+                    f"observation_checklist.categories[{idx}] missing key '{key}'"
+                )
+        items_raw = cat["items"]
+        if not isinstance(items_raw, list) or len(items_raw) == 0:
+            raise NormsLoadError(
+                f"observation_checklist.categories[{idx}].items must be a non-empty array"
+            )
+        items = tuple(str(item) for item in items_raw)
+        categories.append(ObservationCategory(title=str(cat["title"]), items=items))
+    return ObservationChecklist(
+        title=str(raw["title"]),
+        intro=str(raw["intro"]),
+        categories=tuple(categories),
+    )
+
+
 def _parse_category_descriptions(raw: Any) -> CategoryDescriptions:
     if not isinstance(raw, dict):
         raise NormsLoadError("'category_descriptions' must be a JSON object")
@@ -208,6 +293,11 @@ def load(path: Path | None = None) -> NormsConfig:
     else:
         cat_desc = _DEFAULT_CATEGORY_DESCRIPTIONS
 
+    if "observation_checklist" in data:
+        obs_checklist = _parse_observation_checklist(data["observation_checklist"])
+    else:
+        obs_checklist = _DEFAULT_OBSERVATION_CHECKLIST
+
     return NormsConfig(
         version=_as_int(data["version"], "version"),
         power_line_frequency=_as_float(data["power_line_frequency"], "power_line_frequency"),
@@ -215,4 +305,5 @@ def load(path: Path | None = None) -> NormsConfig:
         norms=norm_entries,
         recommendation_rules=rec_rules,
         category_descriptions=cat_desc,
+        observation_checklist=obs_checklist,
     )

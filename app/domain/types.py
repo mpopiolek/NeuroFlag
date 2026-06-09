@@ -93,6 +93,21 @@ class CategoryDescriptions:
 
 
 @dataclass(frozen=True)
+class ObservationCategory:
+    title: str
+    items: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class ObservationChecklist:
+    """Stała sekcja raportu PDF — lista obserwacyjna dla pedagoga/rodzica."""
+
+    title: str
+    intro: str
+    categories: tuple[ObservationCategory, ...]
+
+
+@dataclass(frozen=True)
 class NormsConfig:
     version: int
     power_line_frequency: float
@@ -100,3 +115,4 @@ class NormsConfig:
     norms: tuple[NormEntry, ...]
     recommendation_rules: RecommendationRules
     category_descriptions: CategoryDescriptions
+    observation_checklist: ObservationChecklist

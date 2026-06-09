@@ -12,6 +12,8 @@ from app.domain.types import (
     CellColor,
     NormEntry,
     NormsConfig,
+    ObservationCategory,
+    ObservationChecklist,
     RecommendationRules,
     ScreeningCategory,
 )
@@ -46,6 +48,15 @@ _NORMS_10: tuple[NormEntry, ...] = tuple(
 )
 
 
+_CHECKLIST = ObservationChecklist(
+    title="Test",
+    intro="Test intro",
+    categories=(
+        ObservationCategory(title="Test kategoria", items=("Pozycja 1",)),
+    ),
+)
+
+
 def _config(
     *,
     rules: RecommendationRules = _RULES,
@@ -58,6 +69,7 @@ def _config(
         norms=_NORMS_10,
         recommendation_rules=rules,
         category_descriptions=descriptions,
+        observation_checklist=_CHECKLIST,
     )
 
 
