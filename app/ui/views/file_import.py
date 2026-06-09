@@ -7,7 +7,8 @@ from typing import TYPE_CHECKING
 
 import customtkinter as ctk
 
-from app.domain.eeg_file import EEGFileError
+from app.domain.channels import get_missing_canonical
+from app.domain.eeg_file import EEGFileError, get_channel_names
 from app.ui.app_window import AppState
 
 if TYPE_CHECKING:
@@ -115,13 +116,17 @@ class FileImportView(ctk.CTkFrame):
         from app.domain import eeg_file
 
         error: EEGFileError | None = None
+        channels: list[str] = []
         try:
             eeg_file.validate_eeg_header(path)
+            channels = get_channel_names(path)
         except EEGFileError as exc:
             error = exc
-        self.after(0, self._on_result, path, error)
+        self.after(0, self._on_result, path, error, channels)
 
-    def _on_result(self, path: Path, error: EEGFileError | None) -> None:
+    def _on_result(
+        self, path: Path, error: EEGFileError | None, channels: list[str]
+    ) -> None:
         self._validating = False
         self._progress.stop()
         self._progress.pack_forget()
@@ -137,15 +142,33 @@ class FileImportView(ctk.CTkFrame):
             return
 
         self._app_state.eeg_path = path
-        self._status_label.configure(
-            text="✓ Plik wczytany poprawnie",
-            text_color="#008800",
-        )
+        self._app_state.available_channels = channels
+        self._app_state.channel_overrides = {}
+
+        missing = get_missing_canonical(channels)
+        if missing:
+            self._status_label.configure(
+                text="⚠ Brak C3/O1 — wybór kanału wymagany przed analizą",
+                text_color="#A07000",
+            )
+        else:
+            self._status_label.configure(
+                text="✓ Plik wczytany poprawnie",
+                text_color="#008800",
+            )
         self._analyze_button.configure(state="normal")
 
     def _on_analyze(self) -> None:
         if not self._app_state.ready_for_analysis():
             return
+
+        missing = get_missing_canonical(self._app_state.available_channels)
+        if missing:
+            from app.ui.views.channel_mapping import ChannelMappingView
+
+            self._app_window.show_view(ChannelMappingView, missing_channels=missing)
+            return
+
         from app.ui.views.analysis import AnalysisView
 
         self._app_window.show_view(AnalysisView)

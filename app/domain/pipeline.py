@@ -8,7 +8,11 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from app.domain.channels import normalize_channel_names, require_channels
+from app.domain.channels import (
+    apply_channel_overrides,
+    normalize_channel_names,
+    require_channels,
+)
 from app.domain.eeg_file import validate_extension
 from app.domain.errors import AnalysisCancelledError, PipelineError
 from app.domain.types import NormEntry, NormsConfig
@@ -205,12 +209,15 @@ def run(
     config: NormsConfig,
     *,
     cancel_check: Callable[[], bool] = lambda: False,
+    channel_overrides: dict[str, str] | None = None,
 ) -> tuple[float, ...]:
     """Ładuje plik EEG i zwraca 10 amplitud (µV) w kolejności config.norms."""
     _check_cancel(cancel_check)
     raw = _load_raw(path)
     _check_cancel(cancel_check)
     normalize_channel_names(raw)
+    if channel_overrides:
+        apply_channel_overrides(raw, channel_overrides)
     require_channels(raw, _REQUIRED_CHANNELS)
     raw.pick(list(_REQUIRED_CHANNELS))
     _check_cancel(cancel_check)

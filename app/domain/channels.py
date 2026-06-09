@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     import mne.io
 
 _CANONICAL_CHANNELS = frozenset({"C3", "O1"})
+_REQUIRED_CANONICAL = ("C3", "O1")
 
 
 def _canonical_channel(name: str) -> str | None:
@@ -43,3 +44,34 @@ def require_channels(raw: mne.io.BaseRaw, names: tuple[str, ...]) -> None:
             f"Brak wymaganych kanałów: {missing_str}. "
             f"Dostępne kanały w pliku: {listed}.",
         )
+
+
+def apply_channel_overrides(
+    raw: mne.io.BaseRaw, overrides: dict[str, str]
+) -> None:
+    """Stosuje ręczne mapowanie kanałów (np. {"C3": "EEG 4"}) — in-place.
+
+    Klucz: nazwa kanoniczna (C3/O1), wartość: istniejąca nazwa w pliku.
+    """
+    if not overrides:
+        return
+    existing = set(raw.ch_names)
+    renames: dict[str, str] = {}
+    for canonical, source in overrides.items():
+        if source in existing and source != canonical:
+            renames[source] = canonical
+    if renames:
+        raw.rename_channels(renames)
+
+
+def get_missing_canonical(ch_names: list[str]) -> list[str]:
+    """Zwraca listę kanałów kanonicznych (C3/O1) niedostępnych po normalizacji.
+
+    Przyjmuje surowe nazwy z nagłówka pliku (przed preload).
+    """
+    reachable: set[str] = set()
+    for name in ch_names:
+        target = _canonical_channel(name)
+        if target is not None:
+            reachable.add(target)
+    return [c for c in _REQUIRED_CANONICAL if c not in reachable]

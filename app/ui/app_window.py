@@ -16,6 +16,8 @@ class AppState:
     eeg_path: Path | None = None
     analysis_result: AnalysisResult | None = None
     cancel_event: threading.Event = field(default_factory=threading.Event)
+    channel_overrides: dict[str, str] = field(default_factory=dict)
+    available_channels: list[str] = field(default_factory=list)
 
     def ready_for_analysis(self) -> bool:
         return self.metadata is not None and self.eeg_path is not None

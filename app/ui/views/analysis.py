@@ -81,12 +81,14 @@ class AnalysisView(ctk.CTkFrame):
         path = self._app_state.eeg_path
         config = self._app_state.norms_config
 
+        overrides = self._app_state.channel_overrides or None
         error: PipelineError | None = None
         try:
             amplitudes = pipeline.run(
                 path,
                 config,
                 cancel_check=self._app_state.cancel_event.is_set,
+                channel_overrides=overrides,
             )
             result = algorithm.classify(amplitudes, config)
             self._app_state.analysis_result = result

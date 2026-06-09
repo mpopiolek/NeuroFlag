@@ -36,6 +36,26 @@ def _load_mne() -> ModuleType:
     return mne  # type: ignore[no-any-return]
 
 
+def get_channel_names(path: Path) -> list[str]:
+    """Zwraca listę kanałów z nagłówka pliku EEG bez wczytywania danych.
+
+    Zwraca pustą listę przy błędzie (używane tylko informacyjnie w UI).
+    """
+    validate_extension(path)
+    suffix = path.suffix.lower()
+    mne = _load_mne()
+    try:
+        if suffix == ".edf":
+            raw = mne.io.read_raw_edf(path, preload=False, verbose=False)
+        elif suffix == ".vhdr":
+            raw = mne.io.read_raw_brainvision(path, preload=False, verbose=False)
+        else:
+            return []
+        return list(raw.ch_names)
+    except Exception:
+        return []
+
+
 def validate_eeg_header(path: Path) -> None:
     validate_extension(path)
     suffix = path.suffix.lower()

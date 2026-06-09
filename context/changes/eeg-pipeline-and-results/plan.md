@@ -413,10 +413,10 @@ Ręczne mapowanie brakujących C3/O1 z listy kanałów pliku przed uruchomieniem
 
 #### Automated
 
-- [ ] 4.1 `python -m pytest tests/unit/test_channels.py -q` (overrides)
-- [ ] 4.2 `mypy app/ --strict`
+- [x] 4.1 `python -m pytest tests/unit/test_channels.py -q` (overrides)
+- [x] 4.2 `mypy app/ --strict`
 
 #### Manual
 
-- [ ] 4.3 Mapowanie obcego kanału na C3/O1 — analiza kończy się sukcesem
-- [ ] 4.4 Anuluj w dialogu mapowania — brak uruchomienia pipeline
+- [x] 4.3 Mapowanie obcego kanału na C3/O1 — analiza kończy się sukcesem
+- [x] 4.4 Anuluj w dialogu mapowania — brak uruchomienia pipeline
