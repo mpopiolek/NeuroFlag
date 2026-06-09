@@ -6,14 +6,36 @@ from typing import TYPE_CHECKING
 import customtkinter as ctk
 
 from app.domain.errors import AnalysisCancelledError, PipelineError
+from app.domain.types import AnalysisResult
 from app.ui.app_window import AppState
 
 if TYPE_CHECKING:
     from app.ui.app_window import AppWindow
 
+_ERROR_CODE_PL: dict[str, str] = {
+    "missing_channels": "Brak wymaganych kana\u0142\u00f3w (C3/O1)",
+    "unsupported_format": "Nieobs\u0142ugiwany format pliku",
+    "file_unreadable": "Nie mo\u017cna odczyta\u0107 pliku",
+    "insufficient_duration": "Nagranie za kr\u00f3tkie",
+    "missing_task_segments": "Brak segment\u00f3w zada\u0144",
+    "artifact_rejection": "Odrzucenie artefakt\u00f3w",
+    "invalid_segment": "Nieprawid\u0142owy segment",
+    "empty_segment": "Pusty segment",
+    "invalid_amplitude": "B\u0142\u0105d amplitudy",
+    "amplitude_count": "Niezgodna liczba amplitud",
+    "mne_missing": "Brak biblioteki MNE",
+    "no_file": "Brak pliku EEG",
+    "unexpected_error": "Nieoczekiwany b\u0142\u0105d",
+    "analysis_cancelled": "Anulowano",
+}
+
+
+def _error_code_pl(code: str) -> str:
+    return _ERROR_CODE_PL.get(code, code)
+
 
 def format_pipeline_error(exc: PipelineError) -> str:
-    """Zwraca jednolinijkowy komunikat błędu pipeline po polsku dla pedagoga."""
+    """Zwraca jednolinijkowy komunikat b\u0142\u0119du pipeline po polsku dla pedagoga."""
     return exc.user_message_pl
 
 
@@ -76,6 +98,7 @@ class AnalysisView(ctk.CTkFrame):
                 0,
                 self._on_done,
                 PipelineError("no_file", "Brak wybranego pliku EEG."),
+                None,
             )
             return
         path = self._app_state.eeg_path
@@ -83,6 +106,7 @@ class AnalysisView(ctk.CTkFrame):
 
         overrides = self._app_state.channel_overrides or None
         error: PipelineError | None = None
+        result: AnalysisResult | None = None
         try:
             amplitudes = pipeline.run(
                 path,
@@ -91,7 +115,6 @@ class AnalysisView(ctk.CTkFrame):
                 channel_overrides=overrides,
             )
             result = algorithm.classify(amplitudes, config)
-            self._app_state.analysis_result = result
         except AnalysisCancelledError:
             self.after(0, self._on_cancelled)
             return
@@ -103,7 +126,7 @@ class AnalysisView(ctk.CTkFrame):
                 f"Nieoczekiwany b\u0142\u0105d analizy: {type(exc).__name__}",
             )
 
-        self.after(0, self._on_done, error)
+        self.after(0, self._on_done, error, result)
 
     def _on_cancelled(self) -> None:
         self._progress.stop()
@@ -114,7 +137,9 @@ class AnalysisView(ctk.CTkFrame):
         self._cancel_button.pack_forget()
         self._show_back_button()
 
-    def _on_done(self, error: PipelineError | None) -> None:
+    def _on_done(
+        self, error: PipelineError | None, result: AnalysisResult | None = None
+    ) -> None:
         self._progress.stop()
         self._cancel_button.pack_forget()
 
@@ -126,6 +151,8 @@ class AnalysisView(ctk.CTkFrame):
             self._show_error_details(error)
             self._show_back_button()
             return
+
+        self._app_state.analysis_result = result
 
         from app.ui.views.results_grid import ResultsGridView
 
@@ -145,7 +172,7 @@ class AnalysisView(ctk.CTkFrame):
         ).pack(anchor="w", padx=8, pady=(6, 2))
         ctk.CTkLabel(
             details_frame,
-            text=f"Kod b\u0142\u0119du: {error.code}",
+            text=f"Typ b\u0142\u0119du: {_error_code_pl(error.code)}",
             font=ctk.CTkFont(size=11),
             text_color="#555555",
         ).pack(anchor="w", padx=16, pady=(0, 6))

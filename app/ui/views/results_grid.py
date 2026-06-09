@@ -51,6 +51,18 @@ class ResultsGridView(ctk.CTkFrame):
         self._app_state = app_state
 
         if app_state.analysis_result is None:
+            ctk.CTkLabel(
+                self,
+                text="Brak wynik\u00f3w analizy. "
+                "Wr\u00f3\u0107 do importu i spr\u00f3buj ponownie.",
+                text_color="#CC0000",
+            ).pack(padx=40, pady=40, anchor="w")
+            ctk.CTkButton(
+                self,
+                text="\u2190 Powr\u00f3t do importu",
+                command=self._on_new_study,
+                width=160,
+            ).pack(padx=40, anchor="w")
             return
         result = app_state.analysis_result
 

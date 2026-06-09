@@ -69,6 +69,11 @@ def validate_eeg_header(path: Path) -> None:
     except EEGFileError:
         raise
     except OSError as exc:
-        raise EEGFileError(f"Plik niedostępny: {exc}") from exc
+        raise EEGFileError(
+            "Plik niedost\u0119pny \u2014 sprawdź czy plik istnieje i nie jest zablokowany."
+        ) from exc
     except Exception as exc:
-        raise EEGFileError(f"Nie można odczytać pliku: {exc}") from exc
+        raise EEGFileError(
+            "Nie mo\u017cna odczyta\u0107 pliku \u2014 "
+            "plik mo\u017ce by\u0107 uszkodzony lub w nieobs\u0142ugiwanym formacie."
+        ) from exc

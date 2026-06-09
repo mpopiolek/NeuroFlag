@@ -138,7 +138,12 @@ def detect_task_segments(raw: mne.io.BaseRaw) -> dict[str, tuple[float, float]]:
 
 
 def _load_raw(path: Path) -> mne.io.BaseRaw:
-    validate_extension(path)
+    from app.domain.eeg_file import EEGFileError
+
+    try:
+        validate_extension(path)
+    except EEGFileError as exc:
+        raise PipelineError("unsupported_format", str(exc)) from exc
     mne = _load_mne()
     suffix = path.suffix.lower()
     try:
@@ -146,15 +151,11 @@ def _load_raw(path: Path) -> mne.io.BaseRaw:
             return mne.io.read_raw_edf(path, preload=True, verbose=False)
         if suffix == ".vhdr":
             return mne.io.read_raw_brainvision(path, preload=True, verbose=False)
-    except OSError as exc:
+    except (OSError, Exception) as exc:
         raise PipelineError(
             "file_unreadable",
-            f"Nie można odczytać pliku EEG: {exc}",
-        ) from exc
-    except Exception as exc:
-        raise PipelineError(
-            "file_unreadable",
-            f"Nie można odczytać pliku EEG: {exc}",
+            "Nie mo\u017cna odczyta\u0107 pliku EEG \u2014 "
+            "sprawd\u017a czy plik istnieje i nie jest uszkodzony.",
         ) from exc
     raise PipelineError(
         "unsupported_format",

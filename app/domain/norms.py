@@ -99,7 +99,12 @@ _NORM_ENTRY_KEYS = frozenset({"id", "channel", "task", "band", "mean_z", "mean_k
 
 
 class NormsLoadError(Exception):
-    pass
+    """Błąd ładowania pliku norm — komunikat dla UI po polsku."""
+
+    def __init__(self, user_message_pl: str, code: str = "norms_load_error") -> None:
+        self.code = code
+        self.user_message_pl = user_message_pl
+        super().__init__(user_message_pl)
 
 
 def _as_float(value: object, label: str) -> float:
