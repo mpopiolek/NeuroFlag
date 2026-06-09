@@ -5,26 +5,29 @@ from pathlib import Path
 
 import customtkinter as ctk
 
-from app.domain.types import PatientMetadata
+from app.domain.types import AnalysisResult, NormsConfig, PatientMetadata
 
 
 @dataclass
 class AppState:
+    norms_config: NormsConfig
     metadata: PatientMetadata | None = None
     eeg_path: Path | None = None
+    analysis_result: AnalysisResult | None = None
+    cancel_requested: bool = False
 
     def ready_for_analysis(self) -> bool:
         return self.metadata is not None and self.eeg_path is not None
 
 
 class AppWindow(ctk.CTk):
-    def __init__(self) -> None:
+    def __init__(self, norms_config: NormsConfig) -> None:
         ctk.set_appearance_mode("light")
         ctk.set_default_color_theme("blue")
         super().__init__()
         self.title("NeuroFlag — Badanie przesiewowe EEG")
         self.geometry("900x650")
-        self._state = AppState()
+        self._state = AppState(norms_config=norms_config)
         self._current_view: ctk.CTkFrame | None = None
 
     @property

@@ -397,9 +397,9 @@ Ręczne mapowanie brakujących C3/O1 z listy kanałów pliku przed uruchomieniem
 
 #### Automated
 
-- [ ] 3.1 `python -m pytest -q`
-- [ ] 3.2 `mypy app/ --strict`
-- [ ] 3.3 `ruff check app/`
+- [x] 3.1 `python -m pytest -q`
+- [x] 3.2 `mypy app/ --strict`
+- [x] 3.3 `ruff check app/`
 
 #### Manual
 

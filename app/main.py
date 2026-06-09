@@ -59,7 +59,7 @@ def main() -> None:
         sys.exit(1)
     if smoke_test:
         sys.exit(0)
-    app = AppWindow()
+    app = AppWindow(norms_config=_config)
     app.show_view(MetadataFormView)
     app.mainloop()
 

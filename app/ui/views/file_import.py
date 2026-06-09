@@ -144,8 +144,11 @@ class FileImportView(ctk.CTkFrame):
         self._analyze_button.configure(state="normal")
 
     def _on_analyze(self) -> None:
-        if self._app_state.ready_for_analysis():
-            print("Analiza: gotowe do S-02")  # noqa: T201 — stub S-01
+        if not self._app_state.ready_for_analysis():
+            return
+        from app.ui.views.analysis import AnalysisView
+
+        self._app_window.show_view(AnalysisView)
 
     def _on_back(self) -> None:
         from app.ui.views.metadata_form import MetadataFormView
