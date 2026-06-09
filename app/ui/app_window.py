@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+import threading
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import customtkinter as ctk
@@ -14,7 +15,7 @@ class AppState:
     metadata: PatientMetadata | None = None
     eeg_path: Path | None = None
     analysis_result: AnalysisResult | None = None
-    cancel_requested: bool = False
+    cancel_event: threading.Event = field(default_factory=threading.Event)
 
     def ready_for_analysis(self) -> bool:
         return self.metadata is not None and self.eeg_path is not None

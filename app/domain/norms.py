@@ -124,7 +124,11 @@ def resolve_norms_path() -> Path:
         exe_norms = Path(sys.executable).parent / "norms.json"
         if exe_norms.is_file():
             return exe_norms
-        meipass = getattr(sys, "_MEIPASS")
+        meipass = getattr(sys, "_MEIPASS", None)
+        if meipass is None:
+            raise NormsLoadError(
+                "Nie znaleziono norms.json obok neuroflag.exe ani w paczce aplikacji."
+            )
         return Path(str(meipass)) / "norms.json"
     return Path(__file__).parent.parent.parent / "norms.json"
 
@@ -275,6 +279,10 @@ def load(path: Path | None = None) -> NormsConfig:
         if entry.band not in band_ranges:
             raise NormsLoadError(
                 f"norms[{i}] references band '{entry.band}' not defined in band_ranges"
+            )
+        if entry.mean_z >= entry.mean_k:
+            raise NormsLoadError(
+                f"norms[{i}]: mean_z ({entry.mean_z}) must be less than mean_k ({entry.mean_k})"
             )
 
     if "recommendation_rules" in data:

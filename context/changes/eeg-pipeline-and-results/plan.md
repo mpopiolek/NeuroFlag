@@ -149,6 +149,8 @@ Dostarcza `pipeline.run()` od ścieżki pliku do 10 wartości amplitudy (µV, we
 
 **Contract**: Walidacja: wszystkie 4 progi są int ≥0; `category_descriptions` — 3 niepuste stringi; domyślne wartości 5,3,4,3 i teksty PL z PRD/marketingu eksperta.
 
+> **Intentional deviation**: `recommendation_rules` jest **obowiązkowy** (lub migrowalna przez `recommendation_threshold`) — brak obu kluczy rzuca `NormsLoadError` zamiast cichego fallbacku. Decyzja celowa: klucz reguł jest za ważny semantycznie by ignorować jego brak; `category_descriptions` zachowuje cichy fallback bo to tylko copy. Produkcja nienaruszona (norms.json zawiera blok).
+
 #### 3. norms.json
 
 **File**: `norms.json`
@@ -397,9 +399,9 @@ Ręczne mapowanie brakujących C3/O1 z listy kanałów pliku przed uruchomieniem
 
 #### Automated
 
-- [x] 3.1 `python -m pytest -q`
-- [x] 3.2 `mypy app/ --strict`
-- [x] 3.3 `ruff check app/`
+- [x] 3.1 `python -m pytest -q` — 9457060
+- [x] 3.2 `mypy app/ --strict` — 9457060
+- [x] 3.3 `ruff check app/` — 9457060
 
 #### Manual
 

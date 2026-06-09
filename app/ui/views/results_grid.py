@@ -5,9 +5,10 @@ from typing import TYPE_CHECKING
 import customtkinter as ctk
 
 from app.domain.types import CellColor, CellResult, ScreeningCategory
+from app.ui.app_window import AppState
 
 if TYPE_CHECKING:
-    from app.ui.app_window import AppState, AppWindow
+    from app.ui.app_window import AppWindow
 
 _TASK_LABELS: dict[str, str] = {
     "OO": "Oczy otwarte",
@@ -49,7 +50,8 @@ class ResultsGridView(ctk.CTkFrame):
         self._app_window = app_window
         self._app_state = app_state
 
-        assert app_state.analysis_result is not None
+        if app_state.analysis_result is None:
+            return
         result = app_state.analysis_result
 
         container = ctk.CTkFrame(self, fg_color="transparent")
@@ -133,7 +135,7 @@ class ResultsGridView(ctk.CTkFrame):
         self._app_state.analysis_result = None
         self._app_state.eeg_path = None
         self._app_state.metadata = None
-        self._app_state.cancel_requested = False
+        self._app_state.cancel_event.clear()
 
         from app.ui.views.metadata_form import MetadataFormView
 

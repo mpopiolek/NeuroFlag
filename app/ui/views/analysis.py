@@ -6,9 +6,10 @@ from typing import TYPE_CHECKING
 import customtkinter as ctk
 
 from app.domain.errors import AnalysisCancelledError, PipelineError
+from app.ui.app_window import AppState
 
 if TYPE_CHECKING:
-    from app.ui.app_window import AppState, AppWindow
+    from app.ui.app_window import AppWindow
 
 
 def format_pipeline_error(exc: PipelineError) -> str:
@@ -27,7 +28,7 @@ class AnalysisView(ctk.CTkFrame):
         super().__init__(master, **kwargs)
         self._app_window = app_window
         self._app_state = app_state
-        self._app_state.cancel_requested = False
+        self._app_state.cancel_event.clear()
         self._app_state.analysis_result = None
 
         self._container = ctk.CTkFrame(self, fg_color="transparent")
@@ -64,13 +65,19 @@ class AnalysisView(ctk.CTkFrame):
         threading.Thread(target=self._analysis_worker, daemon=True).start()
 
     def _on_cancel(self) -> None:
-        self._app_state.cancel_requested = True
+        self._app_state.cancel_event.set()
         self._cancel_button.configure(state="disabled", text="Anulowanie\u2026")
 
     def _analysis_worker(self) -> None:
         from app.domain import algorithm, pipeline
 
-        assert self._app_state.eeg_path is not None
+        if self._app_state.eeg_path is None:
+            self.after(
+                0,
+                self._on_done,
+                PipelineError("no_file", "Brak wybranego pliku EEG."),
+            )
+            return
         path = self._app_state.eeg_path
         config = self._app_state.norms_config
 
@@ -79,7 +86,7 @@ class AnalysisView(ctk.CTkFrame):
             amplitudes = pipeline.run(
                 path,
                 config,
-                cancel_check=lambda: self._app_state.cancel_requested,
+                cancel_check=self._app_state.cancel_event.is_set,
             )
             result = algorithm.classify(amplitudes, config)
             self._app_state.analysis_result = result
