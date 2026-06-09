@@ -99,7 +99,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 
 ### S-03: Raport PDF i zapis na dysk
 
-- **Outcome:** użytkownik może wygenerować raport PDF zawierający metrykę dziecka, datę badania, siatkę kolorową 10 komórek, kategorię wynikową (Wskazanie / Uważna obserwacja / Brak wskazań) i klauzulę ograniczenia odpowiedzialności, a następnie zapisać go w wybranej lokalizacji na dysku lokalnym; surowe wartości µV nie są w raporcie.
+- **Outcome:** użytkownik może wygenerować raport PDF i zapisać go w wybranej lokalizacji na dysku lokalnym; surowe wartości µV nie są w raporcie. Struktura raportu (potwierdzona przez eksperta domenowego): (1) tekst wstępny — data badania, metryka dziecka, wniosek słowny w formie „Analiza wyników wskazuje na [kategoria + opis]"; (2) siatka kolorowa 10 komórek (RAG) z kategorią wynikową; (3) stała sekcja „Co obserwować" — tabela/lista kontrolna oparta na aktualnej wiedzy, niezmieniana między badaniami, skierowana do pedagoga/rodzica; (4) klauzula ograniczenia odpowiedzialności.
 - **Change ID:** pdf-report-and-save
 - **PRD refs:** FR-005, FR-006, US-01
 - **Prerequisites:** S-02

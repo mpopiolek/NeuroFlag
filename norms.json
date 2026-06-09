@@ -9,9 +9,9 @@
     "no_indication_max_red": 3
   },
   "category_descriptions": {
-    "wskazanie": "Profil EEG dziecka wykazuje istotne odchylenia od norm grupy kontrolnej w wielu analizowanych kombinacjach lokalizacja–zadanie–pasmo. Zaleca się konsultację ze specjalistą (neurologiem dziecięcym lub neuropsychologiem) w celu pogłębionej diagnostyki.",
-    "obserwacja": "Profil EEG dziecka wykazuje odchylenia od norm w części analizowanych kombinacji. Zaleca się uważną obserwację funkcjonowania dziecka oraz ponowne badanie przesiewowe po 3–6 miesiącach lub wcześniej w przypadku zauważalnych trudności.",
-    "brak": "Profil EEG dziecka pozostaje w granicach normy grupy kontrolnej w przeważającej liczbie analizowanych kombinacji. Na podstawie tego badania przesiewowego brak aktualnych wskazań do dalszej diagnostyki neurologicznej."
+    "wskazanie": "Profil EEG dziecka wykazuje wyniki poniżej wartości referencyjnych grupy kontrolnej w wielu analizowanych kombinacjach lokalizacja–zadanie–pasmo. Zaleca się konsultację ze specjalistą (np. psycholog, pedagog, logopeda) w celu pogłębionej diagnostyki.",
+    "obserwacja": "Profil EEG dziecka wykazuje wyniki poniżej wartości referencyjnych w części analizowanych kombinacji. Zaleca się uważną obserwację funkcjonowania dziecka przez 3–6 miesięcy oraz ponowne badanie przesiewowe po upływie tego czasu lub wcześniej w przypadku zauważalnych trudności.",
+    "brak": "Profil EEG dziecka pozostaje w granicach wartości referencyjnych grupy kontrolnej w przeważającej liczbie analizowanych kombinacji. Na podstawie tego badania przesiewowego brak aktualnych wskazań do dalszej diagnostyki."
   },
   "band_ranges": {
     "Delta": { "l_freq": 0.5,  "h_freq": 4.0  },
