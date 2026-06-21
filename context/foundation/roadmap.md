@@ -1,4 +1,4 @@
----
+﻿---
 project: "NeuroFlag"
 version: 1
 status: draft
@@ -33,7 +33,7 @@ NeuroFlag to aplikacja desktopowa dla Windows, która pozwala pedagogom szkolnym
 | S-01 | metadata-and-import        | wypełnić metrykę dziecka (z wykluczeniami klinicznymi) i wczytać plik .edf lub .vhdr gotowy do analizy | F-01          | FR-001, FR-010, US-01         | done     |
 | S-02 | eeg-pipeline-and-results   | uruchomić analizę i zobaczyć siatkę 10 kolorowych komórek z kategorią wynikową                       | S-01          | FR-002, FR-003, FR-004, US-01 | done     |
 | S-03 | pdf-report-and-save        | wygenerować raport PDF i zapisać go na dysk lokalny                                                  | S-02          | FR-005, FR-006, US-01         | proposed |
-| S-04 | norms-replacement          | zastąpić plik norms.json własnym plikiem i mieć pewność, że aplikacja wczytuje nowe normy i waliduje schemat | F-01          | FR-008                        | proposed |
+| S-04 | norms-replacement          | zastąpić plik norms.json własnym plikiem i mieć pewność, że aplikacja wczytuje nowe normy i waliduje schemat | F-01          | FR-008                        | done |
 
 ## Streams
 
@@ -119,7 +119,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Minimalne ryzyko techniczne (statyczny JSON + walidacja schematu); główne ryzyko to dokumentacja — bez UI formularza użytkownik musi znać dokładny format pliku; brak jasnej instrukcji = frustracja przy podmiance przez psychologa-administratora.
-- **Status:** proposed
+- **Status:** done
 
 ## Backlog Handoff
 
@@ -153,6 +153,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Formaty .bdf i .set** — Why parked: PRD §Constraints; v2.0.
 
 ## Done
+- **S-04: zastapic plik norms.json wlasnym plikiem i miec pewnosc, ze aplikacja wczytuje nowe normy i waliduje schemat** — Archived 2026-06-21 -> context/archive/2026-06-01-norms-replacement/. Lesson: —.
 
 (Empty on first generation. `/10x-archive` appends an entry here — and flips that item's `Status` to `done` — when a change whose `Change ID` matches the item is archived. Format:)
 
