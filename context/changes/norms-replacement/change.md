@@ -1,7 +1,7 @@
 ---
 id: norms-replacement
 title: "Wymiana bazy norm (S-04)"
-status: implementing
+status: implemented
 created: 2026-06-01
 updated: 2026-06-21
 roadmap_ref: S-04

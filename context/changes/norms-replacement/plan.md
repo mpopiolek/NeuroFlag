@@ -382,5 +382,5 @@ Brak. S-04 nie zmienia schematu `norms.json` — istniejący plik pozostaje bez 
 
 #### Manual
 
-- [x] 2.5 `docs/README-norms.md` jest zrozumiały dla osoby niedewelopera bez dodatkowych szkoleń
-- [x] 2.6 `norms.json.template` zawiera komentarze wyjaśniające każde pole schematu
+- [x] 2.5 `docs/README-norms.md` jest zrozumiały dla osoby niedewelopera bez dodatkowych szkoleń — 1dbac79
+- [x] 2.6 `norms.json.template` zawiera komentarze wyjaśniające każde pole schematu — 1dbac79
