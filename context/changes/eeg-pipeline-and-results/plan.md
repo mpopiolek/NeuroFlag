@@ -89,9 +89,9 @@ Dostarcza `pipeline.run()` od ścieżki pliku do 10 wartości amplitudy (µV, we
 
 **File**: `app/domain/pipeline.py`
 
-**Intent**: Wykryj trzy warunki z adnotacji (dopasowanie rozmyte: normalizacja stringów, mała tabela aliasów np. `EYES OPEN`→OO) lub fallback: trzy kolejne okna 180 s od początku nagrania.
+**Intent**: Wykryj trzy warunki z adnotacji w kolejności OO→OZ→ZP (aliasy PL/EN). **Fallback:** brak rozpoznanych znaczników + nagranie ≥ 8 min → 3×3 min od początku. **Błąd:** częściowe znaczniki lub nagranie &lt; 8 min. Szczegóły: `docs/EEG-segmentacja.md`.
 
-**Contract**: `detect_task_segments(raw) -> dict[str, tuple[float, float]]` klucze `OO`|`OZ`|`ZP`, wartości `(t_start, t_end)` w sekundach; przy <3 segmentach po fallback — `PipelineError`.
+**Contract**: `detect_task_segments(raw) -> dict[str, tuple[float, float]]` klucze `OO`|`OZ`|`ZP`, wartości `(t_start, t_end)` w sekundach; przy braku 3 znaczników lub nagraniu &lt; 8 min — `PipelineError`.
 
 #### 4. Obliczenie 10 amplitud
 
@@ -340,11 +340,14 @@ Ręczne mapowanie brakujących C3/O1 z listy kanałów pliku przed uruchomieniem
 
 ### Manual Testing Steps:
 
-1. Pełny flow na pliku z poprawnymi znacznikami OO/OZ/ZP
-2. Plik bez adnotacji — fallback 180 s
-3. Anulowanie w połowie analizy
-4. Plik z dziwnymi nazwami kanałów — Faza 4 picker
-5. Potwierdź brak µV w UI i w Szczegółach błędu
+1. Pełny flow na pliku z poprawnymi znacznikami OO/OZ/ZP (kolejność, ≥ 8 min)
+2. Plik bez znaczników zadań (≥ 8 min) — fallback 3×3 min
+3. Plik ze częściowymi znacznikami — komunikat błędu
+4. Anulowanie w połowie analizy (`--debug-slow-analysis=3`)
+5. Plik z dziwnymi nazwami kanałów — Faza 4 picker
+6. Potwierdź brak µV w UI i w Szczegółach błędu
+
+Mapowanie plików: `tests/fixtures/MANUAL-QA.md`, reguły: `docs/EEG-segmentacja.md`.
 
 ## Performance Considerations
 
@@ -380,8 +383,8 @@ Ręczne mapowanie brakujących C3/O1 z listy kanałów pliku przed uruchomieniem
 
 #### Manual
 
-- [ ] 1.3 Pipeline na lokalnym `.edf` zwraca 10 wartości bez NaN w rozsądnym czasie
-- [ ] 1.4 Plik bez C3/O1 po aliasach — czytelny `PipelineError` po polsku
+- [x] 1.3 Pipeline na lokalnym `.edf` zwraca 10 wartości bez NaN w rozsądnym czasie — manual QA 2026-06-11
+- [x] 1.4 Plik bez C3/O1 po aliasach — czytelny `PipelineError` po polsku — manual QA 2026-06-11
 
 ### Phase 2: Algorytm klasyfikacji i rozszerzenie norms.json
 
@@ -405,9 +408,9 @@ Ręczne mapowanie brakujących C3/O1 z listy kanałów pliku przed uruchomieniem
 
 #### Manual
 
-- [ ] 3.4 Flow metryka → import → Analizuj → wyniki bez µV w UI
-- [ ] 3.5 Anuluj i błąd pipeline — komunikat PL, powrót do importu, Szczegóły bez µV
-- [ ] 3.6 Czas analizy sample file ≤10 min
+- [x] 3.4 Flow metryka → import → Analizuj → wyniki bez µV w UI — manual QA 2026-06-11
+- [x] 3.5 Anuluj i błąd pipeline — komunikat PL, powrót do importu, Szczegóły bez µV — manual QA 2026-06-11
+- [x] 3.6 Czas analizy sample file ≤10 min — manual QA 2026-06-11
 
 ### Phase 4: Picker mapowania kanałów
 
