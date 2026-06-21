@@ -1,10 +1,10 @@
 ---
 change_id: eeg-pipeline-and-results
 title: Pipeline EEG i wyniki
-status: implemented
+status: archived
 created: 2026-06-03
-updated: 2026-06-11
-archived_at: null
+updated: 2026-06-21
+archived_at: 2026-06-21T16:54:00Z
 ---
 
 ## Notes
