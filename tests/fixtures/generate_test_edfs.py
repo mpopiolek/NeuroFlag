@@ -6,9 +6,15 @@ Uruchomienie:
 Wygenerowane pliki (w katalogu tests/fixtures/):
     test_standard.edf       -- C3, O1, EOG; adnotacje OO/OZ/ZP (9 min)
     test_bad_channels.edf   -- EEG 4, EEG 7; adnotacje OO/OZ/ZP (9 min)
-    test_no_annotations.edf -- C3, O1; brak adnotacji (10 min, fallback 3x180s)
+    test_no_annotations.edf -- C3, O1; brak adnotacji, 10 min (fallback 3x180 s)
 
 Pliki są gitignore'owane (.edf w .gitignore); regeneruj gdy potrzebne.
+
+Pliki produkcyjne (poza repo): skopiuj do tego katalogu lub podaj ścieżkę do:
+    python tests/fixtures/probe_pipeline.py --dir "D:\\CVGOSI\\NF dane\\Testowe"
+
+Sonda pipeline (nagłówek, segmenty, kategoria, czas — bez µV w UI):
+    python tests/fixtures/probe_pipeline.py <plik.edf>
 """
 
 from __future__ import annotations
@@ -88,7 +94,7 @@ def generate_bad_channels(out_dir: Path) -> Path:
 
 
 def generate_no_annotations(out_dir: Path) -> Path:
-    """C3, O1 — brak adnotacji, pipeline musi użyć fallbacku 3×180 s."""
+    """C3, O1 — brak adnotacji; pipeline używa fallbacku 3×180 s (≥ 8 min)."""
     raw = _make_raw(["C3", "O1"])
     out = out_dir / "test_no_annotations.edf"
     _write_edf(raw, out)

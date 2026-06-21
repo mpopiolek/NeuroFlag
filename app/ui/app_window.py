@@ -18,19 +18,28 @@ class AppState:
     cancel_event: threading.Event = field(default_factory=threading.Event)
     channel_overrides: dict[str, str] = field(default_factory=dict)
     available_channels: list[str] = field(default_factory=list)
+    analysis_step_delay_s: float = 0.0
 
     def ready_for_analysis(self) -> bool:
         return self.metadata is not None and self.eeg_path is not None
 
 
 class AppWindow(ctk.CTk):
-    def __init__(self, norms_config: NormsConfig) -> None:
+    def __init__(
+        self,
+        norms_config: NormsConfig,
+        *,
+        analysis_step_delay_s: float = 0.0,
+    ) -> None:
         ctk.set_appearance_mode("light")
         ctk.set_default_color_theme("blue")
         super().__init__()
         self.title("NeuroFlag — Badanie przesiewowe EEG")
         self.geometry("900x650")
-        self._state = AppState(norms_config=norms_config)
+        self._state = AppState(
+            norms_config=norms_config,
+            analysis_step_delay_s=analysis_step_delay_s,
+        )
         self._current_view: ctk.CTkFrame | None = None
 
     @property

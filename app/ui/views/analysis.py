@@ -113,6 +113,7 @@ class AnalysisView(ctk.CTkFrame):
                 config,
                 cancel_check=self._app_state.cancel_event.is_set,
                 channel_overrides=overrides,
+                step_delay_s=self._app_state.analysis_step_delay_s,
             )
             result = algorithm.classify(amplitudes, config)
         except AnalysisCancelledError:

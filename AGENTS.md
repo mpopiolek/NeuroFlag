@@ -46,8 +46,9 @@ Selekcja kanałów domenowych (ZAWSZE przed przetwarzaniem):
 
 Znaczniki zadań (mapowanie na segmenty):
   events, event_id = mne.events_from_annotations(raw)
-  # Szukaj: 'OO' (oczy otwarte), 'OZ' (oczy zamknięte), 'ZP' (zadanie pamięciowe)
-  # Fallback jeśli brak znaczników: dziel na segmenty co 180 s (3 minuty)
+  # Szukaj OO → OZ → ZP (kolejność chronologiczna, pierwsze wystąpienie każdego)
+  # Aliasy polskie/angielskie — pełna lista: docs/EEG-segmentacja.md
+  # Min. 8 min nagrania; znaczniki OO→OZ→ZP albo fallback 3×3 min gdy brak znaczników
 
 Usuwanie zakłóceń sieciowych:
   raw.notch_filter(freqs=config.power_line_frequency)  # domyślnie 50 Hz
