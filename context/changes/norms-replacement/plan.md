@@ -357,19 +357,19 @@ Brak. S-04 nie zmienia schematu `norms.json` — istniejący plik pozostaje bez 
 
 #### Automated
 
-- [x] 1.1 `mypy app/ --strict --ignore-missing-imports` — 0 błędów
-- [x] 1.2 `mypy app/main.py --strict --ignore-missing-imports` — 0 błędów
-- [x] 1.3 `ruff check app/main.py app/domain/norms.py` — 0 błędów
-- [x] 1.4 `pytest tests/unit/test_norms.py -q` — test path resolution zielony
-- [x] 1.5 `pytest tests/unit/test_main_cli.py -q` — wszystkie 4 testy zielone
-- [x] 1.6 `pytest tests/unit/test_main_messages.py -q` — test formatowania zielony
-- [x] 1.7 `pytest -q` — brak regresji
+- [x] 1.1 `mypy app/ --strict --ignore-missing-imports` — 0 błędów — 4693da2
+- [x] 1.2 `mypy app/main.py --strict --ignore-missing-imports` — 0 błędów — 4693da2
+- [x] 1.3 `ruff check app/main.py app/domain/norms.py` — 0 błędów — 4693da2
+- [x] 1.4 `pytest tests/unit/test_norms.py -q` — test path resolution zielony — 4693da2
+- [x] 1.5 `pytest tests/unit/test_main_cli.py -q` — wszystkie 4 testy zielone — 4693da2
+- [x] 1.6 `pytest tests/unit/test_main_messages.py -q` — test formatowania zielony — 4693da2
+- [x] 1.7 `pytest -q` — brak regresji — 4693da2
 
 #### Manual
 
-- [x] 1.8 `python app/main.py --validate-norms norms.json` → stdout "OK: norms.json jest poprawny (version=1, 10 norm)"
-- [x] 1.9 `python app/main.py --validate-norms /nieistniejacy/plik.json` → stderr "BŁĄD", exit 1
-- [x] 1.10 `python app/main.py --smoke-test` → exit 0 (brak regresji)
+- [x] 1.8 `python app/main.py --validate-norms norms.json` → stdout "OK: norms.json jest poprawny (version=1, 10 norm)" — 4693da2
+- [x] 1.9 `python app/main.py --validate-norms /nieistniejacy/plik.json` → stderr "BŁĄD", exit 1 — 4693da2
+- [x] 1.10 `python app/main.py --smoke-test` → exit 0 (brak regresji) — 4693da2
 
 ### Phase 2: Dokumentacja schematu dla administratora
 
@@ -382,5 +382,5 @@ Brak. S-04 nie zmienia schematu `norms.json` — istniejący plik pozostaje bez 
 
 #### Manual
 
-- [ ] 2.5 `docs/README-norms.md` jest zrozumiały dla osoby niedewelopera bez dodatkowych szkoleń
-- [ ] 2.6 `norms.json.template` zawiera komentarze wyjaśniające każde pole schematu
+- [x] 2.5 `docs/README-norms.md` jest zrozumiały dla osoby niedewelopera bez dodatkowych szkoleń
+- [x] 2.6 `norms.json.template` zawiera komentarze wyjaśniające każde pole schematu

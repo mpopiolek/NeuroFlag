@@ -3,7 +3,7 @@ id: norms-replacement
 title: "Wymiana bazy norm (S-04)"
 status: implementing
 created: 2026-06-01
-updated: 2026-06-03
+updated: 2026-06-21
 roadmap_ref: S-04
 prd_refs: [FR-008]
 unlocks: []
