@@ -9,3 +9,10 @@ def test_format_norms_error_message() -> None:
     assert "norms.json" in message
     assert "neuroflag.exe" in message
     assert "norms.json.template" in message
+
+
+def test_format_norms_error_message_special_chars() -> None:
+    special = "błąd % \n {} {0} <tag> & 'quote' \"dquote\""
+    message = format_norms_error_message(NormsLoadError(special))
+    assert special in message
+    assert "norms.json" in message

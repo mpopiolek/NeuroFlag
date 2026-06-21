@@ -15,9 +15,32 @@
     "obserwacja": "Profil EEG dziecka wykazuje odchylenia od norm w części analizowanych kombinacji. Zaleca się uważną obserwację funkcjonowania dziecka oraz ponowne badanie przesiewowe po 3–6 miesiącach lub wcześniej w przypadku zauważalnych trudności.",
     "brak": "Profil EEG dziecka pozostaje w granicach normy grupy kontrolnej w przeważającej liczbie analizowanych kombinacji. Na podstawie tego badania przesiewowego brak aktualnych wskazań do dalszej diagnostyki neurologicznej."
   },
+  "observation_checklist": {
+    "_comment": "Opcjonalne. Zastępuje domyślną listę obszarów do obserwacji w UI i raporcie PDF. Usuń tę sekcję, aby użyć wartości domyślnych wbudowanych w aplikację.",
+    "title": "Co obserwować — wskazówki dla pedagoga i rodzica",
+    "intro": "Poniższe obszary funkcjonowania warto śledzić niezależnie od wyniku badania. Nasilenie trudności w kilku obszarach może uzasadniać konsultację ze specjalistą.",
+    "categories": [
+      {
+        "title": "Uwaga i koncentracja",
+        "items": [
+          "Trudności z utrzymaniem uwagi na zadaniu przez 15–20 minut",
+          "Łatwe rozpraszanie się przez bodźce zewnętrzne",
+          "Kłopoty z powróceniem do przerwanego zadania"
+        ]
+      },
+      {
+        "title": "Pamięć robocza",
+        "items": [
+          "Trudności z zapamiętaniem instrukcji złożonych z kilku kroków",
+          "Częste gubienie miejsca podczas czytania lub liczenia",
+          "Konieczność wielokrotnego czytania tego samego fragmentu"
+        ]
+      }
+    ]
+  },
   "band_ranges": {
     "Delta": {
-      "_comment": "Pasmo Delta (µV RMS) — zakres częstotliwości w Hz",
+      "_comment": "Pasmo Delta (µV RMS) — zakres częstotliwości w Hz. UWAGA: nie dodawaj klucza _comment bezpośrednio w band_ranges (na poziomie obok 'Delta') — zostanie potraktowany jako nazwa pasma i spowoduje błąd walidacji. Komentarze umieszczaj tylko wewnątrz obiektów pasm.",
       "l_freq": 0.5,
       "h_freq": 4.0
     },

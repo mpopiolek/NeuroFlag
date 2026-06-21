@@ -25,7 +25,7 @@ C:\Programy\NeuroFlag\
 ## Jak wymienić bazę norm
 
 1. **Skopiuj wzór** — skopiuj plik `norms.json.template` jako `norms.json` (lub edytuj istniejący `norms.json`).
-2. **Edytuj wartości** — zmień `mean_z` i `mean_k` w tablicy `norms` (oraz ewentualnie progi w `recommendation_threshold`). Nie zmieniaj nazw pól ani struktury bez konsultacji z ekspertem domenowym.
+2. **Edytuj wartości** — zmień `mean_z` i `mean_k` w tablicy `norms` (oraz ewentualnie progi w `recommendation_rules`). Nie zmieniaj nazw pól ani struktury bez konsultacji z ekspertem domenowym.
 3. **Zwaliduj plik** przed wdrożeniem (patrz sekcja poniżej).
 4. **Uruchom aplikację** — NeuroFlag wczytuje `norms.json` przy starcie. Jeśli plik jest niepoprawny, zobaczysz okno z komunikatem błędu (aplikacja nie uruchomi analizy).
 
@@ -67,7 +67,19 @@ neuroflag.exe --validate-norms C:\Users\Ja\Pulpit\nowe-normy.json
 |------|-----|------|----------|
 | `version` | liczba całkowita | Wersja schematu pliku | `1` |
 | `power_line_frequency` | liczba | Częstotliwość sieci (Hz) do filtra notch | `50` (Europa) |
-| `recommendation_threshold` | liczba całkowita | Ile czerwonych komórek (≤ Z) daje kategorię „Wskazanie do dalszej diagnozy” | `3` |
+| `recommendation_rules` | obiekt | Progi decyzyjne algorytmu trójstanowego | patrz wzór |
+| `recommendation_rules.indication_min_red` | liczba całkowita ≥ 0 | Min. liczba czerwonych komórek do kategorii „Wskazanie" | `5` |
+| `recommendation_rules.indication_max_green` | liczba całkowita ≥ 0 | Max. liczba zielonych komórek przy „Wskazaniu" | `3` |
+| `recommendation_rules.no_indication_min_green` | liczba całkowita ≥ 0 | Min. liczba zielonych komórek do kategorii „Brak wskazań" | `4` |
+| `recommendation_rules.no_indication_max_red` | liczba całkowita ≥ 0 | Max. liczba czerwonych komórek przy „Braku wskazań" | `3` |
+| `category_descriptions` | obiekt *(opcjonalny)* | Opisy słowne wyników widoczne w UI i raporcie PDF | patrz wzór |
+| `category_descriptions.wskazanie` | tekst niepusty | Opis kategorii „Wskazanie do dalszej diagnozy" | — |
+| `category_descriptions.obserwacja` | tekst niepusty | Opis kategorii „Obserwacja" | — |
+| `category_descriptions.brak` | tekst niepusty | Opis kategorii „Brak wskazań" | — |
+| `observation_checklist` | obiekt *(opcjonalny)* | Lista obszarów do obserwacji w UI i raporcie PDF | patrz wzór |
+| `observation_checklist.title` | tekst niepusty | Tytuł sekcji checklista | — |
+| `observation_checklist.intro` | tekst niepusty | Tekst wprowadzający do listy | — |
+| `observation_checklist.categories` | tablica obiektów | Kategorie obserwacji; każda ma `title` (tekst) i `items` (tablica tekstów) | — |
 | `band_ranges` | obiekt | Zakresy pasm częstotliwości (Hz) | patrz wzór |
 | `band_ranges.*.l_freq` | liczba | Dolna granica pasma (Hz) | `4.0` dla Theta |
 | `band_ranges.*.h_freq` | liczba | Górna granica pasma (Hz) | `8.0` dla Theta |

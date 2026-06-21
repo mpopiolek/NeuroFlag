@@ -109,14 +109,14 @@ class NormsLoadError(Exception):
 
 def _as_float(value: object, label: str) -> float:
     try:
-        return float(value)  # type: ignore[arg-type]
+        return float(value)  # type: ignore[arg-type]  # value comes from json.load() — type unknown until validated
     except (ValueError, TypeError) as exc:
         raise NormsLoadError(f"'{label}' must be a number, got {value!r}") from exc
 
 
 def _as_int(value: object, label: str) -> int:
     try:
-        f = float(value)  # type: ignore[arg-type]
+        f = float(value)  # type: ignore[arg-type]  # value comes from json.load() — type unknown until validated
     except (ValueError, TypeError) as exc:
         raise NormsLoadError(f"'{label}' must be an integer, got {value!r}") from exc
     if f != int(f):
@@ -138,7 +138,7 @@ def resolve_norms_path() -> Path:
     return Path(__file__).parent.parent.parent / "norms.json"
 
 
-def _parse_band_ranges(raw: Any) -> dict[str, BandRange]:
+def _parse_band_ranges(raw: Any) -> dict[str, BandRange]:  # Any: raw JSON value before structural validation
     if not isinstance(raw, dict):
         raise NormsLoadError("'band_ranges' must be a JSON object")
     result: dict[str, BandRange] = {}
@@ -155,7 +155,7 @@ def _parse_band_ranges(raw: Any) -> dict[str, BandRange]:
     return result
 
 
-def _parse_norm_entry(raw: Any, index: int) -> NormEntry:
+def _parse_norm_entry(raw: Any, index: int) -> NormEntry:  # Any: raw JSON value before structural validation
     if not isinstance(raw, dict):
         raise NormsLoadError(f"norms[{index}] must be a JSON object")
     for key in _NORM_ENTRY_KEYS:
@@ -172,7 +172,7 @@ def _parse_norm_entry(raw: Any, index: int) -> NormEntry:
     )
 
 
-def _parse_recommendation_rules(raw: Any) -> RecommendationRules:
+def _parse_recommendation_rules(raw: Any) -> RecommendationRules:  # Any: raw JSON value before structural validation
     if not isinstance(raw, dict):
         raise NormsLoadError("'recommendation_rules' must be a JSON object")
     fields = (
@@ -198,7 +198,7 @@ def _parse_recommendation_rules(raw: Any) -> RecommendationRules:
     )
 
 
-def _parse_observation_checklist(raw: Any) -> ObservationChecklist:
+def _parse_observation_checklist(raw: Any) -> ObservationChecklist:  # Any: raw JSON value before structural validation
     if not isinstance(raw, dict):
         raise NormsLoadError("'observation_checklist' must be a JSON object")
     for key in ("title", "intro", "categories"):
@@ -234,7 +234,7 @@ def _parse_observation_checklist(raw: Any) -> ObservationChecklist:
     )
 
 
-def _parse_category_descriptions(raw: Any) -> CategoryDescriptions:
+def _parse_category_descriptions(raw: Any) -> CategoryDescriptions:  # Any: raw JSON value before structural validation
     if not isinstance(raw, dict):
         raise NormsLoadError("'category_descriptions' must be a JSON object")
     for field in ("wskazanie", "obserwacja", "brak"):

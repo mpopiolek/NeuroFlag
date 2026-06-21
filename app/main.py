@@ -23,8 +23,10 @@ def _show_norms_error(message: str) -> None:
 
     root = tkinter.Tk()
     root.withdraw()
-    tkinter.messagebox.showerror("NeuroFlag — Błąd konfiguracji", message)
-    root.destroy()
+    try:
+        tkinter.messagebox.showerror("NeuroFlag — Błąd konfiguracji", message)
+    finally:
+        root.destroy()
 
 
 def _run_validate_norms_cli(path_str: str) -> int:
@@ -48,7 +50,10 @@ def _parse_debug_slow_analysis(argv: list[str]) -> float:
         if arg == "--debug-slow-analysis":
             delay = max(delay, 2.0)
         elif arg.startswith("--debug-slow-analysis="):
-            delay = max(delay, float(arg.split("=", 1)[1]))
+            try:
+                delay = max(delay, float(arg.split("=", 1)[1]))
+            except ValueError:
+                print(f"BŁĄD: nieprawidłowa wartość dla --debug-slow-analysis: {arg.split('=', 1)[1]}", file=sys.stderr)
     return delay
 
 
@@ -62,7 +67,7 @@ def main() -> None:
             sys.exit(2)
         sys.exit(_run_validate_norms_cli(argv[idx + 1]))
 
-    smoke_test = "--smoke-test" in sys.argv
+    smoke_test = "--smoke-test" in argv
     analysis_step_delay_s = _parse_debug_slow_analysis(argv)
     try:
         _config = norms.load()

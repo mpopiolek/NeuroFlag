@@ -14,7 +14,12 @@ def _valid_payload() -> dict[str, object]:
     return {
         "version": 1,
         "power_line_frequency": 50,
-        "recommendation_threshold": 3,
+        "recommendation_rules": {
+            "indication_min_red": 5,
+            "indication_max_green": 3,
+            "no_indication_min_green": 4,
+            "no_indication_max_red": 3,
+        },
         "band_ranges": {
             "Delta": {"l_freq": 0.5, "h_freq": 4.0},
             "Theta": {"l_freq": 4.0, "h_freq": 8.0},
@@ -44,6 +49,7 @@ def _run_validate(tmp_path: Path, payload: object) -> subprocess.CompletedProces
         capture_output=True,
         text=True,
         cwd=ROOT,
+        timeout=30,
     )
 
 
@@ -67,6 +73,7 @@ def test_validate_norms_file_not_found(tmp_path: Path) -> None:
         capture_output=True,
         text=True,
         cwd=ROOT,
+        timeout=30,
     )
     assert result.returncode == 1
     assert "BŁĄD" in result.stderr
