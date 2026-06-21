@@ -375,10 +375,10 @@ Brak. S-04 nie zmienia schematu `norms.json` — istniejący plik pozostaje bez 
 
 #### Automated
 
-- [x] 2.1 `python -c "import json; json.load(open('norms.json.template'))"` — plik jest poprawnym JSON
-- [x] 2.2 `python app/main.py --validate-norms norms.json.template` → exit 0, stdout "OK"
+- [x] 2.1 `python -c "import json; json.load(open('norms.json.template'))"` — plik jest poprawnym JSON — b77fa2e
+- [x] 2.2 `python app/main.py --validate-norms norms.json.template` → exit 0, stdout "OK" — b77fa2e
 - [ ] 2.3 Po buildzie PyInstaller: `norms.json.template` i `docs/README-norms.md` istnieją w `dist/neuroflag/`
-- [x] 2.4 `pytest -q` — brak regresji
+- [x] 2.4 `pytest -q` — brak regresji — b77fa2e
 
 #### Manual
 
