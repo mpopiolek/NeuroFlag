@@ -41,6 +41,17 @@ def _run_validate_norms_cli(path_str: str) -> int:
     return 0
 
 
+def _parse_debug_slow_analysis(argv: list[str]) -> float:
+    """Opcjonalna pauza między krokami pipeline — tylko do QA anulowania."""
+    delay = 0.0
+    for arg in argv:
+        if arg == "--debug-slow-analysis":
+            delay = max(delay, 2.0)
+        elif arg.startswith("--debug-slow-analysis="):
+            delay = max(delay, float(arg.split("=", 1)[1]))
+    return delay
+
+
 def main() -> None:
     argv = sys.argv[1:]
 
@@ -52,6 +63,7 @@ def main() -> None:
         sys.exit(_run_validate_norms_cli(argv[idx + 1]))
 
     smoke_test = "--smoke-test" in sys.argv
+    analysis_step_delay_s = _parse_debug_slow_analysis(argv)
     try:
         _config = norms.load()
     except NormsLoadError as exc:
@@ -59,7 +71,10 @@ def main() -> None:
         sys.exit(1)
     if smoke_test:
         sys.exit(0)
-    app = AppWindow(norms_config=_config)
+    app = AppWindow(
+        norms_config=_config,
+        analysis_step_delay_s=analysis_step_delay_s,
+    )
     app.show_view(MetadataFormView)
     app.mainloop()
 

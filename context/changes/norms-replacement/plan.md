@@ -367,9 +367,9 @@ Brak. S-04 nie zmienia schematu `norms.json` — istniejący plik pozostaje bez 
 
 #### Manual
 
-- [ ] 1.8 `python app/main.py --validate-norms norms.json` → stdout "OK: norms.json jest poprawny (version=1, 10 norm)"
-- [ ] 1.9 `python app/main.py --validate-norms /nieistniejacy/plik.json` → stderr "BŁĄD", exit 1
-- [ ] 1.10 `python app/main.py --smoke-test` → exit 0 (brak regresji)
+- [x] 1.8 `python app/main.py --validate-norms norms.json` → stdout "OK: norms.json jest poprawny (version=1, 10 norm)"
+- [x] 1.9 `python app/main.py --validate-norms /nieistniejacy/plik.json` → stderr "BŁĄD", exit 1
+- [x] 1.10 `python app/main.py --smoke-test` → exit 0 (brak regresji)
 
 ### Phase 2: Dokumentacja schematu dla administratora
 
