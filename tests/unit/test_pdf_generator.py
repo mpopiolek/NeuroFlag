@@ -117,7 +117,7 @@ def test_pdf_starts_with_pdf_magic(pdf_bytes: bytes) -> None:
     assert pdf_bytes[:4] == b"%PDF"
 
 
-def test_no_uv_values_in_output(pdf_info: bytes) -> None:
+def test_no_uv_in_pdf_metadata(pdf_info: bytes) -> None:
     # Search only in the /Info dictionary object (uncompressed metadata).
     # The generator never receives amplitude data; no µV/uV can appear there.
     assert b"uV" not in pdf_info
@@ -125,7 +125,14 @@ def test_no_uv_values_in_output(pdf_info: bytes) -> None:
     assert b"\xb5V" not in pdf_info  # µV in PDFDocEncoding
 
 
-def test_disclaimer_present(pdf_bytes: bytes) -> None:
+def test_no_uv_values_in_output(pdf_bytes: bytes) -> None:
+    # Scan full raw PDF bytes for UTF-8 µV (\xc2\xb5V).
+    # Single-byte \xb5 and "uV" collide with random binary data in PDF streams
+    # and are checked separately in test_no_uv_in_pdf_metadata (uncompressed metadata).
+    assert b"\xc2\xb5V" not in pdf_bytes  # UTF-8 µV
+
+
+def test_pdf_metadata_title_present(pdf_bytes: bytes) -> None:
     # "NeuroFlag" is stored in the /Title and /Author metadata fields (uncompressed).
     assert b"NeuroFlag" in pdf_bytes
 

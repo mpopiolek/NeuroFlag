@@ -159,6 +159,7 @@ class ResultsGridView(ctk.CTkFrame):
 
             pdf_bytes = generate_report(metadata, result, norms_config)
             Path(path).write_bytes(pdf_bytes)
+            messagebox.showinfo("Raport zapisany", f"Raport PDF zapisano w:\n{path}")
         except Exception as exc:
             messagebox.showerror(
                 "B\u0142\u0105d zapisu PDF",

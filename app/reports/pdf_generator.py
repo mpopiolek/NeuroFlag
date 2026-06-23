@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import io
+import os
 from pathlib import Path
 
 from reportlab.lib import colors
@@ -18,13 +19,15 @@ from reportlab.platypus import (
 )
 
 from app import __version__
-from app.domain.types import AnalysisResult, NormsConfig, PatientMetadata
+from app.domain.types import AnalysisResult, CellColor, NormsConfig, PatientMetadata
 from app.ui.components.rag_colors import RAG_COLOR_BG, TASK_LABELS
 
-_FONTS_DIR = Path("C:/Windows/Fonts")
+_FONTS_DIR = Path(os.environ.get("WINDIR", "C:/Windows")) / "Fonts"
 
 def _register_fonts() -> str:
     """Rejestruje Arial z systemu Windows; fallback na Helvetica."""
+    if "Arial" in pdfmetrics.getRegisteredFontNames():
+        return "Arial"
     regular = _FONTS_DIR / "arial.ttf"
     bold = _FONTS_DIR / "arialbd.ttf"
     italic = _FONTS_DIR / "ariali.ttf"
@@ -35,7 +38,10 @@ def _register_fonts() -> str:
         return "Arial"
     return "Helvetica"
 
-_BASE_FONT = _register_fonts()
+try:
+    _BASE_FONT = _register_fonts()
+except Exception:
+    _BASE_FONT = "Helvetica"
 
 DISCLAIMER_PL: str = (
     "Raport jest narz\u0119dziem przesiewowym i nie stanowi diagnozy medycznej. "
@@ -48,9 +54,6 @@ DISCLAIMER_PL: str = (
 _PAGE_W, _PAGE_H = A4
 _MARGIN = 2 * cm
 
-
-def _hex_to_color(hex_str: str) -> colors.HexColor:
-    return colors.HexColor(hex_str)
 
 
 def generate_report(
@@ -166,7 +169,7 @@ def generate_report(
     for idx, cell in enumerate(result.cells):
         task_label = TASK_LABELS.get(cell.task, cell.task)
         bg_hex = RAG_COLOR_BG[cell.color]
-        fg = colors.white if cell.color.value in ("red", "green") else colors.HexColor("#1A1A1A")
+        fg = colors.white if cell.color in (CellColor.RED, CellColor.GREEN) else colors.HexColor("#1A1A1A")
         cell_style = ParagraphStyle(
             f"cell_{idx}",
             parent=style_normal,
@@ -189,7 +192,7 @@ def generate_report(
     ts = TableStyle([("GRID", (0, 0), (-1, -1), 0.5, colors.white)])
     for idx, cell in enumerate(result.cells):
         row, col = idx // 5, idx % 5
-        bg = _hex_to_color(RAG_COLOR_BG[cell.color])
+        bg = colors.HexColor(RAG_COLOR_BG[cell.color])
         ts.add("BACKGROUND", (col, row), (col, row), bg)
         ts.add("VALIGN", (col, row), (col, row), "MIDDLE")
         ts.add("ALIGN", (col, row), (col, row), "CENTRE")

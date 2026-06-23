@@ -119,6 +119,17 @@ except PackageNotFoundError:
 
 ---
 
+## Addendum: norms.py — prerequisite discovered during implementation
+
+`app/domain/norms.py` required unplanned additions for Phase 2 to work:
+- `ObservationChecklist` / `ObservationCategory` dataclasses and `_parse_observation_checklist()` parser
+- `_DEFAULT_OBSERVATION_CHECKLIST` fallback (used when `norms.json` lacks the key)
+- `load()` updated to populate `NormsConfig.observation_checklist`
+
+These additions are cohesive with the module's existing responsibility (parsing norms.json) and were needed for Section 3 of the PDF report. The plan incorrectly assumed `NormsConfig` already exposed `observation_checklist`.
+
+---
+
 ## Phase 2: PDF Generator Module
 
 ### Overview
