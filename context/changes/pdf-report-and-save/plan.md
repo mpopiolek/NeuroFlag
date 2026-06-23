@@ -343,7 +343,7 @@ ReportLab generuje PDF synchronicznie w wątku UI. Przy typowych danych (10 kom�
 
 #### Automated
 
-- [x] 2.1 Testy jednostkowe przechodzą: `python -m pytest tests/unit/test_pdf_generator.py -v`
+- [x] 2.1 Testy jednostkowe przechodzą: `python -m pytest tests/unit/test_pdf_generator.py -v` — 34cf664
 - [x] 2.2 Mypy: `mypy app/reports/ --strict` — 2d9300a
 - [x] 2.3 Import smoke: `python -c "from app.reports.pdf_generator import generate_report; print('ok')"` — 2d9300a
 
@@ -368,10 +368,10 @@ ReportLab generuje PDF synchronicznie w wątku UI. Przy typowych danych (10 kom�
 
 #### Automated
 
-- [x] 4.1 Wszystkie 6 testów przechodzą: `python -m pytest tests/unit/test_pdf_generator.py -v`
-- [x] 4.2 Brak nowych ostrzeżeń mypy: `mypy tests/ --ignore-missing-imports`
-- [x] 4.3 Pełny suite: `python -m pytest -q` (zero regresji)
+- [x] 4.1 Wszystkie 6 testów przechodzą: `python -m pytest tests/unit/test_pdf_generator.py -v` — 34cf664
+- [x] 4.2 Brak nowych ostrzeżeń mypy: `mypy tests/ --ignore-missing-imports` — 34cf664
+- [x] 4.3 Pełny suite: `python -m pytest -q` (zero regresji) — 34cf664
 
 #### Manual
 
-- [x] 4.4 Coverage > 80%: `python -m pytest --cov=app/reports`
+- [x] 4.4 Coverage > 80%: `python -m pytest --cov=app/reports` — 34cf664
