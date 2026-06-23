@@ -331,13 +331,13 @@ ReportLab generuje PDF synchronicznie w wątku UI. Przy typowych danych (10 kom�
 
 #### Automated
 
-- [ ] 1.1 Testy przechodzą bez regresji: `python -m pytest -q`
-- [ ] 1.2 Brak błędów importu: `python -c "from app.ui.components.rag_colors import RAG_COLOR_BG; from app import __version__; print(__version__)"`
-- [ ] 1.3 Mypy przechodzi: `mypy app/ --strict`
+- [x] 1.1 Testy przechodzą bez regresji: `python -m pytest -q`
+- [x] 1.2 Brak błędów importu: `python -c "from app.ui.components.rag_colors import RAG_COLOR_BG; from app import __version__; print(__version__)"`
+- [x] 1.3 Mypy przechodzi: `mypy app/ --strict`
 
 #### Manual
 
-- [ ] 1.4 Aplikacja uruchamia się normalnie i wyświetla siatkę wyników (kolory bez zmian)
+- [x] 1.4 Aplikacja uruchamia się normalnie i wyświetla siatkę wyników (kolory bez zmian)
 
 ### Phase 2: PDF Generator Module
 

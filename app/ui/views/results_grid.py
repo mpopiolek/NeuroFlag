@@ -6,33 +6,15 @@ import customtkinter as ctk
 
 from app.domain.types import CellColor, CellResult, ScreeningCategory
 from app.ui.app_window import AppState
+from app.ui.components.rag_colors import (
+    CATEGORY_COLOR as _CATEGORY_COLOR,
+    RAG_COLOR_BG as _COLOR_BG,
+    RAG_COLOR_FG as _COLOR_FG,
+    TASK_LABELS as _TASK_LABELS,
+)
 
 if TYPE_CHECKING:
     from app.ui.app_window import AppWindow
-
-_TASK_LABELS: dict[str, str] = {
-    "OO": "Oczy otwarte",
-    "OZ": "Oczy zamkni\u0119te",
-    "ZP": "Zadanie pami\u0119ciowe",
-}
-
-_COLOR_BG: dict[CellColor, str] = {
-    CellColor.RED: "#CC0000",
-    CellColor.YELLOW: "#F5A800",
-    CellColor.GREEN: "#00AA00",
-}
-
-_COLOR_FG: dict[CellColor, str] = {
-    CellColor.RED: "#FFFFFF",
-    CellColor.YELLOW: "#1A1A1A",
-    CellColor.GREEN: "#FFFFFF",
-}
-
-_CATEGORY_COLOR: dict[ScreeningCategory, str] = {
-    ScreeningCategory.WSKAZANIE: "#CC0000",
-    ScreeningCategory.OBSERWACJA: "#A07000",
-    ScreeningCategory.BRAK: "#007700",
-}
 
 _CELL_W = 130
 _CELL_H = 82
