@@ -344,25 +344,25 @@ ReportLab generuje PDF synchronicznie w wątku UI. Przy typowych danych (10 kom�
 #### Automated
 
 - [ ] 2.1 Testy jednostkowe przechodzą: `python -m pytest tests/unit/test_pdf_generator.py -v`
-- [x] 2.2 Mypy: `mypy app/reports/ --strict`
-- [x] 2.3 Import smoke: `python -c "from app.reports.pdf_generator import generate_report; print('ok')"`
+- [x] 2.2 Mypy: `mypy app/reports/ --strict` — 2d9300a
+- [x] 2.3 Import smoke: `python -c "from app.reports.pdf_generator import generate_report; print('ok')"` — 2d9300a
 
 #### Manual
 
-- [x] 2.4 Wygenerowany PDF ma 4 sekcje, siatka 2×5 z kolorami RAG, brak wartości µV
+- [x] 2.4 Wygenerowany PDF ma 4 sekcje, siatka 2×5 z kolorami RAG, brak wartości µV — 2d9300a
 
 ### Phase 3: UI Integration
 
 #### Automated
 
-- [ ] 3.1 Testy przechodzą: `python -m pytest -q`
-- [ ] 3.2 Mypy: `mypy app/ --strict`
+- [x] 3.1 Testy przechodzą: `python -m pytest -q`
+- [x] 3.2 Mypy: `mypy app/ --strict`
 
 #### Manual
 
-- [ ] 3.3 Pełny flow: metadane → EEG → analiza → siatka → klik "Zapisz" → dialog → plik PDF zapisany
-- [ ] 3.4 Kliknięcie "Anuluj" w dialogu nie powoduje błędu
-- [ ] 3.5 Błąd zapisu wyświetla komunikat po polsku
+- [x] 3.3 Pełny flow: metadane → EEG → analiza → siatka → klik "Zapisz" → dialog → plik PDF zapisany
+- [x] 3.4 Kliknięcie "Anuluj" w dialogu nie powoduje błędu
+- [x] 3.5 Błąd zapisu wyświetla komunikat po polsku
 
 ### Phase 4: Unit Tests
 

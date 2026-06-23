@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+from tkinter import filedialog, messagebox
 from typing import TYPE_CHECKING
 
 import customtkinter as ctk
@@ -76,12 +78,22 @@ class ResultsGridView(ctk.CTkFrame):
         for idx, cell in enumerate(result.cells):
             self._make_cell(grid_frame, cell, row=idx // 5, col=idx % 5)
 
+        btn_row = ctk.CTkFrame(container, fg_color="transparent")
+        btn_row.pack(anchor="w", pady=(0, 0))
+
         ctk.CTkButton(
-            container,
+            btn_row,
             text="\u2190 Nowe badanie",
             command=self._on_new_study,
             width=160,
-        ).pack(anchor="w")
+        ).pack(side="left", padx=(0, 12))
+
+        ctk.CTkButton(
+            btn_row,
+            text="Zapisz raport PDF",
+            command=self._on_save_pdf,
+            width=200,
+        ).pack(side="left")
 
     def _make_cell(
         self,
@@ -124,6 +136,34 @@ class ResultsGridView(ctk.CTkFrame):
             font=ctk.CTkFont(size=10),
             text_color=fg,
         ).place(relx=0.5, rely=0.8, anchor="center")
+
+    def _on_save_pdf(self) -> None:
+        if self._app_state.analysis_result is None or self._app_state.metadata is None:
+            return  # structurally unreachable; satisfies mypy --strict
+
+        result = self._app_state.analysis_result
+        metadata = self._app_state.metadata
+        norms_config = self._app_state.norms_config
+
+        default_name = f"neuroflag_{result.analyzed_at.strftime('%Y-%m-%d')}.pdf"
+        path = filedialog.asksaveasfilename(
+            defaultextension=".pdf",
+            filetypes=[("PDF", "*.pdf")],
+            initialfile=default_name,
+        )
+        if not path:
+            return
+
+        try:
+            from app.reports.pdf_generator import generate_report
+
+            pdf_bytes = generate_report(metadata, result, norms_config)
+            Path(path).write_bytes(pdf_bytes)
+        except Exception as exc:
+            messagebox.showerror(
+                "B\u0142\u0105d zapisu PDF",
+                f"Nie mo\u017cna zapisa\u0107 raportu:\n{exc}",
+            )
 
     def _on_new_study(self) -> None:
         self._app_state.analysis_result = None
