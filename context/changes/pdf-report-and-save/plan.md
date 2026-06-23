@@ -331,25 +331,25 @@ ReportLab generuje PDF synchronicznie w wątku UI. Przy typowych danych (10 kom�
 
 #### Automated
 
-- [x] 1.1 Testy przechodzą bez regresji: `python -m pytest -q`
-- [x] 1.2 Brak błędów importu: `python -c "from app.ui.components.rag_colors import RAG_COLOR_BG; from app import __version__; print(__version__)"`
-- [x] 1.3 Mypy przechodzi: `mypy app/ --strict`
+- [x] 1.1 Testy przechodzą bez regresji: `python -m pytest -q` — 7410338
+- [x] 1.2 Brak błędów importu: `python -c "from app.ui.components.rag_colors import RAG_COLOR_BG; from app import __version__; print(__version__)"` — 7410338
+- [x] 1.3 Mypy przechodzi: `mypy app/ --strict` — 7410338
 
 #### Manual
 
-- [x] 1.4 Aplikacja uruchamia się normalnie i wyświetla siatkę wyników (kolory bez zmian)
+- [x] 1.4 Aplikacja uruchamia się normalnie i wyświetla siatkę wyników (kolory bez zmian) — 7410338
 
 ### Phase 2: PDF Generator Module
 
 #### Automated
 
 - [ ] 2.1 Testy jednostkowe przechodzą: `python -m pytest tests/unit/test_pdf_generator.py -v`
-- [ ] 2.2 Mypy: `mypy app/reports/ --strict`
-- [ ] 2.3 Import smoke: `python -c "from app.reports.pdf_generator import generate_report; print('ok')"`
+- [x] 2.2 Mypy: `mypy app/reports/ --strict`
+- [x] 2.3 Import smoke: `python -c "from app.reports.pdf_generator import generate_report; print('ok')"`
 
 #### Manual
 
-- [ ] 2.4 Wygenerowany PDF ma 4 sekcje, siatka 2×5 z kolorami RAG, brak wartości µV
+- [x] 2.4 Wygenerowany PDF ma 4 sekcje, siatka 2×5 z kolorami RAG, brak wartości µV
 
 ### Phase 3: UI Integration
 
