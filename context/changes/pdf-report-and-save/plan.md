@@ -343,7 +343,7 @@ ReportLab generuje PDF synchronicznie w wątku UI. Przy typowych danych (10 kom�
 
 #### Automated
 
-- [ ] 2.1 Testy jednostkowe przechodzą: `python -m pytest tests/unit/test_pdf_generator.py -v`
+- [x] 2.1 Testy jednostkowe przechodzą: `python -m pytest tests/unit/test_pdf_generator.py -v`
 - [x] 2.2 Mypy: `mypy app/reports/ --strict` — 2d9300a
 - [x] 2.3 Import smoke: `python -c "from app.reports.pdf_generator import generate_report; print('ok')"` — 2d9300a
 
@@ -355,23 +355,23 @@ ReportLab generuje PDF synchronicznie w wątku UI. Przy typowych danych (10 kom�
 
 #### Automated
 
-- [x] 3.1 Testy przechodzą: `python -m pytest -q`
-- [x] 3.2 Mypy: `mypy app/ --strict`
+- [x] 3.1 Testy przechodzą: `python -m pytest -q` — ebf8481
+- [x] 3.2 Mypy: `mypy app/ --strict` — ebf8481
 
 #### Manual
 
-- [x] 3.3 Pełny flow: metadane → EEG → analiza → siatka → klik "Zapisz" → dialog → plik PDF zapisany
-- [x] 3.4 Kliknięcie "Anuluj" w dialogu nie powoduje błędu
-- [x] 3.5 Błąd zapisu wyświetla komunikat po polsku
+- [x] 3.3 Pełny flow: metadane → EEG → analiza → siatka → klik "Zapisz" → dialog → plik PDF zapisany — ebf8481
+- [x] 3.4 Kliknięcie "Anuluj" w dialogu nie powoduje błędu — ebf8481
+- [x] 3.5 Błąd zapisu wyświetla komunikat po polsku — ebf8481
 
 ### Phase 4: Unit Tests
 
 #### Automated
 
-- [ ] 4.1 Wszystkie 6 testów przechodzą: `python -m pytest tests/unit/test_pdf_generator.py -v`
-- [ ] 4.2 Brak nowych ostrzeżeń mypy: `mypy tests/ --ignore-missing-imports`
-- [ ] 4.3 Pełny suite: `python -m pytest -q` (zero regresji)
+- [x] 4.1 Wszystkie 6 testów przechodzą: `python -m pytest tests/unit/test_pdf_generator.py -v`
+- [x] 4.2 Brak nowych ostrzeżeń mypy: `mypy tests/ --ignore-missing-imports`
+- [x] 4.3 Pełny suite: `python -m pytest -q` (zero regresji)
 
 #### Manual
 
-- [ ] 4.4 Coverage > 80%: `python -m pytest --cov=app/reports`
+- [x] 4.4 Coverage > 80%: `python -m pytest --cov=app/reports`

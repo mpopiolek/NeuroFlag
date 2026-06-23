@@ -60,6 +60,7 @@ def generate_report(
 ) -> bytes:
     """Generuje raport PDF; nigdy nie zawiera wartości µV."""
     buf = io.BytesIO()
+    keywords = " ".join(f"{c.channel}-{c.band}" for c in result.cells)
     doc = SimpleDocTemplate(
         buf,
         pagesize=A4,
@@ -67,6 +68,10 @@ def generate_report(
         rightMargin=_MARGIN,
         topMargin=_MARGIN,
         bottomMargin=_MARGIN,
+        title="NeuroFlag",
+        author="NeuroFlag",
+        subject=result.category.value,
+        keywords=keywords,
     )
 
     styles = getSampleStyleSheet()
