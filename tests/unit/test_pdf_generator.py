@@ -150,3 +150,8 @@ def test_category_in_output(pdf_bytes: bytes) -> None:
     # ReportLab stores /Subject in the /Info dict as a UTF-16BE string when non-ASCII chars
     # are present; using an all-ASCII category value avoids encoding ambiguity.
     assert b"Wskazanie" in pdf_bytes
+
+
+def test_disclaimer_contains_privacy_text() -> None:
+    assert "lokalnie" in DISCLAIMER_PL
+    assert "nagłówku" in DISCLAIMER_PL

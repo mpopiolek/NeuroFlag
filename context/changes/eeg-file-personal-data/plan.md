@@ -253,8 +253,8 @@ Ponieważ `_load_raw` jest prywatną funkcją, użyj `unittest.mock.patch` na `a
 
 #### Automated
 
-- [x] 1.1 `python -m pytest -q` — pełny pass, brak regresji
-- [x] 1.2 `mypy app/ --strict` — 0 nowych błędów
+- [x] 1.1 `python -m pytest -q` — pełny pass, brak regresji — 0ab328e
+- [x] 1.2 `mypy app/ --strict` — 0 nowych błędów — 0ab328e
 
 #### Manual
 
@@ -265,9 +265,9 @@ Ponieważ `_load_raw` jest prywatną funkcją, użyj `unittest.mock.patch` na `a
 
 #### Automated
 
-- [ ] 2.1 `python -m pytest -q tests/unit/test_pdf_generator.py` — pass
-- [ ] 2.2 DISCLAIMER_PL zawiera słowo „lokalnie" i „nagłówku"
-- [ ] 2.3 `mypy app/ --strict` — 0 nowych błędów
+- [x] 2.1 `python -m pytest -q tests/unit/test_pdf_generator.py` — pass
+- [x] 2.2 DISCLAIMER_PL zawiera słowo „lokalnie" i „nagłówku"
+- [x] 2.3 `mypy app/ --strict` — 0 nowych błędów
 
 #### Manual
 

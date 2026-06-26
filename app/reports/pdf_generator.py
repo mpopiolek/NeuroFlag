@@ -44,10 +44,12 @@ except Exception:
     _BASE_FONT = "Helvetica"
 
 DISCLAIMER_PL: str = (
-    "Raport jest narz\u0119dziem przesiewowym i nie stanowi diagnozy medycznej. "
-    "Wyniki nale\u017cy interpretowa\u0107 wy\u0142\u0105cznie w po\u0142\u0105czeniu z pe\u0142n\u0105 ocen\u0105 kliniczn\u0105 "
-    "przez uprawnionego specjalisty. Autorzy aplikacji NeuroFlag nie ponosz\u0105 "
-    "odpowiedzialno\u015bci za decyzje podj\u0119te wy\u0142\u0105cznie na podstawie niniejszego raportu."
+    "Analiza przeprowadzona wyłącznie lokalnie; żadne dane nie zostały wysłane poza to urządzenie. "
+    "Identyfikatory zapisane w nagłówku pliku EEG przez aparat nie są wyświetlane ani zapisywane w raporcie. "
+    "Raport jest narzędziem przesiewowym i nie stanowi diagnozy medycznej. "
+    "Wyniki należy interpretować wyłącznie w połączeniu z pełną oceną kliniczną "
+    "przez uprawnionego specjalisty. Autorzy aplikacji NeuroFlag nie ponoszą "
+    "odpowiedzialności za decyzje podjęte wyłącznie na podstawie niniejszego raportu."
     # TODO: weryfikacja eksperta domenowego przed wdrożeniem produkcyjnym
 )
 
