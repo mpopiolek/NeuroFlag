@@ -323,11 +323,14 @@ def run(
     cancel_check: Callable[[], bool] = lambda: False,
     channel_overrides: dict[str, str] | None = None,
     step_delay_s: float = 0.0,
+    anonymize_header: bool = False,
 ) -> tuple[float, ...]:
     """Ładuje plik EEG i zwraca 10 amplitud (µV) w kolejności config.norms."""
     _check_cancel(cancel_check)
     _wait_or_cancel(step_delay_s, cancel_check)
     raw = _load_raw(path)
+    if anonymize_header:
+        raw.anonymize(daysback=None, keep_his=False)
     _check_cancel(cancel_check)
     _wait_or_cancel(step_delay_s, cancel_check)
     normalize_channel_names(raw)

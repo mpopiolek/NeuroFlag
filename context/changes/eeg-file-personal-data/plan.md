@@ -265,9 +265,9 @@ Ponieważ `_load_raw` jest prywatną funkcją, użyj `unittest.mock.patch` na `a
 
 #### Automated
 
-- [x] 2.1 `python -m pytest -q tests/unit/test_pdf_generator.py` — pass
-- [x] 2.2 DISCLAIMER_PL zawiera słowo „lokalnie" i „nagłówku"
-- [x] 2.3 `mypy app/ --strict` — 0 nowych błędów
+- [x] 2.1 `python -m pytest -q tests/unit/test_pdf_generator.py` — pass — 273e338
+- [x] 2.2 DISCLAIMER_PL zawiera słowo „lokalnie" i „nagłówku" — 273e338
+- [x] 2.3 `mypy app/ --strict` — 0 nowych błędów — 273e338
 
 #### Manual
 
@@ -277,9 +277,9 @@ Ponieważ `_load_raw` jest prywatną funkcją, użyj `unittest.mock.patch` na `a
 
 #### Automated
 
-- [ ] 3.1 `python -m pytest -q tests/unit/test_pipeline.py` — oba nowe testy zielone
-- [ ] 3.2 `python -m pytest -q` — pełny suite pass
-- [ ] 3.3 `mypy app/ --strict` — 0 nowych błędów
+- [x] 3.1 `python -m pytest -q tests/unit/test_pipeline.py` — oba nowe testy zielone
+- [x] 3.2 `python -m pytest -q` — pełny suite pass
+- [x] 3.3 `mypy app/ --strict` — 0 nowych błędów
 
 #### Manual
 

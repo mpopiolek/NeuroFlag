@@ -54,6 +54,17 @@ class FileImportView(ctk.CTkFrame):
         )
         self._path_label.pack(anchor="w", pady=(0, 8))
 
+        self._anonymize_var = ctk.BooleanVar(value=self._app_state.anonymize_header)
+        self._anonymize_var.trace_add(
+            "write",
+            lambda *_: self._on_anonymize_change(),
+        )
+        ctk.CTkCheckBox(
+            container,
+            text="Wyczyść dane identyfikacyjne z nagłówka pliku przed analizą",
+            variable=self._anonymize_var,
+        ).pack(anchor="w", pady=(0, 12))
+
         self._status_label = ctk.CTkLabel(container, text="", wraplength=700, justify="left")
         self._status_label.pack(anchor="w", pady=(0, 8))
         self._status_label.pack_forget()
@@ -81,6 +92,9 @@ class FileImportView(ctk.CTkFrame):
             command=self._on_back,
             width=120,
         ).pack(side="left")
+
+    def _on_anonymize_change(self) -> None:
+        self._app_state.anonymize_header = bool(self._anonymize_var.get())
 
     def _on_load_file(self) -> None:
         if self._validating:

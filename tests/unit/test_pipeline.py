@@ -262,3 +262,25 @@ def test_run_missing_channels_after_normalize(mock_load: object) -> None:
     with pytest.raises(PipelineError) as exc_info:
         run(Path("no_c3.edf"), config)
     assert exc_info.value.code == "missing_channels"
+
+
+@patch("app.domain.pipeline._load_raw")
+def test_anonymize_header_clears_subject_info(mock_load: object) -> None:
+    raw = _synthetic_raw_with_annotations()
+    raw.info["subject_info"] = {"first_name": "Jan", "last_name": "Kowalski"}
+    mock_load.return_value = raw  # type: ignore[attr-defined]
+    config = load(resolve_norms_path())
+    run(Path("synthetic.edf"), config, anonymize_header=True)
+    # MNE replaces PII fields with the placeholder "mne_anonymize" rather than clearing them.
+    assert raw.info["subject_info"].get("first_name") != "Jan"
+    assert raw.info["subject_info"].get("last_name") != "Kowalski"
+
+
+@patch("app.domain.pipeline._load_raw")
+def test_anonymize_header_default_preserves_info(mock_load: object) -> None:
+    raw = _synthetic_raw_with_annotations()
+    raw.info["subject_info"] = {"first_name": "Jan", "last_name": "Kowalski"}
+    mock_load.return_value = raw  # type: ignore[attr-defined]
+    config = load(resolve_norms_path())
+    run(Path("synthetic.edf"), config, anonymize_header=False)
+    assert raw.info["subject_info"] == {"first_name": "Jan", "last_name": "Kowalski"}

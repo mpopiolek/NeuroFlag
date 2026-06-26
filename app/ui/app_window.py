@@ -19,6 +19,7 @@ class AppState:
     channel_overrides: dict[str, str] = field(default_factory=dict)
     available_channels: list[str] = field(default_factory=list)
     analysis_step_delay_s: float = 0.0
+    anonymize_header: bool = False
 
     def ready_for_analysis(self) -> bool:
         return self.metadata is not None and self.eeg_path is not None
