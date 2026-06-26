@@ -3,9 +3,10 @@
 | Field       | Value                   |
 |-------------|-------------------------|
 | id          | pdf-report-and-save     |
-| status      | impl_reviewed           |
+| status      | archived                |
 | created     | 2026-06-22              |
-| updated     | 2026-06-23              |
+| updated     | 2026-06-26              |
+| archived_at | 2026-06-26T08:17:00Z    |
 | roadmap-ref | S-03                    |
 
 ## Summary
