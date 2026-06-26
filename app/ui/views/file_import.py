@@ -100,7 +100,7 @@ class FileImportView(ctk.CTkFrame):
         self._selected_path = path
         self._app_state.eeg_path = None
         self._analyze_button.configure(state="disabled")
-        self._path_label.configure(text=str(path))
+        self._path_label.configure(text=path.name)
         self._status_label.pack_forget()
         self._progress.pack(anchor="w", pady=(0, 16))
         self._progress.start()

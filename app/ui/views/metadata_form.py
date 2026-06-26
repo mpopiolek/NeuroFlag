@@ -103,6 +103,20 @@ class MetadataFormView(ctk.CTkFrame):
         )
         self._next_button.grid(row=8, column=0, columnspan=2, sticky="w", pady=(16, 0))
 
+        _info_frame = ctk.CTkFrame(form, fg_color="#EBEBEB", corner_radius=6)
+        _info_frame.grid(row=9, column=0, columnspan=2, sticky="w", pady=(16, 0))
+        ctk.CTkLabel(
+            _info_frame,
+            text=(
+                "Analiza odbywa się wyłącznie na tym komputerze. Aplikacja nie wysyła żadnych danych do internetu. "
+                "Do wyniku przesiewowego wykorzystywany jest sygnał EEG oraz znaczniki zadań; "
+                "identyfikatory pacjenta zapisane w nagłówku pliku przez aparat EEG nie są wyświetlane ani zapisywane."
+            ),
+            wraplength=520,
+            justify="left",
+            text_color="#555555",
+        ).pack(padx=12, pady=8)
+
         self._restore_from_state()
 
     def _restore_from_state(self) -> None:
