@@ -271,9 +271,11 @@ def test_anonymize_header_clears_subject_info(mock_load: object) -> None:
     mock_load.return_value = raw  # type: ignore[attr-defined]
     config = load(resolve_norms_path())
     run(Path("synthetic.edf"), config, anonymize_header=True)
-    # MNE replaces PII fields with the placeholder "mne_anonymize" rather than clearing them.
-    assert raw.info["subject_info"].get("first_name") != "Jan"
-    assert raw.info["subject_info"].get("last_name") != "Kowalski"
+    # MNE 1.8.0 replaces PII with "mne_anonymize" rather than clearing to None.
+    # Guard against None in case future MNE versions change the nullification behaviour.
+    subj = raw.info["subject_info"]
+    assert subj is None or subj.get("first_name") != "Jan"
+    assert subj is None or subj.get("last_name") != "Kowalski"
 
 
 @patch("app.domain.pipeline._load_raw")

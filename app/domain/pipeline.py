@@ -330,7 +330,13 @@ def run(
     _wait_or_cancel(step_delay_s, cancel_check)
     raw = _load_raw(path)
     if anonymize_header:
-        raw.anonymize(daysback=None, keep_his=False)
+        try:
+            raw.anonymize(daysback=None, keep_his=False)
+        except Exception as exc:
+            raise PipelineError(
+                "anonymize_failed",
+                "Nie udało się wyczyścić nagłówka pliku EEG.",
+            ) from exc
     _check_cancel(cancel_check)
     _wait_or_cancel(step_delay_s, cancel_check)
     normalize_channel_names(raw)

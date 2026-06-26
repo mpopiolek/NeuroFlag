@@ -50,7 +50,6 @@ DISCLAIMER_PL: str = (
     "Wyniki należy interpretować wyłącznie w połączeniu z pełną oceną kliniczną "
     "przez uprawnionego specjalisty. Autorzy aplikacji NeuroFlag nie ponoszą "
     "odpowiedzialności za decyzje podjęte wyłącznie na podstawie niniejszego raportu."
-    # TODO: weryfikacja eksperta domenowego przed wdrożeniem produkcyjnym
 )
 
 _PAGE_W, _PAGE_H = A4

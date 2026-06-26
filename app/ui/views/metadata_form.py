@@ -103,10 +103,10 @@ class MetadataFormView(ctk.CTkFrame):
         )
         self._next_button.grid(row=8, column=0, columnspan=2, sticky="w", pady=(16, 0))
 
-        _info_frame = ctk.CTkFrame(form, fg_color="#EBEBEB", corner_radius=6)
-        _info_frame.grid(row=9, column=0, columnspan=2, sticky="w", pady=(16, 0))
+        info_frame = ctk.CTkFrame(form, fg_color="#EBEBEB", corner_radius=6)
+        info_frame.grid(row=9, column=0, columnspan=2, sticky="w", pady=(16, 0))
         ctk.CTkLabel(
-            _info_frame,
+            info_frame,
             text=(
                 "Analiza odbywa się wyłącznie na tym komputerze. Aplikacja nie wysyła żadnych danych do internetu. "
                 "Do wyniku przesiewowego wykorzystywany jest sygnał EEG oraz znaczniki zadań; "

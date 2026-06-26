@@ -61,7 +61,7 @@ class FileImportView(ctk.CTkFrame):
         )
         ctk.CTkCheckBox(
             container,
-            text="Wyczyść dane identyfikacyjne z nagłówka pliku przed analizą",
+            text="Wyczyść dane identyfikacyjne z nagłówka pliku przed analizą (tylko w pamięci — plik nie jest modyfikowany)",
             variable=self._anonymize_var,
         ).pack(anchor="w", pady=(0, 12))
 

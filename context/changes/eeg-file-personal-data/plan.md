@@ -234,6 +234,7 @@ Ponieważ `_load_raw` jest prywatną funkcją, użyj `unittest.mock.patch` na `a
 - `mne.io.BaseRaw.anonymize()` jest dostępne w MNE 1.8.0 (wersja przypięta w `pyproject.toml`) — do weryfikacji przy implementacji
 - Czyszczenie `meas_date` przez `anonymize()` może wpłynąć na metadane PDF (pole `date` dokumentu) jeśli kiedykolwiek byłoby pobierane z `raw.info` — aktualnie PDF używa `result.analyzed_at` (datetime analizy), nie daty pliku
 - Anonimizacja nagłówka BrainVision (`.vhdr`) przez MNE — zachowanie `anonymize()` dla tego formatu powinno być potwierdzone testem
+- **[TRACKED]** `DISCLAIMER_PL` wymaga weryfikacji eksperta domenowego (prawnik / specjalista kliniczny) przed wdrożeniem produkcyjnym — usunięto inline TODO z kodu (impl-review F4)
 
 ## References
 

@@ -23,6 +23,7 @@ _ERROR_CODE_PL: dict[str, str] = {
     "empty_segment": "Pusty segment",
     "invalid_amplitude": "B\u0142\u0105d amplitudy",
     "amplitude_count": "Niezgodna liczba amplitud",
+    "anonymize_failed": "Błąd czyszczenia nagłówka pliku EEG",
     "mne_missing": "Brak biblioteki MNE",
     "no_file": "Brak pliku EEG",
     "unexpected_error": "Nieoczekiwany b\u0142\u0105d",

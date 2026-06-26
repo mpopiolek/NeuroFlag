@@ -155,3 +155,4 @@ def test_category_in_output(pdf_bytes: bytes) -> None:
 def test_disclaimer_contains_privacy_text() -> None:
     assert "lokalnie" in DISCLAIMER_PL
     assert "nagłówku" in DISCLAIMER_PL
+    assert "nie są wyświetlane ani zapisywane w raporcie" in DISCLAIMER_PL
