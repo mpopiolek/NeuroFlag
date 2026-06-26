@@ -1,7 +1,7 @@
 ---
 id: eeg-file-personal-data
 title: "Dane osobowe w plikach EEG (.edf / BrainVision)"
-status: implementing
+status: implemented
 created: 2026-06-12
 updated: 2026-06-26
 ---

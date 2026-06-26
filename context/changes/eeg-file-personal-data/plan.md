@@ -277,9 +277,9 @@ Ponieważ `_load_raw` jest prywatną funkcją, użyj `unittest.mock.patch` na `a
 
 #### Automated
 
-- [x] 3.1 `python -m pytest -q tests/unit/test_pipeline.py` — oba nowe testy zielone
-- [x] 3.2 `python -m pytest -q` — pełny suite pass
-- [x] 3.3 `mypy app/ --strict` — 0 nowych błędów
+- [x] 3.1 `python -m pytest -q tests/unit/test_pipeline.py` — oba nowe testy zielone — 1c086b5
+- [x] 3.2 `python -m pytest -q` — pełny suite pass — 1c086b5
+- [x] 3.3 `mypy app/ --strict` — 0 nowych błędów — 1c086b5
 
 #### Manual
 
