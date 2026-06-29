@@ -79,9 +79,18 @@ def read_raw_digitrack(path: Path) -> mne.io.RawArray:
     """
     mne = _load_mne()
 
+    _MAX_FILE_BYTES = 200 * 1024 * 1024  # 200 MB — pliki DigiTrack to max ~15 MB
     try:
+        file_size = path.stat().st_size
+        if file_size > _MAX_FILE_BYTES:
+            raise EEGFileError(
+                f"Plik zbyt duży ({file_size // 1_048_576} MB). "
+                "Maksymalny rozmiar dla formatu DigiTrack: 200 MB."
+            )
         with open(path, "rb") as fh:
             data = fh.read()
+    except EEGFileError:
+        raise
     except OSError as exc:
         raise EEGFileError(
             "Plik niedostępny — sprawdź czy plik istnieje i nie jest zablokowany."
@@ -90,20 +99,33 @@ def read_raw_digitrack(path: Path) -> mne.io.RawArray:
     if _DIGITRACK_SIGNATURE not in data[:512]:
         raise EEGFileError("Brak sygnatury EEGDigiTrack w pliku.")
 
-    sfreq: float = float(struct.unpack_from("<H", data, 0x0004)[0])
-    total_blocks: int = struct.unpack_from("<I", data, 0x0010)[0]
+    try:
+        sfreq: float = float(struct.unpack_from("<H", data, 0x0004)[0])
+        if sfreq <= 0:
+            raise EEGFileError(
+                "Uszkodzony nagłówek: nieprawidłowa częstotliwość próbkowania"
+                f" ({int(sfreq)} Hz)."
+            )
+        total_blocks: int = struct.unpack_from("<I", data, 0x0010)[0]
 
-    ch_names_all: list[str] = []
-    ch_cal_all: list[float] = []
-    for i in range(32):
-        base = 0x0480 + i * 0x40
-        raw_name = data[base : base + 16]
-        name = raw_name.split(b"\x00")[0].decode("ascii", errors="replace").strip()
-        if not name or name == "Default" or ord(name[0]) < 0x20:
-            break
-        cal: float = struct.unpack_from("<f", data, base + 0x18)[0]
-        ch_names_all.append(name)
-        ch_cal_all.append(cal)
+        ch_names_all: list[str] = []
+        ch_cal_all: list[float] = []
+        for i in range(32):
+            base = 0x0480 + i * 0x40
+            raw_name = data[base : base + 16]
+            try:
+                name = raw_name.split(b"\x00")[0].decode("ascii").strip()
+            except UnicodeDecodeError:
+                break
+            if not name or name == "Default" or ord(name[0]) < 0x20:
+                break
+            cal: float = struct.unpack_from("<f", data, base + 0x18)[0]
+            ch_names_all.append(name)
+            ch_cal_all.append(cal)
+    except EEGFileError:
+        raise
+    except struct.error as exc:
+        raise EEGFileError("Uszkodzony nagłówek: zbyt krótki plik.") from exc
 
     ch_names_data = [n for n, c in zip(ch_names_all, ch_cal_all) if c <= _EEG_CAL_THRESHOLD]
     ch_cal_data = [c for c in ch_cal_all if c <= _EEG_CAL_THRESHOLD]
@@ -119,6 +141,9 @@ def read_raw_digitrack(path: Path) -> mne.io.RawArray:
             raise EEGFileError(
                 f"Uszkodzony nagłówek: kalibracja kanału {ch_name} = 0"
             )
+
+    if total_blocks == 0:
+        raise EEGFileError("Uszkodzony nagłówek: total_blocks = 0 — brak danych w pliku.")
 
     data_start = len(data) - total_blocks * n_ch_data * 2
     if data_start < 0:
@@ -172,9 +197,7 @@ def validate_eeg_header(path: Path) -> None:
             resolve_brainvision_companions(path)
             mne.io.read_raw_brainvision(path, preload=False, verbose=False)
         elif suffix == ".eeg":
-            if not _is_digitrack(path):
-                raise EEGFileError("Plik .eeg nie jest w formacie EEGDigiTrack.")
-            read_raw_digitrack(path)
+            read_raw_digitrack(path)  # rzuca EEGFileError gdy sygnatura nieobecna
     except EEGFileError:
         raise
     except OSError as exc:

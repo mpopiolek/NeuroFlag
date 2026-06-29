@@ -261,7 +261,7 @@ def _digitrack_annotations(
     surowe bajty — pipeline.run() operuje wyłącznie na mne.io.BaseRaw i nie ma
     dostępu do bajtów pliku po załadowaniu.
     """
-    return None
+    return None  # pragma: no cover
 
 
 def _load_raw(path: Path) -> mne.io.BaseRaw:
@@ -274,18 +274,17 @@ def _load_raw(path: Path) -> mne.io.BaseRaw:
     mne = _load_mne()
     suffix = path.suffix.lower()
     if suffix == ".eeg":
-        from app.domain.eeg_file import EEGFileError as _EEGErr
         from app.domain.eeg_file import read_raw_digitrack
         try:
             return read_raw_digitrack(path)
-        except _EEGErr as exc:
+        except EEGFileError as exc:
             raise PipelineError("file_unreadable", str(exc)) from exc
     try:
         if suffix == ".edf":
             return mne.io.read_raw_edf(path, preload=True, verbose=False)
         if suffix == ".vhdr":
             return mne.io.read_raw_brainvision(path, preload=True, verbose=False)
-    except (OSError, Exception) as exc:
+    except Exception as exc:
         raise PipelineError(
             "file_unreadable",
             "Nie można odczytać pliku EEG — "

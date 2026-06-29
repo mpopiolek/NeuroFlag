@@ -56,6 +56,10 @@ def main() -> None:
     orig_data_start = len(data) - orig_total_blocks * n_ch_data * 2
     data_bytes_needed = TARGET_BLOCKS * n_ch_data * 2
 
+    if orig_data_start < 0:
+        print("[BŁĄD] Plik źródłowy: total_blocks niezgodne z rozmiarem pliku.", file=sys.stderr)
+        sys.exit(1)
+
     print(f"Oryginalne total_blocks={orig_total_blocks}, data_start=0x{orig_data_start:X}")
     print(f"Wycinamy {TARGET_BLOCKS} bloków = {data_bytes_needed} B danych.")
 
@@ -63,10 +67,18 @@ def main() -> None:
     header = data[:orig_data_start]
     data_section = data[orig_data_start : orig_data_start + data_bytes_needed]
 
+    actual_blocks = len(data_section) // (n_ch_data * 2)
+    if actual_blocks < TARGET_BLOCKS:
+        print(
+            f"[BŁĄD] Źródło ma tylko {actual_blocks} bloków, potrzeba {TARGET_BLOCKS}.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
     output = bytearray(header) + bytearray(data_section)
 
-    # Zaktualizuj total_blocks w nagłówku
-    struct.pack_into("<I", output, 0x0010, TARGET_BLOCKS)
+    # Zaktualizuj total_blocks w nagłówku (może różnić się od TARGET_BLOCKS przy problemach)
+    struct.pack_into("<I", output, 0x0010, actual_blocks)
 
     # Wyzeruj PII (imię, data urodzenia, PESEL)
     for i in range(PII_START, PII_END):

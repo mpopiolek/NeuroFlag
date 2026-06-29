@@ -62,10 +62,10 @@ def test_validate_extension_accepts_eeg_digitrack() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_validate_extension_rejects_eeg_without_signature(tmp_path: Path) -> None:
+def test_validate_eeg_header_rejects_eeg_without_digitrack_signature(tmp_path: Path) -> None:
     eeg = tmp_path / "session.eeg"
     eeg.write_bytes(b"NOT_A_DIGITRACK_FILE\x00" * 30)
-    with pytest.raises(EEGFileError, match=r"nie jest w formacie EEGDigiTrack"):
+    with pytest.raises(EEGFileError, match=r"Brak sygnatury EEGDigiTrack"):
         validate_eeg_header(eeg)
 
 
@@ -170,6 +170,16 @@ def test_read_raw_digitrack_no_signature_raises(tmp_path: Path) -> None:
     eeg = tmp_path / "fake.eeg"
     eeg.write_bytes(b"\x00" * 512)
     with pytest.raises(EEGFileError, match=r"Brak sygnatury EEGDigiTrack"):
+        read_raw_digitrack(eeg)
+
+
+def test_read_raw_digitrack_corrupt_total_blocks_raises(tmp_path: Path) -> None:
+    header = bytearray(_minimal_digitrack_header())
+    # total_blocks=0xFFFFFF wymaga ~32 MB danych — plik jest ~2 KB, data_start < 0
+    struct.pack_into("<I", header, 0x0010, 0xFFFFFF)
+    eeg = tmp_path / "corrupt.eeg"
+    eeg.write_bytes(bytes(header))
+    with pytest.raises(EEGFileError, match=r"data_start < 0"):
         read_raw_digitrack(eeg)
 
 
