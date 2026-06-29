@@ -248,6 +248,22 @@ def detect_task_segments(raw: mne.io.BaseRaw) -> dict[str, tuple[float, float]]:
     )
 
 
+def _digitrack_annotations(
+    data: bytes, sfreq: float
+) -> mne.Annotations | None:
+    """Próbuje odczytać znaczniki zdarzeń z binarnej strefy DigiTrack.
+
+    Zwraca None gdy format strefy jest nieznany — pipeline używa wtedy fallback 3×3 min.
+    Pełne dekodowanie wymaga specyfikacji od Elmiko (patrz research.md Open Questions).
+
+    Uwaga dla przyszłego implementatora: aktywacja tej funkcji wymaga refaktoru
+    read_raw_digitrack() tak, by zwracała (RawArray, bytes) lub przechowywała
+    surowe bajty — pipeline.run() operuje wyłącznie na mne.io.BaseRaw i nie ma
+    dostępu do bajtów pliku po załadowaniu.
+    """
+    return None
+
+
 def _load_raw(path: Path) -> mne.io.BaseRaw:
     from app.domain.eeg_file import EEGFileError
 
@@ -257,6 +273,13 @@ def _load_raw(path: Path) -> mne.io.BaseRaw:
         raise PipelineError("unsupported_format", str(exc)) from exc
     mne = _load_mne()
     suffix = path.suffix.lower()
+    if suffix == ".eeg":
+        from app.domain.eeg_file import EEGFileError as _EEGErr
+        from app.domain.eeg_file import read_raw_digitrack
+        try:
+            return read_raw_digitrack(path)
+        except _EEGErr as exc:
+            raise PipelineError("file_unreadable", str(exc)) from exc
     try:
         if suffix == ".edf":
             return mne.io.read_raw_edf(path, preload=True, verbose=False)
@@ -265,8 +288,8 @@ def _load_raw(path: Path) -> mne.io.BaseRaw:
     except (OSError, Exception) as exc:
         raise PipelineError(
             "file_unreadable",
-            "Nie mo\u017cna odczyta\u0107 pliku EEG \u2014 "
-            "sprawd\u017a czy plik istnieje i nie jest uszkodzony.",
+            "Nie można odczytać pliku EEG — "
+            "sprawdź czy plik istnieje i nie jest uszkodzony.",
         ) from exc
     raise PipelineError(
         "unsupported_format",
@@ -332,6 +355,7 @@ def run(
     if anonymize_header:
         try:
             raw.anonymize(daysback=None, keep_his=False)
+            raw.info["subject_info"] = {}
         except Exception as exc:
             raise PipelineError(
                 "anonymize_failed",

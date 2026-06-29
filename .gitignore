@@ -29,3 +29,4 @@ tests/fixtures/*.edf
 tests/fixtures/*.vhdr
 tests/fixtures/*.vmrk
 tests/fixtures/*.eeg
+!tests/fixtures/sample_digitrack.eeg

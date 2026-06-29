@@ -59,9 +59,13 @@ class FileImportView(ctk.CTkFrame):
             "write",
             lambda *_: self._on_anonymize_change(),
         )
+        _anon_text = (
+            "Wyczyść dane identyfikacyjne z nagłówka pliku przed analizą"
+            " (tylko w pamięci — plik nie jest modyfikowany)"
+        )
         ctk.CTkCheckBox(
             container,
-            text="Wyczyść dane identyfikacyjne z nagłówka pliku przed analizą (tylko w pamięci — plik nie jest modyfikowany)",
+            text=_anon_text,
             variable=self._anonymize_var,
         ).pack(anchor="w", pady=(0, 12))
 
@@ -103,7 +107,7 @@ class FileImportView(ctk.CTkFrame):
             parent=self.winfo_toplevel(),
             title="Wybierz plik EEG",
             filetypes=[
-                ("Pliki EEG", "*.edf *.vhdr"),
+                ("Pliki EEG", "*.edf *.vhdr *.eeg *.EEG"),
                 ("Wszystkie pliki", "*.*"),
             ],
         )
