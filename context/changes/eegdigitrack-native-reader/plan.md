@@ -402,45 +402,45 @@ PII (imię, data urodzenia, PESEL) wyzerowane przez skrypt generatora.
 
 #### Automated
 
-- [x] 1.1 `pytest tests/unit/test_eeg_file.py -q` przechodzi (testy z Phase 4)
-- [x] 1.2 `mypy app/domain/eeg_file.py --strict` bez błędów
-- [x] 1.3 `ruff check app/domain/eeg_file.py` bez błędów
+- [x] 1.1 `pytest tests/unit/test_eeg_file.py -q` przechodzi (testy z Phase 4) — dccc452
+- [x] 1.2 `mypy app/domain/eeg_file.py --strict` bez błędów — dccc452
+- [x] 1.3 `ruff check app/domain/eeg_file.py` bez błędów — dccc452
 
 #### Manual
 
-- [ ] 1.4 `read_raw_digitrack()` zwraca RawArray z 19 ch, sfreq=250, dane ±50 µV
+- [x] 1.4 `read_raw_digitrack()` zwraca RawArray z 19 ch, sfreq=250, dane ±50 µV — dccc452
 
 ### Phase 2: Integracja pipeline — `app/domain/pipeline.py`
 
 #### Automated
 
-- [x] 2.1 `pytest tests/unit/test_pipeline.py -q` bez regresji
-- [x] 2.2 `mypy app/domain/pipeline.py --strict` bez błędów
+- [x] 2.1 `pytest tests/unit/test_pipeline.py -q` bez regresji — dccc452
+- [x] 2.2 `mypy app/domain/pipeline.py --strict` bez błędów — dccc452
 
 #### Manual
 
-- [ ] 2.3 Uruchom aplikację, wczytaj Kuczyński.EEG, analiza przechodzi fallbackiem 3×3 min
-- [ ] 2.4 Checkbox anonimizacji nie powoduje błędu przy pliku DigiTrack
+- [x] 2.3 Uruchom aplikację, wczytaj Kuczyński.EEG, analiza przechodzi fallbackiem 3×3 min — dccc452
+- [x] 2.4 Checkbox anonimizacji nie powoduje błędu przy pliku DigiTrack — dccc452
 
 ### Phase 3: UI — dialog wyboru pliku
 
 #### Automated
 
-- [x] 3.1 `mypy app/ui/views/file_import.py --strict` bez błędów
-- [x] 3.2 `ruff check app/ui/views/file_import.py` bez błędów
+- [x] 3.1 `mypy app/ui/views/file_import.py --strict` bez błędów — dccc452
+- [x] 3.2 `ruff check app/ui/views/file_import.py` bez błędów — dccc452
 
 #### Manual
 
-- [ ] 3.3 Dialog pokazuje .EEG pliki bez przełączania na „Wszystkie pliki"
+- [x] 3.3 Dialog pokazuje .EEG pliki bez przełączania na „Wszystkie pliki" — dccc452
 
 ### Phase 4: Fixture i testy jednostkowe
 
 #### Automated
 
-- [x] 4.1 `pytest tests/unit/ -q` — 7 nowych testów DigiTrack przechodzi
-- [x] 4.2 `pytest tests/unit/test_eeg_file.py -v` — brak regresji starych testów
-- [x] 4.3 `mypy tests/unit/test_eeg_file.py --strict` bez błędów
+- [x] 4.1 `pytest tests/unit/ -q` — 7 nowych testów DigiTrack przechodzi — dccc452
+- [x] 4.2 `pytest tests/unit/test_eeg_file.py -v` — brak regresji starych testów — dccc452
+- [x] 4.3 `mypy tests/unit/test_eeg_file.py --strict` bez błędów — dccc452
 
 #### Manual
 
-- [ ] 4.4 `generate_digitrack_fixture.py` tworzy plik < 200 KB
+- [x] 4.4 `generate_digitrack_fixture.py` tworzy plik < 200 KB — dccc452

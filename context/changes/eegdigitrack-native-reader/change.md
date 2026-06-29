@@ -1,7 +1,7 @@
 ---
 id: eegdigitrack-native-reader
 title: "Natywny czytnik formatu EEGDigiTrack (Elmiko) w NeuroFlag"
-status: implementing
+status: implemented
 created: 2026-06-26
 updated: 2026-06-29
 ---
