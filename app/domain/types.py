@@ -33,6 +33,9 @@ class PatientMetadata:
     age: int
     sex: Sex
     exclusions: frozenset[ExclusionDiagnosis] = field(default_factory=frozenset)
+    initials: str | None = None
+    birth_year: str | None = None
+    custom_label: str | None = None
 
     def is_excluded(self) -> bool:
         return len(self.exclusions) > 0

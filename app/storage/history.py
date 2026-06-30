@@ -15,7 +15,7 @@ class StudyRecord:
     id: int
     analyzed_at: datetime
     initials: str | None
-    birth_date: str | None
+    birth_year: str | None
     custom_label: str | None
     age: int
     sex: str
@@ -30,8 +30,8 @@ class StudyRecord:
         parts: list[str] = []
         if self.initials:
             parts.append(self.initials)
-        if self.birth_date:
-            parts.append(self.birth_date)
+        if self.birth_year:
+            parts.append(self.birth_year)
         if parts:
             return " / ".join(parts)
         return self.analyzed_at.strftime("%Y-%m-%d %H:%M")
@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS studies (
     id               INTEGER PRIMARY KEY AUTOINCREMENT,
     analyzed_at      TEXT    NOT NULL,
     initials         TEXT,
-    birth_date       TEXT,
+    birth_year       TEXT,
     custom_label     TEXT,
     age              INTEGER NOT NULL,
     sex              TEXT    NOT NULL,
@@ -108,21 +108,18 @@ class HistoryStore:
         exclusions_json = json.dumps([e.value for e in metadata.exclusions])
         cells_json = _serialize_cells(result.cells)
         eeg_filename = eeg_path.name if eeg_path is not None else None
-        initials: str | None = getattr(metadata, "initials", None)
-        birth_date: str | None = getattr(metadata, "birth_date", None)
-        custom_label: str | None = getattr(metadata, "custom_label", None)
         cur = self._conn.execute(
             """
             INSERT INTO studies
-                (analyzed_at, initials, birth_date, custom_label, age, sex,
+                (analyzed_at, initials, birth_year, custom_label, age, sex,
                  exclusions_json, category, description, cells_json, eeg_filename)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 result.analyzed_at.isoformat(),
-                initials,
-                birth_date,
-                custom_label,
+                metadata.initials,
+                metadata.birth_year,
+                metadata.custom_label,
                 metadata.age,
                 metadata.sex.value,
                 exclusions_json,
@@ -140,7 +137,7 @@ class HistoryStore:
         """Zwraca rekordy posortowane malejąco po analyzed_at."""
         rows = self._conn.execute(
             """
-            SELECT id, analyzed_at, initials, birth_date, custom_label,
+            SELECT id, analyzed_at, initials, birth_year, custom_label,
                    age, sex, category, description, cells_json, eeg_filename
             FROM studies
             ORDER BY analyzed_at DESC
@@ -155,7 +152,7 @@ class HistoryStore:
                     id=row["id"],
                     analyzed_at=datetime.fromisoformat(row["analyzed_at"]),
                     initials=row["initials"],
-                    birth_date=row["birth_date"],
+                    birth_year=row["birth_year"],
                     custom_label=row["custom_label"],
                     age=row["age"],
                     sex=row["sex"],

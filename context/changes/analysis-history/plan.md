@@ -506,25 +506,27 @@ po wdrożeniu tej zmiany.
 #### Automated
 
 - [ ] 1.1 `pytest tests/unit/test_history.py -q` przechodzi
-- [x] 1.2 `mypy app/storage/history.py --strict` bez błędów
-- [x] 1.3 `ruff check app/storage/history.py` bez błędów
+- [x] 1.2 `mypy app/storage/history.py --strict` bez błędów — 79a9c2c
+- [x] 1.3 `ruff check app/storage/history.py` bez błędów — 79a9c2c
 
 #### Manual
 
-- [x] 1.4 `HistoryStore(resolve_history_db_path()).has_any()` zwraca `False`
+- [x] 1.4 `HistoryStore(resolve_history_db_path()).has_any()` zwraca `False` — 79a9c2c
 
 ### Phase 2: Typy domenowe + formularz metryki
 
 #### Automated
 
-- [ ] 2.1 `mypy app/domain/types.py --strict` bez błędów
-- [ ] 2.2 `mypy app/ui/views/metadata_form.py --strict` bez błędów
-- [ ] 2.3 `pytest tests/unit/test_types.py -q` bez regresji
+- [x] 2.1 `mypy app/domain/types.py --strict` bez błędów
+- [x] 2.2 `mypy app/ui/views/metadata_form.py --strict` bez błędów
+- [x] 2.3 `pytest tests/unit/test_types.py -q` bez regresji
+
+> Odchylenie od planu: pola identyfikacyjne przeniesione z MetadataFormView → FileImportView (po walidacji pliku); birth_date zmienione na birth_year; pre-fill z nagłówka EDF; wszystkie 3 pola opcjonalne.
 
 #### Manual
 
-- [ ] 2.4 Formularz pokazuje sekcję „Identyfikacja dziecka (opcjonalnie)" z 3 polami
-- [ ] 2.5 Formularz przechodzi dalej gdy pola są puste
+- [x] 2.4 Formularz pokazuje sekcję „Identyfikacja dziecka (opcjonalnie)" z 3 polami
+- [x] 2.5 Formularz przechodzi dalej gdy pola są puste
 
 ### Phase 3: Auto-zapis po analizie
 

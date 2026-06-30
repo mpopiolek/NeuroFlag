@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import threading
+from dataclasses import replace
 from pathlib import Path
 from tkinter import filedialog
 from typing import TYPE_CHECKING
@@ -8,7 +9,7 @@ from typing import TYPE_CHECKING
 import customtkinter as ctk
 
 from app.domain.channels import get_missing_canonical
-from app.domain.eeg_file import EEGFileError, get_channel_names
+from app.domain.eeg_file import EEGFileError, get_channel_names, read_patient_header_info
 from app.ui.app_window import AppState
 
 if TYPE_CHECKING:
@@ -78,6 +79,39 @@ class FileImportView(ctk.CTkFrame):
         self._progress.pack_forget()
         self._progress.stop()
 
+        self._id_frame = ctk.CTkFrame(container, fg_color="transparent")
+        ctk.CTkLabel(
+            self._id_frame,
+            text="Identyfikacja dziecka (opcjonalnie)",
+            font=ctk.CTkFont(size=15, weight="bold"),
+        ).grid(row=0, column=0, columnspan=2, sticky="w", pady=(0, 8))
+
+        ctk.CTkLabel(self._id_frame, text="Inicjały:").grid(
+            row=1, column=0, sticky="w", padx=(0, 12), pady=5
+        )
+        self._initials_entry = ctk.CTkEntry(
+            self._id_frame, width=180, placeholder_text="np. AN"
+        )
+        self._initials_entry.grid(row=1, column=1, sticky="w", pady=5)
+
+        ctk.CTkLabel(self._id_frame, text="Rok urodzenia:").grid(
+            row=2, column=0, sticky="w", padx=(0, 12), pady=5
+        )
+        self._birth_year_entry = ctk.CTkEntry(
+            self._id_frame, width=100, placeholder_text="np. 2018"
+        )
+        self._birth_year_entry.grid(row=2, column=1, sticky="w", pady=5)
+
+        ctk.CTkLabel(self._id_frame, text="Własna etykieta:").grid(
+            row=3, column=0, sticky="w", padx=(0, 12), pady=5
+        )
+        self._custom_label_entry = ctk.CTkEntry(
+            self._id_frame, width=220, placeholder_text="np. klasa 2B"
+        )
+        self._custom_label_entry.grid(row=3, column=1, sticky="w", pady=5)
+
+        self._id_frame.pack_forget()
+
         button_row = ctk.CTkFrame(container, fg_color="transparent")
         button_row.pack(anchor="w", pady=(8, 0))
 
@@ -135,15 +169,21 @@ class FileImportView(ctk.CTkFrame):
 
         error: EEGFileError | None = None
         channels: list[str] = []
+        patient_info: tuple[str | None, str | None] = (None, None)
         try:
             eeg_file.validate_eeg_header(path)
             channels = get_channel_names(path)
+            patient_info = read_patient_header_info(path)
         except EEGFileError as exc:
             error = exc
-        self.after(0, self._on_result, path, error, channels)
+        self.after(0, self._on_result, path, error, channels, patient_info)
 
     def _on_result(
-        self, path: Path, error: EEGFileError | None, channels: list[str]
+        self,
+        path: Path,
+        error: EEGFileError | None,
+        channels: list[str],
+        patient_info: tuple[str | None, str | None],
     ) -> None:
         self._validating = False
         self._progress.stop()
@@ -156,6 +196,7 @@ class FileImportView(ctk.CTkFrame):
                 text=f"✗ {error}",
                 text_color="#CC0000",
             )
+            self._id_frame.pack_forget()
             self._analyze_button.configure(state="disabled")
             return
 
@@ -174,11 +215,39 @@ class FileImportView(ctk.CTkFrame):
                 text="✓ Plik wczytany poprawnie",
                 text_color="#008800",
             )
+
+        self._show_identification_section(patient_info)
         self._analyze_button.configure(state="normal")
+
+    def _show_identification_section(
+        self, patient_info: tuple[str | None, str | None]
+    ) -> None:
+        """Pokazuje sekcję identyfikacji. Czyści pola i pre-fill z nagłówka EDF."""
+        initials, birth_year = patient_info
+
+        self._initials_entry.delete(0, "end")
+        if initials:
+            self._initials_entry.insert(0, initials)
+
+        self._birth_year_entry.delete(0, "end")
+        if birth_year:
+            self._birth_year_entry.insert(0, birth_year)
+
+        self._custom_label_entry.delete(0, "end")
+
+        self._id_frame.pack(anchor="w", pady=(0, 12), before=self._analyze_button.master)
 
     def _on_analyze(self) -> None:
         if not self._app_state.ready_for_analysis():
             return
+
+        assert self._app_state.metadata is not None
+        self._app_state.metadata = replace(
+            self._app_state.metadata,
+            initials=self._initials_entry.get().strip() or None,
+            birth_year=self._birth_year_entry.get().strip() or None,
+            custom_label=self._custom_label_entry.get().strip() or None,
+        )
 
         missing = get_missing_canonical(self._app_state.available_channels)
         if missing:

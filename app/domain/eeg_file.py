@@ -164,6 +164,39 @@ def read_raw_digitrack(path: Path) -> mne.io.RawArray:
     return mne.io.RawArray(data_v, info, verbose=False)
 
 
+def read_patient_header_info(path: Path) -> tuple[str | None, str | None]:
+    """Czyta inicjały i rok urodzenia z nagłówka pliku EDF.
+
+    Zwraca (initials, birth_year) lub (None, None) przy braku danych.
+    Obsługuje wyłącznie .edf — BrainVision i DigiTrack nie mają
+    strukturalnych danych pacjenta w nagłówku.
+    Wszystkie wyjątki są przechwytywane — nie blokuje wczytywania pliku.
+    """
+    if path.suffix.lower() != ".edf":
+        return None, None
+    try:
+        mne = _load_mne()
+        raw = mne.io.read_raw_edf(path, preload=False, verbose=False)
+        subj: dict[str, object] = raw.info.get("subject_info") or {}
+
+        first = str(subj.get("first_name") or "").strip()
+        last = str(subj.get("last_name") or "").strip()
+        initials: str | None = None
+        if first or last:
+            initials = "".join(n[0].upper() for n in (first, last) if n) or None
+
+        birthday = subj.get("birthday")
+        birth_year: str | None = None
+        if birthday is not None:
+            birth_year = str(getattr(birthday, "year", ""))  # date.year
+            if not birth_year:
+                birth_year = None
+
+        return initials, birth_year
+    except Exception:
+        return None, None
+
+
 def get_channel_names(path: Path) -> list[str]:
     """Zwraca listę kanałów z nagłówka pliku EEG bez wczytywania danych.
 
