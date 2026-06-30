@@ -6,12 +6,18 @@ from typing import TYPE_CHECKING
 
 import customtkinter as ctk
 
-from app.domain.types import CellColor, CellResult, ScreeningCategory
+from app.domain.types import CellResult
 from app.ui.app_window import AppState
 from app.ui.components.rag_colors import (
     CATEGORY_COLOR as _CATEGORY_COLOR,
+)
+from app.ui.components.rag_colors import (
     RAG_COLOR_BG as _COLOR_BG,
+)
+from app.ui.components.rag_colors import (
     RAG_COLOR_FG as _COLOR_FG,
+)
+from app.ui.components.rag_colors import (
     TASK_LABELS as _TASK_LABELS,
 )
 
@@ -93,7 +99,17 @@ class ResultsGridView(ctk.CTkFrame):
             text="Zapisz raport PDF",
             command=self._on_save_pdf,
             width=200,
-        ).pack(side="left")
+        ).pack(side="left", padx=(0, 12))
+
+        store = app_state.history_store
+        assert store is not None
+        if store.has_any():
+            ctk.CTkButton(
+                btn_row,
+                text="Historia badań",
+                command=self._on_history,
+                width=160,
+            ).pack(side="left")
 
     def _make_cell(
         self,
@@ -165,6 +181,11 @@ class ResultsGridView(ctk.CTkFrame):
                 "B\u0142\u0105d zapisu PDF",
                 f"Nie mo\u017cna zapisa\u0107 raportu:\n{exc}",
             )
+
+    def _on_history(self) -> None:
+        from app.ui.views.history import HistoryView
+
+        self._app_window.show_view(HistoryView)
 
     def _on_new_study(self) -> None:
         self._app_state.analysis_result = None

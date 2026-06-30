@@ -133,6 +133,24 @@ class HistoryStore:
         row_id: int = cur.lastrowid  # type: ignore[assignment]
         return row_id
 
+    def _rows_to_records(self, rows: list[sqlite3.Row]) -> list[StudyRecord]:
+        return [
+            StudyRecord(
+                id=row["id"],
+                analyzed_at=datetime.fromisoformat(row["analyzed_at"]),
+                initials=row["initials"],
+                birth_year=row["birth_year"],
+                custom_label=row["custom_label"],
+                age=row["age"],
+                sex=row["sex"],
+                category=row["category"],
+                description=row["description"],
+                cells_json=row["cells_json"],
+                eeg_filename=row["eeg_filename"],
+            )
+            for row in rows
+        ]
+
     def list_recent(self, limit: int = 200) -> list[StudyRecord]:
         """Zwraca rekordy posortowane malejąco po analyzed_at."""
         rows = self._conn.execute(
@@ -145,24 +163,54 @@ class HistoryStore:
             """,
             (limit,),
         ).fetchall()
-        records: list[StudyRecord] = []
-        for row in rows:
-            records.append(
-                StudyRecord(
-                    id=row["id"],
-                    analyzed_at=datetime.fromisoformat(row["analyzed_at"]),
-                    initials=row["initials"],
-                    birth_year=row["birth_year"],
-                    custom_label=row["custom_label"],
-                    age=row["age"],
-                    sex=row["sex"],
-                    category=row["category"],
-                    description=row["description"],
-                    cells_json=row["cells_json"],
-                    eeg_filename=row["eeg_filename"],
-                )
-            )
-        return records
+        return self._rows_to_records(rows)
+
+    def list_for_patient(
+        self,
+        initials: str | None,
+        birth_year: str | None,
+        custom_label: str | None,
+        limit: int = 200,
+    ) -> list[StudyRecord]:
+        """Zwraca rekordy pasujące do danych pacjenta.
+
+        Dopasowanie: (initials AND birth_year) OR (initials only) OR
+        (birth_year only) OR (custom_label) — w zależności od dostępnych pól.
+        Zwraca wszystkie rekordy gdy żadne kryterium nie jest podane.
+        """
+        clauses: list[str] = []
+        params: list[str] = []
+
+        if initials and birth_year:
+            clauses.append("(initials = ? AND birth_year = ?)")
+            params += [initials, birth_year]
+        elif initials:
+            clauses.append("initials = ?")
+            params.append(initials)
+        elif birth_year:
+            clauses.append("birth_year = ?")
+            params.append(birth_year)
+
+        if custom_label:
+            clauses.append("custom_label = ?")
+            params.append(custom_label)
+
+        if not clauses:
+            return self.list_recent(limit)
+
+        where = " OR ".join(clauses)
+        rows = self._conn.execute(
+            f"""
+            SELECT id, analyzed_at, initials, birth_year, custom_label,
+                   age, sex, category, description, cells_json, eeg_filename
+            FROM studies
+            WHERE {where}
+            ORDER BY analyzed_at DESC
+            LIMIT ?
+            """,  # noqa: S608  — parametrised; no user input in column/table names
+            (*params, limit),
+        ).fetchall()
+        return self._rows_to_records(rows)
 
     def delete(self, study_id: int) -> None:
         self._conn.execute("DELETE FROM studies WHERE id = ?", (study_id,))

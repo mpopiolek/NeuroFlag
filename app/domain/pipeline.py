@@ -311,13 +311,20 @@ def _amplitude_for_norm(
         )
     band = config.band_ranges[norm.band]
     cropped = raw.copy().crop(tmin=t_start, tmax=t_end).pick([norm.channel])
+    # Short segments (< 4096 samples ≈ 16 s at 256 Hz) cannot accommodate the
+    # FIR filter length required by MNE for low-frequency bands (e.g. Theta 4–8 Hz
+    # needs ~1690 taps at 256 Hz). IIR Butterworth order 4 (MNE default) has no
+    # minimum-length constraint and is standard for EEG frequency-band extraction.
+    _method: str = "iir" if cropped.n_times < 4096 else "fir"
     cropped.notch_filter(
         freqs=config.power_line_frequency,
+        method=_method,
         verbose=False,
     )
     cropped.filter(
         l_freq=band.l_freq,
         h_freq=band.h_freq,
+        method=_method,
         verbose=False,
     )
     if cropped.n_times < 1:

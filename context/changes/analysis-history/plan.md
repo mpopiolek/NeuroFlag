@@ -532,26 +532,28 @@ po wdrożeniu tej zmiany.
 
 #### Automated
 
-- [x] 3.1 `mypy app/ui/app_window.py --strict` bez błędów
-- [x] 3.2 `mypy app/ui/views/analysis.py --strict` bez błędów
+- [x] 3.1 `mypy app/ui/app_window.py --strict` bez błędów — bf2bdca
+- [x] 3.2 `mypy app/ui/views/analysis.py --strict` bez błędów — bf2bdca
 
 #### Manual
 
-- [x] 3.3 Po pierwszej analizie pojawia się komunikat RODO (tylko raz)
-- [x] 3.4 `HistoryStore(resolve_history_db_path()).list_recent()` zwraca 1 rekord po analizie
+- [x] 3.3 Po pierwszej analizie pojawia się komunikat RODO (tylko raz) — bf2bdca
+- [x] 3.4 `HistoryStore(resolve_history_db_path()).list_recent()` zwraca 1 rekord po analizie — bf2bdca
 
 ### Phase 4: `HistoryView` + przycisk w wynikach
 
 #### Automated
 
-- [ ] 4.1 `mypy app/ui/views/history.py --strict` bez błędów
-- [ ] 4.2 `mypy app/ui/views/results_grid.py --strict` bez błędów
-- [ ] 4.3 `ruff check app/ui/views/history.py` bez błędów
+- [x] 4.1 `mypy app/ui/views/history.py --strict` bez błędów
+- [x] 4.2 `mypy app/ui/views/results_grid.py --strict` bez błędów
+- [x] 4.3 `ruff check app/ui/views/history.py` bez błędów
+
+> Odchylenie od planu: HistoryView domyślnie filtruje rekordy po danych bieżącego pacjenta (initials+birth_year lub custom_label); przycisk „Pokaż wszystkie" przełącza na pełną listę.
 
 #### Manual
 
-- [ ] 4.4 Przycisk „Historia badań" widoczny po przeprowadzeniu badania
-- [ ] 4.5 Usunięcie rekordu działa poprawnie
+- [x] 4.4 Przycisk „Historia badań" widoczny po przeprowadzeniu badania
+- [x] 4.5 Usunięcie rekordu działa poprawnie
 
 ### Phase 5: Testy jednostkowe
 
