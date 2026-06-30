@@ -517,28 +517,28 @@ po wdrożeniu tej zmiany.
 
 #### Automated
 
-- [x] 2.1 `mypy app/domain/types.py --strict` bez błędów
-- [x] 2.2 `mypy app/ui/views/metadata_form.py --strict` bez błędów
-- [x] 2.3 `pytest tests/unit/test_types.py -q` bez regresji
+- [x] 2.1 `mypy app/domain/types.py --strict` bez błędów — 086edad
+- [x] 2.2 `mypy app/ui/views/metadata_form.py --strict` bez błędów — 086edad
+- [x] 2.3 `pytest tests/unit/test_types.py -q` bez regresji — 086edad
 
 > Odchylenie od planu: pola identyfikacyjne przeniesione z MetadataFormView → FileImportView (po walidacji pliku); birth_date zmienione na birth_year; pre-fill z nagłówka EDF; wszystkie 3 pola opcjonalne.
 
 #### Manual
 
-- [x] 2.4 Formularz pokazuje sekcję „Identyfikacja dziecka (opcjonalnie)" z 3 polami
-- [x] 2.5 Formularz przechodzi dalej gdy pola są puste
+- [x] 2.4 Formularz pokazuje sekcję „Identyfikacja dziecka (opcjonalnie)" z 3 polami — 086edad
+- [x] 2.5 Formularz przechodzi dalej gdy pola są puste — 086edad
 
 ### Phase 3: Auto-zapis po analizie
 
 #### Automated
 
-- [ ] 3.1 `mypy app/ui/app_window.py --strict` bez błędów
-- [ ] 3.2 `mypy app/ui/views/analysis.py --strict` bez błędów
+- [x] 3.1 `mypy app/ui/app_window.py --strict` bez błędów
+- [x] 3.2 `mypy app/ui/views/analysis.py --strict` bez błędów
 
 #### Manual
 
-- [ ] 3.3 Po pierwszej analizie pojawia się komunikat RODO (tylko raz)
-- [ ] 3.4 `HistoryStore(resolve_history_db_path()).list_recent()` zwraca 1 rekord po analizie
+- [x] 3.3 Po pierwszej analizie pojawia się komunikat RODO (tylko raz)
+- [x] 3.4 `HistoryStore(resolve_history_db_path()).list_recent()` zwraca 1 rekord po analizie
 
 ### Phase 4: `HistoryView` + przycisk w wynikach
 

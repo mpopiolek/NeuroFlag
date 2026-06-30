@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import sys
 import threading
+import tkinter.messagebox
 from typing import TYPE_CHECKING
 
 import customtkinter as ctk
@@ -11,6 +13,12 @@ from app.ui.app_window import AppState
 
 if TYPE_CHECKING:
     from app.ui.app_window import AppWindow
+
+_RODO_NOTICE = (
+    "Badanie zostało zapisane w lokalnej historii na tym urządzeniu.\n\n"
+    "Historia zawiera inicjały i rok urodzenia dziecka.\n"
+    "Dane nie opuszczają urządzenia."
+)
 
 _ERROR_CODE_PL: dict[str, str] = {
     "missing_channels": "Brak wymaganych kana\u0142\u00f3w (C3/O1)",
@@ -154,6 +162,22 @@ class AnalysisView(ctk.CTkFrame):
             self._show_error_details(error)
             self._show_back_button()
             return
+
+        if result is not None:
+            store = self._app_state.history_store
+            assert store is not None
+            try:
+                if not store.is_notice_shown():
+                    tkinter.messagebox.showinfo("Historia badań", _RODO_NOTICE)
+                    store.mark_notice_shown()
+                assert self._app_state.metadata is not None
+                store.add(
+                    self._app_state.metadata,
+                    result,
+                    eeg_path=self._app_state.eeg_path,
+                )
+            except Exception as exc:  # noqa: BLE001
+                print(f"[historia] Błąd zapisu: {exc}", file=sys.stderr)
 
         self._app_state.analysis_result = result
 

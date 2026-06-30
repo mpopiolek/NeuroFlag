@@ -7,6 +7,7 @@ from pathlib import Path
 import customtkinter as ctk
 
 from app.domain.types import AnalysisResult, NormsConfig, PatientMetadata
+from app.storage.history import HistoryStore, resolve_history_db_path
 
 
 @dataclass
@@ -20,6 +21,7 @@ class AppState:
     available_channels: list[str] = field(default_factory=list)
     analysis_step_delay_s: float = 0.0
     anonymize_header: bool = False
+    history_store: HistoryStore | None = None
 
     def ready_for_analysis(self) -> bool:
         return self.metadata is not None and self.eeg_path is not None
@@ -41,6 +43,7 @@ class AppWindow(ctk.CTk):
             norms_config=norms_config,
             analysis_step_delay_s=analysis_step_delay_s,
         )
+        self._state.history_store = HistoryStore(resolve_history_db_path())
         self._current_view: ctk.CTkFrame | None = None
 
     @property
