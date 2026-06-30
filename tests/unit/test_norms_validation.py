@@ -15,7 +15,7 @@ def _write(tmp_path: Path, payload: object) -> Path:
     return p
 
 
-def _valid_payload() -> dict[str, Any]:
+def _valid_payload() -> dict[str, object]:
     return {
         "version": 1,
         "power_line_frequency": 50,
@@ -61,32 +61,37 @@ def _valid_payload() -> dict[str, Any]:
     }
 
 
-def _mutate_empty_json(p: dict[str, Any]) -> dict[str, Any]:
+def _mutate_empty_json(p: dict[str, object]) -> dict[str, object]:
     p.clear()
     return p
 
 
-def _mutate_wrong_type_power_line_frequency(p: dict[str, Any]) -> dict[str, Any]:
+def _mutate_wrong_type_power_line_frequency(p: dict[str, object]) -> dict[str, object]:
     p["power_line_frequency"] = "pięćdziesiąt"
     return p
 
 
-def _mutate_missing_band_ranges(p: dict[str, Any]) -> dict[str, Any]:
+def _mutate_missing_band_ranges(p: dict[str, object]) -> dict[str, object]:
     del p["band_ranges"]
     return p
 
 
-def _mutate_missing_version(p: dict[str, Any]) -> dict[str, Any]:
+def _mutate_missing_version(p: dict[str, object]) -> dict[str, object]:
     del p["version"]
     return p
 
 
-def _mutate_invalid_band_range_l_freq_gt_h_freq(p: dict[str, Any]) -> dict[str, Any]:
+def _mutate_invalid_band_range_l_freq_gt_h_freq(p: dict[str, object]) -> dict[str, object]:
     p["band_ranges"]["Delta"] = {"l_freq": 4.0, "h_freq": 0.5}  # type: ignore[index]
     return p
 
 
-def _mutate_mean_z_gte_mean_k(p: dict[str, Any]) -> dict[str, Any]:
+def _mutate_equal_l_freq_h_freq(p: dict[str, object]) -> dict[str, object]:
+    p["band_ranges"]["Delta"] = {"l_freq": 4.0, "h_freq": 4.0}  # type: ignore[index]
+    return p
+
+
+def _mutate_mean_z_gte_mean_k(p: dict[str, object]) -> dict[str, object]:
     p["norms"][0]["mean_z"] = p["norms"][0]["mean_k"]  # type: ignore[index]
     return p
 
@@ -98,6 +103,7 @@ _VARIANTS: list[tuple[str, Any, str]] = [
     ("missing_band_ranges", _mutate_missing_band_ranges, "band_ranges"),
     ("missing_version", _mutate_missing_version, "version"),
     ("invalid_band_range_l_freq_gt_h_freq", _mutate_invalid_band_range_l_freq_gt_h_freq, "l_freq"),
+    ("equal_l_freq_h_freq", _mutate_equal_l_freq_h_freq, "l_freq"),
     ("mean_z_gte_mean_k", _mutate_mean_z_gte_mean_k, "mean_z"),
 ]
 
