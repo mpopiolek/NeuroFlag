@@ -222,12 +222,12 @@ Fixture `real_norms_config` z scope=`session` ładuje `norms.json` raz na całą
 
 #### Automated
 
-- [x] 2.1 Testy R3 przechodzą: `python -m pytest tests/unit/test_norms_validation.py -v`
-- [x] 2.2 Brak błędów mypy z nowym kodem: `mypy app/domain/norms.py --strict`
-- [x] 2.3 Brak błędów ruff: `ruff check tests/unit/test_norms_validation.py app/domain/norms.py`
-- [x] 2.4 Pełna suite przechodzi: `python -m pytest -q`
+- [x] 2.1 Testy R3 przechodzą: `python -m pytest tests/unit/test_norms_validation.py -v` — 8bc070f
+- [x] 2.2 Brak błędów mypy z nowym kodem: `mypy app/domain/norms.py --strict` — 8bc070f
+- [x] 2.3 Brak błędów ruff: `ruff check tests/unit/test_norms_validation.py app/domain/norms.py` — 8bc070f
+- [x] 2.4 Pełna suite przechodzi: `python -m pytest -q` — 8bc070f
 
 #### Manual
 
-- [x] 2.5 Raport pytest -v pokazuje 6 czytelnych nazw wariantów (np. `[empty_json]`, `[wrong_type_power_line_frequency]`)
-- [x] 2.6 Istniejące testy w `test_norms.py` nadal przechodzą bez regresji
+- [x] 2.5 Raport pytest -v pokazuje 6 czytelnych nazw wariantów (np. `[empty_json]`, `[wrong_type_power_line_frequency]`) — 8bc070f
+- [x] 2.6 Istniejące testy w `test_norms.py` nadal przechodzą bez regresji — 8bc070f
