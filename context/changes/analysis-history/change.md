@@ -1,7 +1,7 @@
 ---
 id: analysis-history
 title: "Historia badań — lokalna baza SQLite z trendami"
-status: implementing
+status: implemented
 created: 2026-06-30
 updated: 2026-06-30
 roadmap_ref: ~
