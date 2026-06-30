@@ -505,7 +505,7 @@ po wdrożeniu tej zmiany.
 
 #### Automated
 
-- [ ] 1.1 `pytest tests/unit/test_history.py -q` przechodzi
+- [x] 1.1 `pytest tests/unit/test_history.py -q` przechodzi
 - [x] 1.2 `mypy app/storage/history.py --strict` bez błędów — 79a9c2c
 - [x] 1.3 `ruff check app/storage/history.py` bez błędów — 79a9c2c
 
@@ -544,26 +544,26 @@ po wdrożeniu tej zmiany.
 
 #### Automated
 
-- [x] 4.1 `mypy app/ui/views/history.py --strict` bez błędów
-- [x] 4.2 `mypy app/ui/views/results_grid.py --strict` bez błędów
-- [x] 4.3 `ruff check app/ui/views/history.py` bez błędów
+- [x] 4.1 `mypy app/ui/views/history.py --strict` bez błędów — fbab1ae
+- [x] 4.2 `mypy app/ui/views/results_grid.py --strict` bez błędów — fbab1ae
+- [x] 4.3 `ruff check app/ui/views/history.py` bez błędów — fbab1ae
 
 > Odchylenie od planu: HistoryView domyślnie filtruje rekordy po danych bieżącego pacjenta (initials+birth_year lub custom_label); przycisk „Pokaż wszystkie" przełącza na pełną listę.
 
 #### Manual
 
-- [x] 4.4 Przycisk „Historia badań" widoczny po przeprowadzeniu badania
-- [x] 4.5 Usunięcie rekordu działa poprawnie
+- [x] 4.4 Przycisk „Historia badań" widoczny po przeprowadzeniu badania — fbab1ae
+- [x] 4.5 Usunięcie rekordu działa poprawnie — fbab1ae
 
 ### Phase 5: Testy jednostkowe
 
 #### Automated
 
-- [ ] 5.1 `pytest tests/unit/test_history.py -v` — 13 testów przechodzi
-- [ ] 5.2 `pytest tests/unit/ -q` — brak regresji
-- [ ] 5.3 `mypy tests/unit/test_history.py --strict` bez błędów
+- [x] 5.1 `pytest tests/unit/test_history.py -v` — 13 testów przechodzi
+- [x] 5.2 `pytest tests/unit/ -q` — brak regresji
+- [x] 5.3 `mypy tests/unit/test_history.py --strict` bez błędów
 
 #### Manual
 
-- [ ] 5.4 Wszystkie 13 testów zielone lokalnie
-- [ ] 5.5 AGENTS.md zaktualizowany (usunięte „nie ma bazy danych")
+- [x] 5.4 Wszystkie 13 testów zielone lokalnie
+- [x] 5.5 AGENTS.md zaktualizowany (usunięte „nie ma bazy danych")

@@ -1,6 +1,8 @@
 # AGENTS.md
 
-NeuroFlag to aplikacja desktopowa dla Windows (Python), która analizuje pliki EEG (.edf / BrainVision .vhdr) i generuje wynik przesiewowy dla dzieci w wieku 6–10 lat. Nie ma bazy danych, nie ma połączeń sieciowych, nie ma Docker. Dystrybuowana jako single-dir `.exe` (PyInstaller).
+NeuroFlag to aplikacja desktopowa dla Windows (Python), która analizuje pliki EEG (.edf / BrainVision .vhdr) i generuje wynik przesiewowy dla dzieci w wieku 6–10 lat. Nie ma połączeń sieciowych, nie ma Docker. Dystrybuowana jako single-dir `.exe` (PyInstaller).
+
+Lokalna baza SQLite (`history.db`) obok `neuroflag.exe` — przechowuje historię badań; obsługiwana przez `app/storage/history.py`.
 
 ---
 
