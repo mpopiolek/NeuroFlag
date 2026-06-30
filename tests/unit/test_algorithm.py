@@ -241,8 +241,10 @@ def test_classify_empty_raises() -> None:
 
 
 def test_classify_with_real_norms_config() -> None:
+    # Smoke test: amplitude=0.0 is a safe sentinel (always below any mean_z).
+    # For precision boundary coverage (mean_z ± 2ε, mean_k ± 2ε) see
+    # test_algorithm_real_norms.py which also verifies result structure per norm.
     cfg = load(resolve_norms_path())
-    # Wszystkie amplitudy 0 → poniżej każdej normy → wszystkie RED → WSKAZANIE
     result = classify([0.0] * 10, cfg)
     assert result.category is ScreeningCategory.WSKAZANIE
     assert len(result.cells) == 10

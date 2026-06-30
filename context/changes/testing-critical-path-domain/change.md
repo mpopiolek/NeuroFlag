@@ -1,7 +1,7 @@
 ---
 change_id: testing-critical-path-domain
 title: Testing critical path domain
-status: implementing
+status: impl_reviewed
 created: 2026-06-30
 updated: 2026-06-30
 archived_at: null
