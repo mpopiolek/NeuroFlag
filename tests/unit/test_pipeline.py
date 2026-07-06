@@ -216,6 +216,7 @@ def test_detect_task_segments_zp_ends_at_next_unrelated_marker() -> None:
 
 @patch("app.domain.pipeline._load_raw")
 def test_run_returns_ten_finite_amplitudes(mock_load: object) -> None:
+    # fidelity bounds: see tests/integration/test_pipeline_fidelity.py
     mock_load.return_value = _synthetic_raw_with_annotations()
     config = load(resolve_norms_path())
     result = run(Path("synthetic.edf"), config)

@@ -328,26 +328,26 @@ Brak migracji danych użytkownika. Istniejący `sample_digitrack.eeg` w forkach 
 
 #### Automated
 
-- [x] 1.1 Reader tests: `python -m pytest tests/unit/test_eeg_file.py -v -k digitrack`
-- [x] 1.2 Integration scaffold: `python -m pytest tests/integration/test_pipeline_fidelity.py -v`
-- [x] 1.3 Typy: `mypy app/ --strict`
-- [x] 1.4 Pełna suite: `python -m pytest -q`
+- [x] 1.1 Reader tests: `python -m pytest tests/unit/test_eeg_file.py -v -k digitrack` — 2db6eb7
+- [x] 1.2 Integration scaffold: `python -m pytest tests/integration/test_pipeline_fidelity.py -v` — 2db6eb7
+- [x] 1.3 Typy: `mypy app/ --strict` — 2db6eb7
+- [x] 1.4 Pełna suite: `python -m pytest -q` — 2db6eb7
 
 #### Manual
 
-- [x] 1.5 `sample_digitrack.eeg` w repo — `read_raw_digitrack()` ≥480 s; rozmiar <5 MB
+- [x] 1.5 `sample_digitrack.eeg` w repo — `read_raw_digitrack()` ≥480 s; rozmiar <5 MB — 2db6eb7
 
 ### Phase 2: R4 — Amplitude Preservation + Artifact Gate
 
 #### Automated
 
-- [ ] 2.1 R4 tests: `python -m pytest tests/integration/test_pipeline_fidelity.py -v -k "amplitude_bounds or artifact_rejection"`
-- [ ] 2.2 Pełna suite: `python -m pytest -q`
-- [ ] 2.3 Mypy: `mypy app/ --strict`
+- [x] 2.1 R4 tests: `python -m pytest tests/integration/test_pipeline_fidelity.py -v -k "amplitude_bounds or artifact_rejection"`
+- [x] 2.2 Pełna suite: `python -m pytest -q`
+- [x] 2.3 Mypy: `mypy app/ --strict`
 
 #### Manual
 
-- [ ] 2.4 Przy failu boundów — diagnoza filtr/jednostki bez obniżania progów
+- [x] 2.4 Przy failu boundów — diagnoza filtr/jednostki bez obniżania progów
 
 ### Phase 3: R5 — DigiTrack Fallback + run() Smoke
 
