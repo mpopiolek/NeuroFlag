@@ -2,7 +2,60 @@
   "version": 1,
   "description": "NeuroFlag — domyślna baza norm. Badanie N=200, wiek 6–10 lat. Wartości potwierdzone przez eksperta domenowego 2026-05-29. Zakresy pasm potwierdzone 2026-05-30.",
   "power_line_frequency": 50,
-  "recommendation_threshold": 3,
+  "recommendation_rules": {
+    "indication_min_red": 5,
+    "indication_max_green": 3,
+    "no_indication_min_green": 4,
+    "no_indication_max_red": 3
+  },
+  "category_descriptions": {
+    "wskazanie": "Profil EEG dziecka wykazuje wyniki poniżej wartości referencyjnych grupy kontrolnej w wielu analizowanych kombinacjach lokalizacja–zadanie–pasmo. Zaleca się konsultację ze specjalistą (np. psycholog, pedagog, logopeda) w celu pogłębionej diagnostyki.",
+    "obserwacja": "Profil EEG dziecka wykazuje wyniki poniżej wartości referencyjnych w części analizowanych kombinacji. Zaleca się uważną obserwację funkcjonowania dziecka przez 3–6 miesięcy oraz ponowne badanie przesiewowe po upływie tego czasu lub wcześniej w przypadku zauważalnych trudności.",
+    "brak": "Profil EEG dziecka pozostaje w granicach wartości referencyjnych grupy kontrolnej w przeważającej liczbie analizowanych kombinacji. Na podstawie tego badania przesiewowego brak aktualnych wskazań do dalszej diagnostyki."
+  },
+  "observation_checklist": {
+    "_content_review_status": "DRAFT — wymaga weryfikacji eksperta domenowego przed wdrożeniem",
+    "title": "Co obserwować — wskazówki dla pedagoga i rodzica",
+    "intro": "Poniższe obszary funkcjonowania warto śledzić niezależnie od wyniku badania przesiewowego. Trudności w kilku kategoriach jednocześnie mogą uzasadniać konsultację ze specjalistą.",
+    "categories": [
+      {
+        "title": "Uwaga i koncentracja",
+        "items": [
+          "Trudności z utrzymaniem uwagi na zadaniu przez 15–20 minut",
+          "Łatwe rozpraszanie przez bodźce w otoczeniu (dźwięki, ruch)",
+          "Potrzeba wielokrotnego powtarzania poleceń",
+          "Kłopoty z powróceniem do przerwanego zadania"
+        ]
+      },
+      {
+        "title": "Pamięć robocza",
+        "items": [
+          "Trudności z zapamiętaniem instrukcji złożonych z kilku kroków",
+          "Szybkie zapominanie materiału omówionego na lekcji",
+          "Kłopoty z liczeniem w pamięci bez pomocy palców lub kartki",
+          "Konieczność wielokrotnego czytania tego samego fragmentu"
+        ]
+      },
+      {
+        "title": "Przetwarzanie wzrokowo-przestrzenne",
+        "items": [
+          "Mylenie podobnych liter lub cyfr (np. b/d, p/q, 6/9)",
+          "Trudności z orientacją na kartce — gubienie miejsca w tekście",
+          "Wolne tempo przepisywania z tablicy lub z książki",
+          "Kłopoty z zadaniami geometrycznymi, mapami i schematami"
+        ]
+      },
+      {
+        "title": "Tempo pracy i zmęczenie poznawcze",
+        "items": [
+          "Wolniejsze tempo wykonywania zadań niż rówieśnicy",
+          "Szybkie zmęczenie podczas intensywnej pracy umysłowej",
+          "Trudności z nadążaniem podczas dyktanda lub szybkich instrukcji",
+          "Wahania jakości pracy w ciągu dnia szkolnego"
+        ]
+      }
+    ]
+  },
   "band_ranges": {
     "Delta": { "l_freq": 0.5,  "h_freq": 4.0  },
     "Theta": { "l_freq": 4.0,  "h_freq": 8.0  },

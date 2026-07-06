@@ -1,9 +1,9 @@
----
+﻿---
 project: "NeuroFlag"
 version: 1
 status: draft
 created: 2026-05-30
-updated: 2026-06-02
+updated: 2026-06-26
 prd_version: 1
 main_goal: low-complexity
 top_blocker: decisions
@@ -31,9 +31,9 @@ NeuroFlag to aplikacja desktopowa dla Windows, która pozwala pedagogom szkolnym
 |------|----------------------------|------------------------------------------------------------------------------------------------------|---------------|-------------------------------|----------|
 | F-01 | project-foundation         | (foundation) środowisko gotowe: pyproject.toml z przypiętymi zależnościami, norms.json z 10 normami, typy domenowe w app/domain/types.py | —             | FR-008                        | ready    |
 | S-01 | metadata-and-import        | wypełnić metrykę dziecka (z wykluczeniami klinicznymi) i wczytać plik .edf lub .vhdr gotowy do analizy | F-01          | FR-001, FR-010, US-01         | done     |
-| S-02 | eeg-pipeline-and-results   | uruchomić analizę i zobaczyć siatkę 10 kolorowych komórek z kategorią wynikową                       | S-01          | FR-002, FR-003, FR-004, US-01 | proposed |
-| S-03 | pdf-report-and-save        | wygenerować raport PDF i zapisać go na dysk lokalny                                                  | S-02          | FR-005, FR-006, US-01         | proposed |
-| S-04 | norms-replacement          | zastąpić plik norms.json własnym plikiem i mieć pewność, że aplikacja wczytuje nowe normy i waliduje schemat | F-01          | FR-008                        | proposed |
+| S-02 | eeg-pipeline-and-results   | uruchomić analizę i zobaczyć siatkę 10 kolorowych komórek z kategorią wynikową                       | S-01          | FR-002, FR-003, FR-004, US-01 | done     |
+| S-03 | pdf-report-and-save        | wygenerować raport PDF i zapisać go na dysk lokalny                                                  | S-02          | FR-005, FR-006, US-01         | done     |
+| S-04 | norms-replacement          | zastąpić plik norms.json własnym plikiem i mieć pewność, że aplikacja wczytuje nowe normy i waliduje schemat | F-01          | FR-008                        | done |
 
 ## Streams
 
@@ -95,11 +95,11 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Najwyższe ryzyko techniczne w projekcie: MNE-Python pipeline (wykrycie znaczników OO/OZ/ZP lub fallback co 3 minuty, selekcja C3/O1, usunięcie artefaktów ICA/progowych, obliczenie 10 wartości µV) + algorytm trójstanowy. Zakresy pasm potwierdzone (Delta 0,5–4 Hz, Theta 4–8 Hz, Beta1 15–18 Hz, Beta2 18–25 Hz) — implementacja może ruszać.
-- **Status:** proposed
+- **Status:** done
 
 ### S-03: Raport PDF i zapis na dysk
 
-- **Outcome:** użytkownik może wygenerować raport PDF zawierający metrykę dziecka, datę badania, siatkę kolorową 10 komórek, kategorię wynikową (Wskazanie / Uważna obserwacja / Brak wskazań) i klauzulę ograniczenia odpowiedzialności, a następnie zapisać go w wybranej lokalizacji na dysku lokalnym; surowe wartości µV nie są w raporcie.
+- **Outcome:** użytkownik może wygenerować raport PDF i zapisać go w wybranej lokalizacji na dysku lokalnym; surowe wartości µV nie są w raporcie. Struktura raportu (potwierdzona przez eksperta domenowego): (1) tekst wstępny — data badania, metryka dziecka, wniosek słowny w formie „Analiza wyników wskazuje na [kategoria + opis]"; (2) siatka kolorowa 10 komórek (RAG) z kategorią wynikową; (3) stała sekcja „Co obserwować" — tabela/lista kontrolna oparta na aktualnej wiedzy, niezmieniana między badaniami, skierowana do pedagoga/rodzica; (4) klauzula ograniczenia odpowiedzialności.
 - **Change ID:** pdf-report-and-save
 - **PRD refs:** FR-005, FR-006, US-01
 - **Prerequisites:** S-02
@@ -107,7 +107,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** ReportLab jest sprawdzony i obecny w stosie; główne ryzyko to wierna rastoryzacja siatki kolorowej (RAG) w PDF — kolory muszą odpowiadać wytycznej eksperta domenowego (czerwony = a ≤ Z, żółty = Z < a < K, zielony = a ≥ K).
-- **Status:** proposed
+- **Status:** done
 
 ### S-04: Wymiana bazy norm
 
@@ -119,7 +119,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Minimalne ryzyko techniczne (statyczny JSON + walidacja schematu); główne ryzyko to dokumentacja — bez UI formularza użytkownik musi znać dokładny format pliku; brak jasnej instrukcji = frustracja przy podmiance przez psychologa-administratora.
-- **Status:** proposed
+- **Status:** done
 
 ## Backlog Handoff
 
@@ -153,7 +153,10 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Formaty .bdf i .set** — Why parked: PRD §Constraints; v2.0.
 
 ## Done
+- **S-04: zastapic plik norms.json wlasnym plikiem i miec pewnosc, ze aplikacja wczytuje nowe normy i waliduje schemat** — Archived 2026-06-21 -> context/archive/2026-06-01-norms-replacement/. Lesson: —.
 
 (Empty on first generation. `/10x-archive` appends an entry here — and flips that item's `Status` to `done` — when a change whose `Change ID` matches the item is archived. Format:)
 
 - **S-01: użytkownik może otworzyć aplikację, wypełnić metrykę dziecka (wiek 6–10 lat, płeć, diagnozy), zobaczyć ostrzeżenie i blokadę analizy dla wykluczonych grup klinicznych (uraz/uszkodzenie mózgu, niepełnosprawność intelektualna, padaczka) oraz wczytać plik `.edf` lub `.vhdr` przyciskiem „Wczytaj plik" (drag & drop jako bonus) z wyraźnym komunikatem błędu jeśli plik jest nieobsługiwany lub uszkodzony.** — Archived 2026-06-02 → `context/archive/2026-06-01-metadata-and-import/`. Lesson: —.
+- **S-02: użytkownik może uruchomić analizę i zobaczyć siatkę 10 kolorowych komórek z kategorią wynikową** — Archived 2026-06-21 → `context/archive/2026-06-03-eeg-pipeline-and-results/`. Lesson: —.
+- **S-03: wygenerować raport PDF i zapisać go na dysk lokalny** — Archived 2026-06-26 → `context/archive/2026-06-22-pdf-report-and-save/`. Lesson: —.

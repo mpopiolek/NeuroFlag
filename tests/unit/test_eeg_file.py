@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import struct
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -7,10 +8,35 @@ import pytest
 
 from app.domain.eeg_file import (
     EEGFileError,
+    _DIGITRACK_SIGNATURE,
+    get_channel_names,
+    read_raw_digitrack,
     resolve_brainvision_companions,
     validate_eeg_header,
     validate_extension,
 )
+
+_FIXTURE = Path(__file__).parent.parent / "fixtures" / "sample_digitrack.eeg"
+
+
+def _minimal_digitrack_header() -> bytes:
+    """Buduje minimalny nagłówek pliku EEGDigiTrack z jednym kanałem EEG."""
+    buf = bytearray(0x0480 + 0x40)  # nagłówek + jeden rekord kanału
+    # Sygnatuta na offset 0x014C
+    buf[0x014C : 0x014C + len(_DIGITRACK_SIGNATURE)] = _DIGITRACK_SIGNATURE
+    # sfreq = 250 Hz na offset 0x0004 (uint16 LE)
+    struct.pack_into("<H", buf, 0x0004, 250)
+    # total_blocks = 0 (brak danych — używane tylko do data_start)
+    struct.pack_into("<I", buf, 0x0010, 0)
+    # Rekord kanału 0: nazwa "C3", kalibracja 0.179266 µV/LSB
+    buf[0x0480 : 0x0480 + 2] = b"C3"
+    struct.pack_into("<f", buf, 0x0480 + 0x18, 0.179266)
+    return bytes(buf)
+
+
+# ---------------------------------------------------------------------------
+# validate_extension
+# ---------------------------------------------------------------------------
 
 
 def test_validate_extension_rejects_unsupported() -> None:
@@ -24,6 +50,28 @@ def test_validate_extension_accepts_edf() -> None:
 
 def test_validate_extension_accepts_vhdr() -> None:
     validate_extension(Path("recording.vhdr"))
+
+
+def test_validate_extension_accepts_eeg_digitrack() -> None:
+    # .eeg jest teraz obsługiwanym rozszerzeniem — samo rozszerzenie wystarczy
+    validate_extension(Path("session.eeg"))
+
+
+# ---------------------------------------------------------------------------
+# validate_eeg_header — gałąź .eeg
+# ---------------------------------------------------------------------------
+
+
+def test_validate_eeg_header_rejects_eeg_without_digitrack_signature(tmp_path: Path) -> None:
+    eeg = tmp_path / "session.eeg"
+    eeg.write_bytes(b"NOT_A_DIGITRACK_FILE\x00" * 30)
+    with pytest.raises(EEGFileError, match=r"Brak sygnatury EEGDigiTrack"):
+        validate_eeg_header(eeg)
+
+
+# ---------------------------------------------------------------------------
+# resolve_brainvision_companions
+# ---------------------------------------------------------------------------
 
 
 def test_resolve_brainvision_companions_missing_vmrk(tmp_path: Path) -> None:
@@ -52,6 +100,11 @@ def test_resolve_brainvision_companions_returns_paths(tmp_path: Path) -> None:
     assert resolve_brainvision_companions(vhdr) == (vmrk, eeg)
 
 
+# ---------------------------------------------------------------------------
+# validate_eeg_header — EDF
+# ---------------------------------------------------------------------------
+
+
 @patch("mne.io.read_raw_edf")
 def test_validate_eeg_header_edf_mne_raises(mock_read: MagicMock, tmp_path: Path) -> None:
     edf = tmp_path / "recording.edf"
@@ -77,3 +130,68 @@ def test_validate_eeg_header_vhdr_ok(mock_read: MagicMock, tmp_path: Path) -> No
     (tmp_path / "session.eeg").touch()
     validate_eeg_header(vhdr)
     mock_read.assert_called_once_with(vhdr, preload=False, verbose=False)
+
+
+# ---------------------------------------------------------------------------
+# read_raw_digitrack — testy z realną fixture
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.skipif(not _FIXTURE.exists(), reason="Brak fixture sample_digitrack.eeg")
+def test_read_raw_digitrack_channel_count() -> None:
+    raw = read_raw_digitrack(_FIXTURE)
+    assert len(raw.ch_names) == 19
+
+
+@pytest.mark.skipif(not _FIXTURE.exists(), reason="Brak fixture sample_digitrack.eeg")
+def test_read_raw_digitrack_sfreq() -> None:
+    raw = read_raw_digitrack(_FIXTURE)
+    assert raw.info["sfreq"] == 250.0
+
+
+@pytest.mark.skipif(not _FIXTURE.exists(), reason="Brak fixture sample_digitrack.eeg")
+def test_read_raw_digitrack_data_shape() -> None:
+    raw = read_raw_digitrack(_FIXTURE)
+    n_times = raw.get_data().shape[1]
+    assert raw.get_data().shape[0] == 19
+    assert n_times >= 120_000
+
+
+@pytest.mark.skipif(not _FIXTURE.exists(), reason="Brak fixture sample_digitrack.eeg")
+def test_get_channel_names_digitrack() -> None:
+    names = get_channel_names(_FIXTURE)
+    assert "C3" in names
+
+
+# ---------------------------------------------------------------------------
+# read_raw_digitrack — testy błędów (syntetyczne nagłówki)
+# ---------------------------------------------------------------------------
+
+
+def test_read_raw_digitrack_no_signature_raises(tmp_path: Path) -> None:
+    eeg = tmp_path / "fake.eeg"
+    eeg.write_bytes(b"\x00" * 512)
+    with pytest.raises(EEGFileError, match=r"Brak sygnatury EEGDigiTrack"):
+        read_raw_digitrack(eeg)
+
+
+def test_read_raw_digitrack_corrupt_total_blocks_raises(tmp_path: Path) -> None:
+    header = bytearray(_minimal_digitrack_header())
+    # total_blocks=0xFFFFFF wymaga ~32 MB danych — plik jest ~2 KB, data_start < 0
+    struct.pack_into("<I", header, 0x0010, 0xFFFFFF)
+    eeg = tmp_path / "corrupt.eeg"
+    eeg.write_bytes(bytes(header))
+    with pytest.raises(EEGFileError, match=r"data_start < 0"):
+        read_raw_digitrack(eeg)
+
+
+def test_read_raw_digitrack_calibration_zero_raises(tmp_path: Path) -> None:
+    header = bytearray(_minimal_digitrack_header())
+    # Ustaw kalibrację pierwszego kanału na 0.0
+    struct.pack_into("<f", header, 0x0480 + 0x18, 0.0)
+    # total_blocks = 0 → data_start = len(data) → brak danych (OK dla błędu kalibracji)
+    struct.pack_into("<I", header, 0x0010, 0)
+    eeg = tmp_path / "zero_cal.eeg"
+    eeg.write_bytes(bytes(header))
+    with pytest.raises(EEGFileError, match=r"kalibracja kanału"):
+        read_raw_digitrack(eeg)

@@ -1,0 +1,292 @@
+from __future__ import annotations
+
+import json
+import sqlite3
+import sys
+from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
+
+from app.domain.types import AnalysisResult, CellResult, PatientMetadata
+
+
+@dataclass
+class StudyRecord:
+    id: int
+    analyzed_at: datetime
+    initials: str | None
+    birth_year: str | None
+    custom_label: str | None
+    age: int
+    sex: str
+    category: str
+    description: str
+    cells_json: str
+    eeg_filename: str | None
+
+    @property
+    def display_name(self) -> str:
+        """Zwraca czytelny identyfikator dziecka dla listy historii."""
+        parts: list[str] = []
+        if self.initials:
+            parts.append(self.initials)
+        if self.birth_year:
+            parts.append(self.birth_year)
+        if self.custom_label:
+            parts.append(self.custom_label)
+        if parts:
+            return " / ".join(parts)
+        return self.analyzed_at.strftime("%Y-%m-%d %H:%M")
+
+
+def resolve_history_db_path() -> Path:
+    """Zwraca ścieżkę do history.db — obok .exe w dystrybucji, w root projektu w dev."""
+    if getattr(sys, "frozen", False):
+        return Path(sys.executable).parent / "history.db"
+    return Path(__file__).parent.parent.parent / "history.db"
+
+
+def _serialize_cells(cells: tuple[CellResult, ...]) -> str:
+    return json.dumps(
+        [
+            {
+                "cell_id": c.cell_id,
+                "channel": c.channel,
+                "task": c.task,
+                "band": c.band,
+                "color": c.color.value,
+            }
+            for c in cells
+        ]
+    )
+
+
+_EMPTY_DIAGNOSES_JSON = '{"diagnoses":[],"other_note":null}'
+
+
+def _serialize_diagnoses(metadata: PatientMetadata) -> str:
+    return json.dumps(
+        {
+            "diagnoses": sorted(d.value for d in metadata.diagnoses),
+            "other_note": metadata.other_diagnosis_note,
+        }
+    )
+
+
+_CREATE_STUDIES = """
+CREATE TABLE IF NOT EXISTS studies (
+    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+    analyzed_at      TEXT    NOT NULL,
+    initials         TEXT,
+    birth_year       TEXT,
+    custom_label     TEXT,
+    age              INTEGER NOT NULL,
+    sex              TEXT    NOT NULL,
+    exclusions_json  TEXT    NOT NULL,  -- write-only: reserved for v2.0 trend analysis
+    category         TEXT    NOT NULL,
+    description      TEXT    NOT NULL,
+    cells_json       TEXT    NOT NULL,
+    eeg_filename     TEXT
+);
+"""
+
+_CREATE_SETTINGS = """
+CREATE TABLE IF NOT EXISTS settings (
+    key   TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+);
+"""
+
+
+class HistoryStore:
+    def __init__(self, db_path: Path) -> None:
+        self._db_path = db_path
+        self._conn = sqlite3.connect(str(db_path))
+        self._conn.row_factory = sqlite3.Row
+        self._ensure_schema()
+
+    def _ensure_schema(self) -> None:
+        cur = self._conn.cursor()
+        cur.execute(_CREATE_STUDIES)
+        cur.execute(_CREATE_SETTINGS)
+        try:
+            cur.execute(
+                f"""
+                ALTER TABLE studies ADD COLUMN diagnoses_json TEXT NOT NULL
+                    DEFAULT '{_EMPTY_DIAGNOSES_JSON}'
+                """
+            )
+        except sqlite3.OperationalError:
+            pass
+        self._conn.commit()
+
+    def add(
+        self,
+        metadata: PatientMetadata,
+        result: AnalysisResult,
+        *,
+        eeg_path: Path | None = None,
+    ) -> int:
+        """Wstawia rekord i zwraca nowe id. eeg_path.name zapisywany jako eeg_filename."""
+        exclusions_json = json.dumps([e.value for e in metadata.exclusions])
+        diagnoses_json = _serialize_diagnoses(metadata)
+        cells_json = _serialize_cells(result.cells)
+        eeg_filename = eeg_path.name if eeg_path is not None else None
+        cur = self._conn.execute(
+            """
+            INSERT INTO studies
+                (analyzed_at, initials, birth_year, custom_label, age, sex,
+                 exclusions_json, diagnoses_json, category, description, cells_json, eeg_filename)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                result.analyzed_at.isoformat(),
+                metadata.initials,
+                metadata.birth_year,
+                metadata.custom_label,
+                metadata.age,
+                metadata.sex.value,
+                exclusions_json,
+                diagnoses_json,
+                result.category.value,
+                result.description,
+                cells_json,
+                eeg_filename,
+            ),
+        )
+        self._conn.commit()
+        assert cur.lastrowid is not None, "INSERT did not return a rowid"
+        return cur.lastrowid
+
+    def _rows_to_records(self, rows: list[sqlite3.Row]) -> list[StudyRecord]:
+        records: list[StudyRecord] = []
+        for row in rows:
+            try:
+                analyzed_at = datetime.fromisoformat(row["analyzed_at"])
+            except ValueError:
+                print(
+                    f"history: skipping record id={row['id']} — invalid analyzed_at value",
+                    file=sys.stderr,
+                )
+                continue
+            records.append(
+                StudyRecord(
+                    id=row["id"],
+                    analyzed_at=analyzed_at,
+                    initials=row["initials"],
+                    birth_year=row["birth_year"],
+                    custom_label=row["custom_label"],
+                    age=row["age"],
+                    sex=row["sex"],
+                    category=row["category"],
+                    description=row["description"],
+                    cells_json=row["cells_json"],
+                    eeg_filename=row["eeg_filename"],
+                )
+            )
+        return records
+
+    def list_recent(self, limit: int = 200) -> list[StudyRecord]:
+        """Zwraca rekordy posortowane malejąco po analyzed_at."""
+        rows = self._conn.execute(
+            """
+            SELECT id, analyzed_at, initials, birth_year, custom_label,
+                   age, sex, category, description, cells_json, eeg_filename
+            FROM studies
+            ORDER BY analyzed_at DESC
+            LIMIT ?
+            """,
+            (limit,),
+        ).fetchall()
+        return self._rows_to_records(rows)
+
+    def list_for_patient(
+        self,
+        initials: str | None,
+        birth_year: str | None,
+        custom_label: str | None,
+        limit: int = 200,
+    ) -> list[StudyRecord]:
+        """Zwraca rekordy pasujące do danych pacjenta.
+
+        Dopasowanie: (initials AND birth_year) OR (initials only) OR
+        (birth_year only) OR (custom_label) — w zależności od dostępnych pól.
+        Zwraca wszystkie rekordy gdy żadne kryterium nie jest podane.
+        """
+        clauses: list[str] = []
+        params: list[str] = []
+
+        if initials and birth_year:
+            clauses.append("(initials = ? AND birth_year = ?)")
+            params += [initials, birth_year]
+        elif initials:
+            clauses.append("initials = ?")
+            params.append(initials)
+        elif birth_year:
+            clauses.append("birth_year = ?")
+            params.append(birth_year)
+
+        if custom_label:
+            clauses.append("custom_label = ?")
+            params.append(custom_label)
+
+        if not clauses:
+            return self.list_recent(limit)
+
+        where = " OR ".join(clauses)
+        rows = self._conn.execute(
+            f"""
+            SELECT id, analyzed_at, initials, birth_year, custom_label,
+                   age, sex, category, description, cells_json, eeg_filename
+            FROM studies
+            WHERE {where}
+            ORDER BY analyzed_at DESC
+            LIMIT ?
+            """,  # noqa: S608  — parametrised; no user input in column/table names
+            (*params, limit),
+        ).fetchall()
+        return self._rows_to_records(rows)
+
+    def update_identification(
+        self,
+        study_id: int,
+        *,
+        initials: str | None,
+        birth_year: str | None,
+        custom_label: str | None,
+    ) -> bool:
+        """Aktualizuje pola identyfikacji dziecka w istniejącym rekordzie.
+
+        Zwraca True gdy rekord istnieje i został zaktualizowany.
+        """
+        cur = self._conn.execute(
+            """
+            UPDATE studies
+            SET initials = ?, birth_year = ?, custom_label = ?
+            WHERE id = ?
+            """,
+            (initials, birth_year, custom_label, study_id),
+        )
+        self._conn.commit()
+        return cur.rowcount > 0
+
+    def delete(self, study_id: int) -> None:
+        self._conn.execute("DELETE FROM studies WHERE id = ?", (study_id,))
+        self._conn.commit()
+
+    def has_any(self) -> bool:
+        row = self._conn.execute("SELECT COUNT(*) FROM studies").fetchone()
+        return bool(row[0] > 0)
+
+    def is_notice_shown(self) -> bool:
+        """Sprawdza flagę 'history_notice_shown' w tabeli settings."""
+        row = self._conn.execute(
+            "SELECT value FROM settings WHERE key = 'history_notice_shown'"
+        ).fetchone()
+        return row is not None and row["value"] == "1"
+
+    def mark_notice_shown(self) -> None:
+        self._conn.execute(
+            "INSERT OR REPLACE INTO settings (key, value) VALUES ('history_notice_shown', '1')"
+        )
+        self._conn.commit()

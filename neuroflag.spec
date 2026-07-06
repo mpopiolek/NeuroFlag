@@ -64,8 +64,9 @@ hidden_imports = [
 datas = [
     # Baza norm — nadpisywalna przez użytkownika
     (str(ROOT / "norms.json"), "."),
-    # Czcionki i ikony GUI (katalog tworzony podczas implementacji UI)
-    # (str(ROOT / "app" / "ui" / "assets"), "app/ui/assets"),
+    (str(ROOT / "norms.json.template"), "."),
+    (str(ROOT / "docs" / "README-norms.md"), "docs"),
+    (str(ROOT / "app" / "ui" / "assets"), "app/ui/assets"),
     # Moduły CustomTkinter zawierają zasoby (motywy, czcionki)
     # Lokalizacja zależy od wirtualnego środowiska — PyInstaller wykrywa je
     # automatycznie przez collect_data_files; poniższa linia jest fallbackiem.

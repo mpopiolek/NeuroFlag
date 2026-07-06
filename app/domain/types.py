@@ -11,6 +11,23 @@ class ExclusionDiagnosis(Enum):
     EPILEPSY = "epilepsy"
 
 
+class ClinicalDiagnosis(Enum):
+    ASD = "asd"
+    ADHD = "adhd"
+    DEPRESSION_ANXIETY = "depression_anxiety"
+    DYSLEXIA = "dyslexia"
+    OTHER = "other"
+
+
+_CLINICAL_LABELS_PL: dict[ClinicalDiagnosis, str] = {
+    ClinicalDiagnosis.ASD: "ASD / autyzm",
+    ClinicalDiagnosis.ADHD: "ADHD",
+    ClinicalDiagnosis.DEPRESSION_ANXIETY: "Depresja lub zaburzenia lękowe",
+    ClinicalDiagnosis.DYSLEXIA: "Dysleksja",
+    ClinicalDiagnosis.OTHER: "Inne",
+}
+
+
 class CellColor(Enum):
     RED = "red"
     YELLOW = "yellow"
@@ -33,9 +50,27 @@ class PatientMetadata:
     age: int
     sex: Sex
     exclusions: frozenset[ExclusionDiagnosis] = field(default_factory=frozenset)
+    diagnoses: frozenset[ClinicalDiagnosis] = field(default_factory=frozenset)
+    other_diagnosis_note: str | None = None
+    initials: str | None = None
+    birth_year: str | None = None
+    custom_label: str | None = None
 
     def is_excluded(self) -> bool:
         return len(self.exclusions) > 0
+
+
+def format_clinical_diagnoses(metadata: PatientMetadata) -> str:
+    """Zwraca polskie etykiety diagnoz informacyjnych, rozdzielone przecinkami."""
+    if not metadata.diagnoses:
+        return ""
+    labels: list[str] = []
+    for diagnosis in sorted(metadata.diagnoses, key=lambda d: d.value):
+        label = _CLINICAL_LABELS_PL[diagnosis]
+        if diagnosis is ClinicalDiagnosis.OTHER and metadata.other_diagnosis_note:
+            label = f"{label} ({metadata.other_diagnosis_note})"
+        labels.append(label)
+    return ", ".join(labels)
 
 
 @dataclass(frozen=True)
@@ -78,9 +113,41 @@ class NormEntry:
 
 
 @dataclass(frozen=True)
+class RecommendationRules:
+    indication_min_red: int
+    indication_max_green: int
+    no_indication_min_green: int
+    no_indication_max_red: int
+
+
+@dataclass(frozen=True)
+class CategoryDescriptions:
+    wskazanie: str
+    obserwacja: str
+    brak: str
+
+
+@dataclass(frozen=True)
+class ObservationCategory:
+    title: str
+    items: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class ObservationChecklist:
+    """Stała sekcja raportu PDF — lista obserwacyjna dla pedagoga/rodzica."""
+
+    title: str
+    intro: str
+    categories: tuple[ObservationCategory, ...]
+
+
+@dataclass(frozen=True)
 class NormsConfig:
     version: int
     power_line_frequency: float
-    recommendation_threshold: int
     band_ranges: dict[str, BandRange]
     norms: tuple[NormEntry, ...]
+    recommendation_rules: RecommendationRules
+    category_descriptions: CategoryDescriptions
+    observation_checklist: ObservationChecklist

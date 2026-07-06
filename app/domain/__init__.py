@@ -5,12 +5,14 @@ from app.domain.types import (
     BandRange,
     CellColor,
     CellResult,
+    ClinicalDiagnosis,
     ExclusionDiagnosis,
     NormEntry,
     NormsConfig,
     PatientMetadata,
     ScreeningCategory,
     Sex,
+    format_clinical_diagnoses,
 )
 
 __all__ = [
@@ -18,10 +20,12 @@ __all__ = [
     "BandRange",
     "CellColor",
     "CellResult",
+    "ClinicalDiagnosis",
     "ExclusionDiagnosis",
     "NormEntry",
     "NormsConfig",
     "PatientMetadata",
     "ScreeningCategory",
     "Sex",
+    "format_clinical_diagnoses",
 ]
