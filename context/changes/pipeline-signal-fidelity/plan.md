@@ -341,24 +341,24 @@ Brak migracji danych użytkownika. Istniejący `sample_digitrack.eeg` w forkach 
 
 #### Automated
 
-- [x] 2.1 R4 tests: `python -m pytest tests/integration/test_pipeline_fidelity.py -v -k "amplitude_bounds or artifact_rejection"`
-- [x] 2.2 Pełna suite: `python -m pytest -q`
-- [x] 2.3 Mypy: `mypy app/ --strict`
+- [x] 2.1 R4 tests: `python -m pytest tests/integration/test_pipeline_fidelity.py -v -k "amplitude_bounds or artifact_rejection"` — 63a826b
+- [x] 2.2 Pełna suite: `python -m pytest -q` — 63a826b
+- [x] 2.3 Mypy: `mypy app/ --strict` — 63a826b
 
 #### Manual
 
-- [x] 2.4 Przy failu boundów — diagnoza filtr/jednostki bez obniżania progów
+- [x] 2.4 Przy failu boundów — diagnoza filtr/jednostki bez obniżania progów — 63a826b
 
 ### Phase 3: R5 — DigiTrack Fallback + run() Smoke
 
 #### Automated
 
-- [ ] 3.1 R5 tests: `python -m pytest tests/integration/test_pipeline_fidelity.py -v -k digitrack`
-- [ ] 3.2 Pełna suite: `python -m pytest -q`
+- [x] 3.1 R5 tests: `python -m pytest tests/integration/test_pipeline_fidelity.py -v -k digitrack`
+- [x] 3.2 Pełna suite: `python -m pytest -q`
 
 #### Manual
 
-- [ ] 3.3 Wartości bliskie 0 → Phase 4 kalibracja, nie osłabianie smoke
+- [x] 3.3 Wartości bliskie 0 → Phase 4 kalibracja, nie osłabianie smoke
 
 ### Phase 4: Production Fixes Driven by Tests
 

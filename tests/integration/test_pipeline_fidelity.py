@@ -10,7 +10,7 @@ mne = pytest.importorskip("mne")
 
 from app.domain.eeg_file import read_raw_digitrack
 from app.domain.errors import PipelineError
-from app.domain.pipeline import run
+from app.domain.pipeline import _collect_task_markers, detect_task_segments, run
 from app.domain.types import NormsConfig
 
 FIXTURE = Path(__file__).resolve().parents[1] / "fixtures" / "sample_digitrack.eeg"
@@ -79,3 +79,34 @@ def test_run_raises_artifact_rejection_when_segment_exceeds_200_uv(
     with pytest.raises(PipelineError) as exc_info:
         run(Path("synthetic.edf"), real_norms_config)
     assert exc_info.value.code == "artifact_rejection"
+
+
+def _load_digitrack_fixture() -> mne.io.BaseRaw:
+    return read_raw_digitrack(FIXTURE)
+
+
+@pytest.mark.skipif(not FIXTURE.exists(), reason="Brak fixture sample_digitrack.eeg")
+def test_digitrack_has_no_task_annotations() -> None:
+    raw = _load_digitrack_fixture()
+    assert _collect_task_markers(raw) == []
+
+
+@pytest.mark.skipif(not FIXTURE.exists(), reason="Brak fixture sample_digitrack.eeg")
+def test_digitrack_detect_task_segments_uses_fallback_3x3() -> None:
+    raw = _load_digitrack_fixture()
+    total = float(raw.times[-1])
+    segments = detect_task_segments(raw)
+    assert set(segments) == {"OO", "OZ", "ZP"}
+    assert segments["OO"] == (0.0, 180.0)
+    assert segments["OZ"] == (180.0, 360.0)
+    assert segments["ZP"][0] == 360.0
+    assert segments["ZP"][1] == pytest.approx(min(540.0, total), abs=0.01)
+
+
+@pytest.mark.skipif(not FIXTURE.exists(), reason="Brak fixture sample_digitrack.eeg")
+def test_digitrack_run_returns_ten_finite_amplitudes(
+    real_norms_config: NormsConfig,
+) -> None:
+    result = run(FIXTURE, real_norms_config)
+    assert len(result) == 10
+    assert all(np.isfinite(v) for v in result)
