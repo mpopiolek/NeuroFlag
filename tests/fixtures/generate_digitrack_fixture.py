@@ -3,10 +3,10 @@
 Uruchom ręcznie (NIE w CI):
     python tests/fixtures/generate_digitrack_fixture.py
 
-Wynikowy plik: tests/fixtures/sample_digitrack.eeg (~137 KB)
-- Pierwsze 2500 próbek (10 s przy 250 Hz)
+Wynikowy plik: tests/fixtures/sample_digitrack.eeg (~1–2 MB)
+- Pierwsze 120_000 próbek (480 s / 8 min przy 250 Hz) — minimum dla fallback 3×3 min
 - PII wyzerowane (offset 0x00C4–0x0143)
-- Pole total_blocks zaktualizowane do 2500
+- Pole total_blocks zaktualizowane do 120_000
 """
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ from pathlib import Path
 SOURCE = Path("D:/CVGOSI/NF dane/Testowe/Kuczyński.EEG")
 OUT = Path(__file__).parent / "sample_digitrack.eeg"
 
-TARGET_BLOCKS = 2500
+TARGET_BLOCKS = 120_000  # 480 s @ 250 Hz — min. dla detect_task_segments()
 PII_START = 0x00C4
 PII_END = 0x0143 + 1  # włącznie
 
@@ -51,7 +51,7 @@ def main() -> None:
 
     print(f"Wykryto {n_ch_data} kanałów EEG w strumieniu danych.")
 
-    # Oblicz pozycję danych oryginalnych (pierwsze 2500 bloków)
+    # Oblicz pozycję danych oryginalnych (pierwsze TARGET_BLOCKS bloków)
     orig_total_blocks: int = struct.unpack_from("<I", data, 0x0010)[0]
     orig_data_start = len(data) - orig_total_blocks * n_ch_data * 2
     data_bytes_needed = TARGET_BLOCKS * n_ch_data * 2
@@ -87,8 +87,8 @@ def main() -> None:
     OUT.write_bytes(bytes(output))
     size_kb = OUT.stat().st_size / 1024
     print(f"Zapisano: {OUT}  ({size_kb:.1f} KB)")
-    if size_kb > 200:
-        print("[OSTRZEŻENIE] Plik przekracza 200 KB — rozważ zmniejszenie TARGET_BLOCKS.")
+    if size_kb > 5000:
+        print("[OSTRZEŻENIE] Plik przekracza 5 MB — rozważ zmniejszenie TARGET_BLOCKS.")
 
 
 if __name__ == "__main__":

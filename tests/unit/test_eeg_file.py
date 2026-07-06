@@ -152,7 +152,9 @@ def test_read_raw_digitrack_sfreq() -> None:
 @pytest.mark.skipif(not _FIXTURE.exists(), reason="Brak fixture sample_digitrack.eeg")
 def test_read_raw_digitrack_data_shape() -> None:
     raw = read_raw_digitrack(_FIXTURE)
-    assert raw.get_data().shape == (19, 2500)
+    n_times = raw.get_data().shape[1]
+    assert raw.get_data().shape[0] == 19
+    assert n_times >= 120_000
 
 
 @pytest.mark.skipif(not _FIXTURE.exists(), reason="Brak fixture sample_digitrack.eeg")
