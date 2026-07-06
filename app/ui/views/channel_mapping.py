@@ -4,7 +4,9 @@ from typing import TYPE_CHECKING
 
 import customtkinter as ctk
 
+from app.ui import theme as t
 from app.ui.app_window import AppState
+from app.ui.components import widgets as w
 
 if TYPE_CHECKING:
     from app.ui.app_window import AppWindow
@@ -28,22 +30,18 @@ class ChannelMappingView(ctk.CTkFrame):
         self._app_state = app_state
         self._missing_channels = missing_channels
 
-        container = ctk.CTkFrame(self, fg_color="transparent")
-        container.pack(fill="both", expand=True, padx=40, pady=40)
+        container = w.page_container(self)
 
-        ctk.CTkLabel(
-            container,
-            text="Mapowanie kanałów EEG",
-            font=ctk.CTkFont(size=22, weight="bold"),
-        ).pack(anchor="w", pady=(0, 8))
+        w.page_title(container, "Mapowanie kanałów EEG").pack(anchor="w", pady=(0, 8))
 
-        ctk.CTkLabel(
+        w.body_label(
             container,
-            text=(
+            (
                 "Nie znaleziono kanałów C3/O1 pod standardowymi nazwami.\n"
-                'Przypisz kana\u0142y z pliku do wymaganych pozycji i kliknij "Kontynuuj".'
+                'Przypisz kanały z pliku do wymaganych pozycji i kliknij "Kontynuuj".'
             ),
-            wraplength=720,
+            secondary=True,
+            wraplength=t.WRAP_WIDTH,
             justify="left",
         ).pack(anchor="w", pady=(0, 20))
 
@@ -56,18 +54,14 @@ class ChannelMappingView(ctk.CTkFrame):
             row = ctk.CTkFrame(container, fg_color="transparent")
             row.pack(anchor="w", pady=(0, 12))
 
-            ctk.CTkLabel(
-                row,
-                text=f"{canonical}:",
-                font=ctk.CTkFont(size=14, weight="bold"),
-                width=60,
-                anchor="w",
-            ).pack(side="left", padx=(0, 12))
+            label = w.section_title(row, f"{canonical}:")
+            label.pack(side="left", padx=(0, 12))
 
             menu = ctk.CTkOptionMenu(
                 row,
                 values=option_values,
                 width=260,
+                font=t.font_body(),
                 command=lambda _val: self._refresh_continue_button(),
             )
             menu.set(_PLACEHOLDER)
@@ -75,14 +69,18 @@ class ChannelMappingView(ctk.CTkFrame):
             self._menus[canonical] = menu
 
         self._status_label = ctk.CTkLabel(
-            container, text="", text_color="#CC0000", wraplength=700
+            container,
+            text="",
+            text_color=t.COLOR_ERROR,
+            font=t.font_body(),
+            wraplength=t.WRAP_WIDTH,
         )
         self._status_label.pack(anchor="w", pady=(4, 0))
 
         button_row = ctk.CTkFrame(container, fg_color="transparent")
         button_row.pack(anchor="w", pady=(16, 0))
 
-        self._continue_button = ctk.CTkButton(
+        self._continue_button = w.primary_button(
             button_row,
             text="Kontynuuj",
             command=self._on_continue,
@@ -91,7 +89,7 @@ class ChannelMappingView(ctk.CTkFrame):
         )
         self._continue_button.pack(side="left", padx=(0, 12))
 
-        ctk.CTkButton(
+        w.secondary_button(
             button_row,
             text="← Anuluj",
             command=self._on_cancel,

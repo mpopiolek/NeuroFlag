@@ -9,14 +9,17 @@ import customtkinter as ctk
 
 from app.domain.errors import AnalysisCancelledError, PipelineError
 from app.domain.types import AnalysisResult
+from app.ui import theme as t
 from app.ui.app_window import AppState
+from app.ui.components import widgets as w
 
 if TYPE_CHECKING:
     from app.ui.app_window import AppWindow
 
 _RODO_NOTICE = (
     "Badanie zostało zapisane w lokalnej historii na tym urządzeniu.\n\n"
-    "Historia zawiera inicjały i rok urodzenia dziecka.\n"
+    "Historia zawiera inicjały, rok urodzenia oraz — jeśli podane — wcześniejsze "
+    "diagnozy dziecka.\n"
     "Dane nie opuszczają urządzenia."
 )
 
@@ -62,30 +65,25 @@ class AnalysisView(ctk.CTkFrame):
         self._app_state.cancel_event.clear()
         self._app_state.analysis_result = None
 
-        self._container = ctk.CTkFrame(self, fg_color="transparent")
-        self._container.pack(fill="both", expand=True, padx=40, pady=40)
+        self._container = w.page_container(self)
 
-        ctk.CTkLabel(
-            self._container,
-            text="Trwa analiza EEG\u2026",
-            font=ctk.CTkFont(size=22, weight="bold"),
-        ).pack(anchor="w", pady=(0, 20))
+        w.page_title(self._container, "Trwa analiza EEG…").pack(anchor="w", pady=(0, 20))
 
-        self._status_label = ctk.CTkLabel(
+        self._status_label = w.body_label(
             self._container,
-            text="Przetwarzanie sygna\u0142u\u2026",
-            wraplength=700,
+            "Przetwarzanie sygna\u0142u\u2026",
+            wraplength=t.WRAP_WIDTH,
             justify="left",
         )
         self._status_label.pack(anchor="w", pady=(0, 12))
 
         self._progress = ctk.CTkProgressBar(
-            self._container, mode="indeterminate", width=500
+            self._container, mode="indeterminate", width=480
         )
         self._progress.pack(anchor="w", pady=(0, 20))
         self._progress.start()
 
-        self._cancel_button = ctk.CTkButton(
+        self._cancel_button = w.secondary_button(
             self._container,
             text="Anuluj",
             command=self._on_cancel,
@@ -143,7 +141,7 @@ class AnalysisView(ctk.CTkFrame):
         self._progress.stop()
         self._status_label.configure(
             text="Analiza zosta\u0142a anulowana.",
-            text_color="#888888",
+            text_color=t.COLOR_TEXT_MUTED,
         )
         self._cancel_button.pack_forget()
         self._show_back_button()
@@ -157,7 +155,7 @@ class AnalysisView(ctk.CTkFrame):
         if error is not None:
             self._status_label.configure(
                 text=f"\u2717 {format_pipeline_error(error)}",
-                text_color="#CC0000",
+                text_color=t.COLOR_ERROR,
             )
             self._show_error_details(error)
             self._show_back_button()
@@ -188,24 +186,27 @@ class AnalysisView(ctk.CTkFrame):
     def _show_error_details(self, error: PipelineError) -> None:
         details_frame = ctk.CTkFrame(
             self._container,
-            fg_color="#F0F0F0",
-            corner_radius=6,
+            fg_color=t.COLOR_SURFACE,
+            corner_radius=t.CORNER_RADIUS_SM,
+            border_width=1,
+            border_color=t.COLOR_BORDER,
         )
         details_frame.pack(anchor="w", pady=(8, 0), fill="x")
         ctk.CTkLabel(
             details_frame,
             text="Szczeg\u00f3\u0142y",
-            font=ctk.CTkFont(size=12, weight="bold"),
-        ).pack(anchor="w", padx=8, pady=(6, 2))
+            font=t.font_small(),
+            text_color=t.COLOR_TEXT,
+        ).pack(anchor="w", padx=12, pady=(8, 2))
         ctk.CTkLabel(
             details_frame,
             text=f"Typ b\u0142\u0119du: {_error_code_pl(error.code)}",
-            font=ctk.CTkFont(size=11),
-            text_color="#555555",
-        ).pack(anchor="w", padx=16, pady=(0, 6))
+            font=t.font_caption(),
+            text_color=t.COLOR_TEXT_SECONDARY,
+        ).pack(anchor="w", padx=16, pady=(0, 10))
 
     def _show_back_button(self) -> None:
-        ctk.CTkButton(
+        w.secondary_button(
             self._container,
             text="\u2190 Wr\u00f3\u0107 do importu",
             command=self._on_back,

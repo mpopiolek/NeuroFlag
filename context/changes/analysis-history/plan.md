@@ -8,20 +8,30 @@ Pedagog widzi listę poprzednich badań (data, identyfikator dziecka, kategoria 
 i może usuwać rekordy. Funkcja spełnia kryterium CRUD dla certyfikacji MVP
 i otwiera drogę do trendów terapeutycznych w v2.0.
 
+**Rozszerzenie (Phase 6):** zbieranie zdiagnozowanych wcześniej schorzeń
+psychologiczno-pedagogicznych/medycznych (ASD, ADHD, depresja/lęki, dysleksja, inne)
+obok istniejących diagnoz wykluczających. Dane zapisywane lokalnie w `history.db`
+i trafiają do raportu PDF — bez wpływu na algorytm przesiewowy w v1.0; fundament
+pod rozszerzanie norm i uczenie w v2.0 (FR-010).
+
 ## Current State Analysis
 
-- `PatientMetadata` (`app/domain/types.py:31`) — brak pól identyfikujących dziecko
-  (inicjały, data urodzenia, etykieta). Można bezpiecznie dodać opcjonalne pola —
-  `frozen=True` dataclass, pipeline i algorytm je ignorują.
+- `PatientMetadata` (`app/domain/types.py:31`) — pola identyfikujące dziecko
+  (`initials`, `birth_year`, `custom_label`) już zaimplementowane (Phase 2, ekran importu).
+  Brak pól na diagnozy informacyjne (ASD, ADHD itd.) — tylko `ExclusionDiagnosis`
+  (uraz mózgu, niepełnosprawność intelektualna, padaczka) z blokadą analizy.
+  Pipeline i algorytm ignorują metrykę poza wiekiem/płcią — nowe diagnozy można
+  dodać bez zmiany wyniku przesiewowego.
 - `AppState` (`app/ui/app_window.py:12`) — sesja w RAM, reset przy „Nowe badanie".
   `AppState.metadata` i `AppState.analysis_result` są dostępne w momencie zapisu.
 - `AnalysisView._on_done()` (`app/ui/views/analysis.py:143`) — naturalne miejsce
   auto-zapisu: wynik gotowy, `show_view(ResultsGridView)` jeszcze niezwołane.
 - `ResultsGridView._on_new_study()` (`app/ui/views/results_grid.py:169`) — reset stanu i
-  powrót do `MetadataFormView`. Tu można dołączyć przycisk „Historia badań".
-- Brak jakiejkolwiek warstwy persystencji; `resolve_norms_path()` (`app/domain/norms.py:127`)
-  to wzorzec lokalizacji pliku obok `.exe`.
-- `AGENTS.md` zawiera wpis „nie ma bazy danych" — wymaga aktualizacji po tej zmianie.
+  powrót do `MetadataFormView`. Przycisk „Historia badań" zaimplementowany (Phase 4).
+- `HistoryStore` + `history.db` — **zaimplementowane** (fazy 1–5): auto-zapis po analizie,
+  `HistoryView`, komunikat RODO, pola identyfikacyjne (`initials`, `birth_year`,
+  `custom_label`) na ekranie importu pliku. `AGENTS.md` zaktualizowany.
+- `resolve_history_db_path()` (`app/storage/history.py`) — wzorzec lokalizacji pliku obok `.exe`.
 
 ## Desired End State
 
@@ -33,9 +43,13 @@ Użytkownik może:
    kategoria wynikowa (kolor RAG).
 4. Usunąć wybrany rekord po potwierdzeniu.
 5. Wrócić do ekranu wyników.
+6. *(Phase 6)* Opcjonalnie zaznaczyć wcześniejsze diagnozy (ASD, ADHD, depresja/lęki,
+   dysleksja, inne) w formularzu metryki — bez wpływu na wynik przesiewowy.
+7. *(Phase 6)* Zdiagnozowane schorzenia zapisywane lokalnie w historii i widoczne w raporcie PDF.
 
 Weryfikacja: po przeprowadzeniu 2 badań lista pokazuje 2 rekordy; po usunięciu jednego —
 1 rekord; `history.db` istnieje w folderze aplikacji.
+Po Phase 6: rekord z zaznaczonym ADHD ma `diagnoses_json` w bazie; PDF zawiera sekcję diagnoz.
 
 ## What We're NOT Doing
 
@@ -45,12 +59,13 @@ Weryfikacja: po przeprowadzeniu 2 badań lista pokazuje 2 rekordy; po usunięciu
 - Szyfrowanie bazy danych — dane pozostają lokalne, szyfrowanie v2.0.
 - Eksport historii (CSV/Excel) — v2.0.
 - Wyszukiwanie / filtrowanie historii — v2.0.
+- Użycie diagnoz informacyjnych w algorytmie przesiewowym lub segmentacji norm — v2.0.
+- Filtrowanie historii po diagnozie — v2.0.
 
 ## Implementation Approach
 
-Pięć faz zależnych sekwencyjnie: warstwa storage (nowy moduł) → rozszerzenie typów domenowych
-i formularza → auto-zapis po analizie z jednorazowym komunikatem RODO → widok historii
-i przycisk w wynikach → testy jednostkowe.
+Pięć faz (1–5) **ukończonych**; Phase 6 (diagnozy informacyjne) — pending.
+Sekwencja Phase 6: typy domenowe → UI metryki + RODO → storage (`diagnoses_json`) → PDF → testy.
 
 SQLite obsługiwany przez wbudowany moduł `sqlite3` — zero nowych zależności.
 Schemat tworzy się przy pierwszym uruchomieniu (`CREATE TABLE IF NOT EXISTS`).
@@ -461,6 +476,166 @@ def sample_result():
 
 ---
 
+## Phase 6: Diagnozy informacyjne w metryce (FR-010)
+
+### Overview
+
+Rozszerzenie metryki dziecka o opcjonalne, wcześniej postawione diagnozy
+psychologiczno-pedagogiczne/medyczne. Oddzielone od istniejących diagnoz wykluczających
+(uraz mózgu, niepełnosprawność intelektualna, padaczka), które nadal blokują analizę.
+Zbierane dane służą wyłącznie do zapisu lokalnego i raportu PDF w v1.0; w v2.0 umożliwią
+rozszerzanie norm i analizę trendów per grupa kliniczna.
+
+### Changes Required:
+
+#### 1. Dodaj enum `ClinicalDiagnosis` i pola w `PatientMetadata`
+
+**File**: `app/domain/types.py`
+
+**Intent**: Typować diagnozy informacyjne oddzielnie od `ExclusionDiagnosis`;
+zachować kompatybilność wsteczną istniejących konstruktorów.
+
+**Contract**:
+```python
+class ClinicalDiagnosis(Enum):
+    ASD = "asd"                          # ASD / autyzm
+    ADHD = "adhd"
+    DEPRESSION_ANXIETY = "depression_anxiety"  # depresja / zaburzenia lękowe
+    DYSLEXIA = "dyslexia"
+    OTHER = "other"
+```
+
+Rozszerz `PatientMetadata`:
+```python
+diagnoses: frozenset[ClinicalDiagnosis] = field(default_factory=frozenset)
+other_diagnosis_note: str | None = None  # wymagane gdy OTHER ∈ diagnoses
+```
+
+Eksportuj `ClinicalDiagnosis` z `app/domain/__init__.py`.
+
+Dodaj helper w `app/domain/types.py` (lub `app/domain/clinical_labels.py` jeśli
+plik rośnie):
+```python
+_CLINICAL_LABELS_PL: dict[ClinicalDiagnosis, str] = {
+    ClinicalDiagnosis.ASD: "ASD / autyzm",
+    ClinicalDiagnosis.ADHD: "ADHD",
+    ClinicalDiagnosis.DEPRESSION_ANXIETY: "Depresja lub zaburzenia lękowe",
+    ClinicalDiagnosis.DYSLEXIA: "Dysleksja",
+    ClinicalDiagnosis.OTHER: "Inne",
+}
+
+def format_clinical_diagnoses(metadata: PatientMetadata) -> str:
+    """Zwraca polskie etykiety diagnoz informacyjnych, rozdzielone przecinkami."""
+    ...
+```
+PDF (`pdf_generator.py`) i testy importują `format_clinical_diagnoses` — jedno
+źródło prawdy dla etykiet PL.
+
+#### 2. Sekcja UI w `MetadataFormView`
+
+**File**: `app/ui/views/metadata_form.py`
+
+**Intent**: Umożliwić pedagogowi zaznaczenie wcześniejszych diagnoz bez blokady analizy.
+
+**Contract**:
+- Nowa sekcja **„Zdiagnozowane wcześniej (opcjonalnie)"** między płcią a diagnozami
+  wykluczającymi.
+- Checkboxy (wielokrotny wybór): ASD / autyzm, ADHD, Depresja lub zaburzenia lękowe,
+  Dysleksja, Inne.
+- Gdy zaznaczono „Inne" — pojawia się `CTkEntry` na krótki opis (max ~100 znaków,
+  `strip() or None`).
+- Sekcja opcjonalna — puste checkboxy nie blokują „Dalej →".
+- Istniejąca sekcja „Diagnozy wykluczające" bez zmian (blokada analizy).
+- `_on_next()` przekazuje `diagnoses` i `other_diagnosis_note` do `PatientMetadata`.
+- `_restore_from_state()` przywraca checkboxy i pole „Inne".
+- Infobox RODO: doprecyzować, że diagnozy zapisywane są lokalnie (jak inicjały)
+  i nie wpływają na wynik przesiewowy.
+
+#### 2b. Aktualizacja komunikatu RODO przy pierwszym zapisie
+
+**File**: `app/ui/views/analysis.py`
+
+**Intent**: Jednorazowy dialog przy pierwszym zapisie do historii musi wymieniać
+pełny zakres zapisywanych danych osobowych — w tym opcjonalne diagnozy (art. 9).
+
+**Contract**: Rozszerz `_RODO_NOTICE` o wzmiankę o diagnozach, np.:
+„Historia zawiera inicjały, rok urodzenia oraz — jeśli podane — wcześniejsze
+diagnozy dziecka. Dane nie opuszczają urządzenia."
+Bez zmiany mechanizmu `is_notice_shown()` / `mark_notice_shown()`.
+
+#### 3. Kolumna `diagnoses_json` w `HistoryStore`
+
+**File**: `app/storage/history.py`
+
+**Intent**: Persystować diagnozy informacyjne obok istniejącego `exclusions_json`.
+
+**Contract**:
+- Migracja schematu w `_ensure_schema()`:
+  ```sql
+  ALTER TABLE studies ADD COLUMN diagnoses_json TEXT NOT NULL
+      DEFAULT '{"diagnoses":[],"other_note":null}'
+  ```
+  (obsłużyć `sqlite3.OperationalError` gdy kolumna już istnieje — idempotentna migracja).
+- `add()` serializuje ten sam kształt:
+  ```python
+  diagnoses_json = json.dumps({
+      "diagnoses": [d.value for d in metadata.diagnoses],
+      "other_note": metadata.other_diagnosis_note,
+  })
+  ```
+  Pusty zestaw → `{"diagnoses":[],"other_note":null}` (nigdy goły `[]`).
+- `exclusions_json` bez zmian — nadal zapisuje wykluczenia (puste `[]` gdy brak).
+- `StudyRecord` — opcjonalnie pole `diagnoses_json: str` (odczyt przez helper
+  `format_clinical_diagnoses` po deserializacji, gdy potrzebny w v2.0).
+
+#### 4. Raport PDF — sekcja diagnoz
+
+**File**: `app/reports/pdf_generator.py`
+
+**Intent**: Spełnić FR-010 — metryka dziecka w raporcie zawiera zdiagnozowane schorzenia.
+
+**Contract**:
+- Pod linią wiek/płeć dodaj wiersz „Diagnozy:" gdy `metadata.diagnoses` niepuste.
+- Użyj `format_clinical_diagnoses(metadata)` z domain — nie duplikuj mapowania w PDF.
+- Dla `OTHER` helper dołącza `other_diagnosis_note` w nawiasie.
+- Gdy brak diagnoz — wiersz pominięty (nie drukuj „Brak").
+- **Nie** wyświetlaj diagnoz wykluczających w PDF (analiza dla nich nie dochodzi do skutku).
+
+#### 5. Testy jednostkowe
+
+**Files**: `tests/unit/test_types.py`, `tests/unit/test_history.py`,
+`tests/unit/test_pdf_generator.py`
+
+**Intent**: Pokryć serializację, domyślne wartości i render PDF.
+
+**Contract** — nowe testy:
+- `test_patient_metadata_empty_diagnoses` — domyślnie `frozenset()`
+- `test_patient_metadata_with_diagnoses` — konstruktor z `ClinicalDiagnosis.ADHD`
+- `test_add_persists_diagnoses_json` — `store.add()` zapisuje JSON z diagnozami
+- `test_schema_migration_adds_diagnoses_column` — init na istniejącej DB dodaje kolumnę
+- `test_pdf_includes_diagnoses_when_present` — PDF zawiera etykietę ADHD
+- `test_pdf_omits_diagnoses_when_empty` — PDF bez wiersza „Diagnozy"
+
+### Success Criteria:
+
+#### Automated Verification:
+
+- `mypy app/domain/types.py app/storage/history.py app/ui/views/metadata_form.py app/ui/views/analysis.py app/reports/pdf_generator.py --strict` bez błędów
+- `python -m pytest tests/unit/test_types.py tests/unit/test_history.py tests/unit/test_pdf_generator.py -q` bez regresji
+- `ruff check app/domain/types.py app/storage/history.py app/ui/views/metadata_form.py` bez błędów
+
+#### Manual Verification:
+
+- Formularz metryki pokazuje sekcję „Zdiagnozowane wcześniej (opcjonalnie)" z 5 checkboxami
+- Zaznaczenie ADHD + przejście dalej nie blokuje analizy
+- Po analizie `diagnoses_json` w `history.db` zawiera `"adhd"`
+- Raport PDF zawiera wiersz „Diagnozy: ADHD"
+- Zaznaczenie urazu mózgu nadal blokuje „Dalej →" (regresja wykluczeń)
+
+**Implementation Note**: Po zakończeniu tej fazy zatrzymaj się na potwierdzenie.
+
+---
+
 ## Testing Strategy
 
 ### Unit Tests:
@@ -480,6 +655,14 @@ def sample_result():
 7. Usuń jeden rekord — potwierdź że lista skraca się do jednego
 8. Wyjdź z aplikacji, uruchom ponownie — sprawdź że komunikat RODO nie pojawia się ponownie
 9. Sprawdź `history.db` w folderze projektu przez DB Browser lub CLI SQLite
+
+### Phase 6 Manual Testing Steps:
+
+1. Wypełnij metrykę z zaznaczonym ADHD i dysleksją — przejdź dalej bez blokady
+2. Przeprowadź analizę — sprawdź `diagnoses_json` w `history.db`
+3. Wygeneruj PDF — sprawdź wiersz „Diagnozy: ADHD, Dysleksja"
+4. Zaznacz „Inne" z opisem „Zaburzenia ze spektrum tików" — sprawdź PDF i JSON
+5. Zaznacz uraz mózgu — potwierdź że „Dalej →" jest zablokowane (regresja)
 
 ## Migration Notes
 
@@ -512,6 +695,8 @@ po wdrożeniu tej zmiany.
 #### Manual
 
 - [x] 1.4 `HistoryStore(resolve_history_db_path()).has_any()` zwraca `False` — 79a9c2c
+
+> Odchylenie od planu: `birth_date` → `birth_year` (spójność z `PatientMetadata`); `list_for_patient()` dodana w ramach Phase 1 na potrzeby filtrowania w Phase 4.
 
 ### Phase 2: Typy domenowe + formularz metryki
 
@@ -567,3 +752,18 @@ po wdrożeniu tej zmiany.
 
 - [x] 5.4 Wszystkie 13 testów zielone lokalnie — 0f9ae74
 - [x] 5.5 AGENTS.md zaktualizowany (usunięte „nie ma bazy danych") — 0f9ae74
+
+### Phase 6: Diagnozy informacyjne w metryce (FR-010)
+
+#### Automated
+
+- [x] 6.1 `mypy app/domain/types.py app/storage/history.py app/ui/views/metadata_form.py app/ui/views/analysis.py app/reports/pdf_generator.py --strict` bez błędów — 1522cf5
+- [x] 6.2 `pytest tests/unit/test_types.py tests/unit/test_history.py tests/unit/test_pdf_generator.py -q` bez regresji — 1522cf5
+- [x] 6.3 `ruff check` na zmienionych plikach bez błędów — 1522cf5
+
+#### Manual
+
+- [x] 6.4 Formularz pokazuje sekcję diagnoz informacyjnych (5 checkboxów + pole „Inne") — 1522cf5
+- [x] 6.5 Diagnozy informacyjne nie blokują analizy; wykluczenia nadal blokują; komunikat RODO wymienia diagnozy — 1522cf5
+- [x] 6.6 `diagnoses_json` zapisany w `history.db` po analizie — 1522cf5
+- [x] 6.7 Raport PDF zawiera wiersz diagnoz gdy zaznaczone — 1522cf5

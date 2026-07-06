@@ -1,13 +1,17 @@
 from __future__ import annotations
 
 import tkinter.messagebox
+from collections.abc import Callable
+from functools import partial
 from typing import TYPE_CHECKING
 
 import customtkinter as ctk
 
 from app.domain.types import ScreeningCategory
 from app.storage.history import StudyRecord
+from app.ui import theme as t
 from app.ui.app_window import AppState
+from app.ui.components import widgets as w
 from app.ui.components.rag_colors import CATEGORY_COLOR as _CATEGORY_COLOR
 
 if TYPE_CHECKING:
@@ -15,9 +19,9 @@ if TYPE_CHECKING:
 
 _CATEGORY_BG: dict[ScreeningCategory, str] = _CATEGORY_COLOR
 _CATEGORY_FG: dict[ScreeningCategory, str] = {
-    ScreeningCategory.WSKAZANIE: "#FFFFFF",
-    ScreeningCategory.OBSERWACJA: "#FFFFFF",
-    ScreeningCategory.BRAK: "#FFFFFF",
+    ScreeningCategory.WSKAZANIE: t.COLOR_ON_ACCENT,
+    ScreeningCategory.OBSERWACJA: t.COLOR_ON_ACCENT,
+    ScreeningCategory.BRAK: t.COLOR_ON_ACCENT,
 }
 
 
@@ -41,19 +45,16 @@ class HistoryView(ctk.CTkFrame):
         self._app_state = app_state
         self._show_all = False
 
-        outer = ctk.CTkFrame(self, fg_color="transparent")
-        outer.pack(fill="both", expand=True, padx=40, pady=30)
+        self._outer = w.page_container(self)
+        self._outer.columnconfigure(0, weight=1)
+        self._outer.rowconfigure(3, weight=1)
 
-        header_row = ctk.CTkFrame(outer, fg_color="transparent")
-        header_row.pack(fill="x", pady=(0, 4))
+        header_row = ctk.CTkFrame(self._outer, fg_color="transparent")
+        header_row.grid(row=0, column=0, sticky="ew", pady=(0, 4))
 
-        ctk.CTkLabel(
-            header_row,
-            text="Historia badań",
-            font=ctk.CTkFont(size=22, weight="bold"),
-        ).pack(side="left")
+        w.page_title(header_row, "Historia badań").pack(side="left")
 
-        ctk.CTkButton(
+        w.secondary_button(
             header_row,
             text="← Wróć do wyników",
             command=self._on_back,
@@ -61,33 +62,50 @@ class HistoryView(ctk.CTkFrame):
         ).pack(side="right")
 
         self._filter_label = ctk.CTkLabel(
-            outer,
+            self._outer,
             text="",
-            font=ctk.CTkFont(size=12),
-            text_color="#555555",
+            font=t.font_small(),
+            text_color=t.COLOR_TEXT_SECONDARY,
             anchor="w",
         )
-        self._filter_label.pack(fill="x", pady=(0, 4))
+        self._filter_label.grid(row=1, column=0, sticky="ew", pady=(0, 4))
 
-        # Stały wiersz na przycisk toggle — unika problemu z before= i CTkScrollableFrame
-        self._controls_row = ctk.CTkFrame(outer, fg_color="transparent")
-        self._controls_row.pack(anchor="w", pady=(0, 8))
+        self._controls_row = ctk.CTkFrame(self._outer, fg_color="transparent")
+        self._controls_row.grid(row=2, column=0, sticky="w", pady=(0, 8))
 
-        self._toggle_btn = ctk.CTkButton(
+        self._toggle_btn = w.secondary_button(
             self._controls_row,
             text="Pokaż wszystkie",
-            width=140,
-            fg_color="transparent",
-            border_width=1,
-            text_color="#333333",
-            hover_color="#EBEBEB",
+            width=150,
             command=self._on_toggle_all,
         )
 
-        self._list_frame = ctk.CTkScrollableFrame(outer, fg_color="transparent")
-        self._list_frame.pack(fill="both", expand=True)
+        self._list_frame = ctk.CTkScrollableFrame(self._outer, fg_color="transparent")
+        self._list_frame.grid(row=3, column=0, sticky="nsew")
+        self._sync_scrollbar = w.bind_auto_hide_scrollbar(self._list_frame)
+
+        self._outer.bind("<Configure>", self._on_outer_configure, add="+")
+        self.bind("<Configure>", self._on_outer_configure, add="+")
 
         self._build_list()
+        self.after_idle(self._fit_list_height)
+
+    def _on_outer_configure(self, _event: object | None = None) -> None:
+        self.after_idle(self._fit_list_height)
+
+    def _fit_list_height(self) -> None:
+        self.update_idletasks()
+        list_y = self._list_frame.winfo_y()
+        outer_h = self._outer.winfo_height()
+        if list_y <= 0 or outer_h <= 0:
+            return
+        available = outer_h - list_y - 4
+        if available < 80:
+            return
+        current = self._list_frame.cget("height")
+        if current != available:
+            self._list_frame.configure(height=available)
+        self._sync_scrollbar()
 
     def _patient_filter_label(self) -> str:
         metadata = self._app_state.metadata
@@ -134,15 +152,17 @@ class HistoryView(ctk.CTkFrame):
             self._toggle_btn.pack_forget()
 
         if not records:
-            ctk.CTkLabel(
+            w.body_label(
                 self._list_frame,
-                text="Brak zapisanych badań dla tego dziecka.",
-                text_color="#888888",
+                "Brak zapisanych badań dla tego dziecka.",
+                secondary=True,
             ).pack(anchor="w", pady=16)
+            self.after_idle(self._fit_list_height)
             return
 
         for record in records:
             self._make_row(record)
+        self.after_idle(self._fit_list_height)
 
     def _on_toggle_all(self) -> None:
         self._show_all = not self._show_all
@@ -151,51 +171,94 @@ class HistoryView(ctk.CTkFrame):
     def _make_row(self, record: StudyRecord) -> None:
         row = ctk.CTkFrame(
             self._list_frame,
-            fg_color="#F5F5F5",
-            corner_radius=6,
+            fg_color=t.COLOR_ROW_BG,
+            corner_radius=t.CORNER_RADIUS_SM,
+            border_width=1,
+            border_color=t.COLOR_BORDER,
         )
-        row.pack(fill="x", pady=(0, 6))
+        row.pack(fill="x", pady=(0, 8))
         row.columnconfigure(1, weight=1)
 
         date_str = record.analyzed_at.strftime("%Y-%m-%d %H:%M")
         ctk.CTkLabel(
             row,
             text=date_str,
-            font=ctk.CTkFont(size=12),
-            text_color="#555555",
+            font=t.font_small(),
+            text_color=t.COLOR_TEXT_SECONDARY,
             width=130,
             anchor="w",
-        ).grid(row=0, column=0, padx=(10, 6), pady=8, sticky="w")
+        ).grid(row=0, column=0, padx=(12, 6), pady=10, sticky="w")
 
         ctk.CTkLabel(
             row,
             text=record.display_name,
-            font=ctk.CTkFont(size=13),
+            font=t.font_body(),
+            text_color=t.COLOR_TEXT,
             anchor="w",
-        ).grid(row=0, column=1, padx=6, pady=8, sticky="w")
+        ).grid(row=0, column=1, padx=6, pady=10, sticky="w")
 
         category = _category_from_value(record.category)
-        cat_bg = _CATEGORY_BG.get(category, "#888888") if category else "#888888"
-        cat_fg = _CATEGORY_FG.get(category, "#FFFFFF") if category else "#FFFFFF"
-        cat_short = record.category.split(" ")[0]  # "Wskazanie" / "Uważna" / "Brak"
+        cat_bg = _CATEGORY_BG.get(category, t.COLOR_TEXT_MUTED) if category else t.COLOR_TEXT_MUTED
+        cat_fg = _CATEGORY_FG.get(category, t.COLOR_ON_ACCENT) if category else t.COLOR_ON_ACCENT
+        cat_short = record.category.split(" ")[0]
         ctk.CTkLabel(
             row,
             text=cat_short,
-            font=ctk.CTkFont(size=11, weight="bold"),
+            font=t.font_caption(),
             text_color=cat_fg,
             fg_color=cat_bg,
             corner_radius=4,
-            width=80,
-        ).grid(row=0, column=2, padx=6, pady=8)
+            width=84,
+        ).grid(row=0, column=2, padx=6, pady=10)
 
-        ctk.CTkButton(
+        edit_btn = w.secondary_button(
+            row,
+            text="Edytuj",
+            width=68,
+            command=partial(self._on_edit, record),
+        )
+        edit_btn.grid(row=0, column=3, padx=(0, 4), pady=10)
+
+        delete_btn = w.danger_button(
             row,
             text="Usuń",
-            width=60,
-            fg_color="#CC3333",
-            hover_color="#AA2222",
-            command=lambda rid=record.id: self._on_delete(rid),
-        ).grid(row=0, column=3, padx=(6, 10), pady=8)
+            width=68,
+            command=partial(self._on_delete, record.id),
+        )
+        delete_btn.grid(row=0, column=4, padx=(0, 12), pady=10)
+
+    def _on_edit(self, record: StudyRecord) -> None:
+        dialog = _EditStudyDialog(
+            self.winfo_toplevel(),
+            record=record,
+            on_save=self._save_identification,
+        )
+        dialog.wait_window()
+
+    def _save_identification(
+        self,
+        study_id: int,
+        *,
+        initials: str | None,
+        birth_year: str | None,
+        custom_label: str | None,
+    ) -> None:
+        store = self._app_state.history_store
+        assert store is not None
+        updated = store.update_identification(
+            study_id,
+            initials=initials,
+            birth_year=birth_year,
+            custom_label=custom_label,
+        )
+        if not updated:
+            tkinter.messagebox.showerror(
+                "Edycja rekordu",
+                "Nie znaleziono rekordu w historii.",
+            )
+            return
+        self._show_all = True
+        self._build_list()
 
     def _on_delete(self, study_id: int) -> None:
         confirmed = tkinter.messagebox.askyesno(
@@ -213,3 +276,84 @@ class HistoryView(ctk.CTkFrame):
         from app.ui.views.results_grid import ResultsGridView
 
         self._app_window.show_view(ResultsGridView)
+
+
+class _EditStudyDialog(ctk.CTkToplevel):
+    def __init__(
+        self,
+        master: ctk.CTk,
+        *,
+        record: StudyRecord,
+        on_save: Callable[..., None],
+    ) -> None:
+        super().__init__(master)
+        self._record = record
+        self._on_save = on_save
+
+        self.title("Edytuj identyfikację")
+        self.resizable(False, False)
+        self.transient(master)
+        self.protocol("WM_DELETE_WINDOW", self.destroy)
+
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(0, weight=1)
+
+        body = ctk.CTkFrame(self, fg_color="transparent")
+        body.grid(row=0, column=0, sticky="nsew", padx=24, pady=(20, 8))
+
+        w.section_title(body, "Identyfikacja dziecka").pack(anchor="w", pady=(0, 12))
+
+        self._initials_entry = self._labeled_entry(
+            body, "Inicjały", record.initials or ""
+        )
+        self._birth_year_entry = self._labeled_entry(
+            body, "Rok urodzenia", record.birth_year or ""
+        )
+        self._custom_label_entry = self._labeled_entry(
+            body, "Własna etykieta", record.custom_label or ""
+        )
+
+        footer = ctk.CTkFrame(self, fg_color="transparent")
+        footer.grid(row=1, column=0, sticky="ew", padx=24, pady=(0, 20))
+
+        w.primary_button(footer, text="Zapisz", command=self._submit, width=110).pack(
+            side="right"
+        )
+        w.secondary_button(
+            footer,
+            text="Anuluj",
+            command=self.destroy,
+            width=110,
+        ).pack(side="right", padx=(0, 8))
+
+        self.bind("<Return>", lambda _event: self._submit())
+        self.bind("<Escape>", lambda _event: self.destroy())
+
+        self.update_idletasks()
+        self.grab_set()
+        self._initials_entry.focus_set()
+        self.lift()
+        self.attributes("-topmost", True)
+        self.after(100, lambda: self.attributes("-topmost", False))
+
+    def _labeled_entry(self, parent: ctk.CTkFrame, label: str, value: str) -> ctk.CTkEntry:
+        w.body_label(parent, label).pack(anchor="w", pady=(0, 2))
+        entry = ctk.CTkEntry(parent, width=360, font=t.font_body())
+        entry.pack(anchor="w", pady=(0, 8))
+        entry.insert(0, value)
+        return entry
+
+    def _field_value(self, entry: ctk.CTkEntry) -> str | None:
+        value = entry.get().strip()
+        return value or None
+
+    def _submit(self) -> None:
+        save = self._on_save
+        assert callable(save)
+        save(
+            self._record.id,
+            initials=self._field_value(self._initials_entry),
+            birth_year=self._field_value(self._birth_year_entry),
+            custom_label=self._field_value(self._custom_label_entry),
+        )
+        self.destroy()

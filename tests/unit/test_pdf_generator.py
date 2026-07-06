@@ -11,6 +11,7 @@ from app.domain.types import (
     CategoryDescriptions,
     CellColor,
     CellResult,
+    ClinicalDiagnosis,
     NormEntry,
     NormsConfig,
     ObservationCategory,
@@ -19,6 +20,7 @@ from app.domain.types import (
     RecommendationRules,
     ScreeningCategory,
     Sex,
+    format_clinical_diagnoses,
 )
 from app.reports.pdf_generator import DISCLAIMER_PL, generate_report
 
@@ -156,3 +158,19 @@ def test_disclaimer_contains_privacy_text() -> None:
     assert "lokalnie" in DISCLAIMER_PL
     assert "nagłówku" in DISCLAIMER_PL
     assert "nie są wyświetlane ani zapisywane w raporcie" in DISCLAIMER_PL
+
+
+def test_pdf_includes_diagnoses_when_present() -> None:
+    meta = PatientMetadata(
+        age=8,
+        sex=Sex.Z,
+        diagnoses=frozenset({ClinicalDiagnosis.ADHD}),
+    )
+    empty_pdf = generate_report(_METADATA, _RESULT, _CONFIG)
+    diagnosed_pdf = generate_report(meta, _RESULT, _CONFIG)
+    assert diagnosed_pdf != empty_pdf
+    assert len(diagnosed_pdf) > len(empty_pdf)
+
+
+def test_pdf_omits_diagnoses_when_empty() -> None:
+    assert format_clinical_diagnoses(_METADATA) == ""

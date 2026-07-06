@@ -8,6 +8,7 @@ import customtkinter as ctk
 
 from app.domain.types import AnalysisResult, NormsConfig, PatientMetadata
 from app.storage.history import HistoryStore, resolve_history_db_path
+from app.ui import theme as ui_theme
 
 
 @dataclass
@@ -34,11 +35,12 @@ class AppWindow(ctk.CTk):
         *,
         analysis_step_delay_s: float = 0.0,
     ) -> None:
-        ctk.set_appearance_mode("light")
-        ctk.set_default_color_theme("blue")
+        ui_theme.apply_app_theme()
         super().__init__()
         self.title("NeuroFlag — Badanie przesiewowe EEG")
-        self.geometry("900x650")
+        self.geometry("920x680")
+        self.minsize(820, 600)
+        self.configure(fg_color=ui_theme.COLOR_SURFACE_ELEVATED)
         self._state = AppState(
             norms_config=norms_config,
             analysis_step_delay_s=analysis_step_delay_s,

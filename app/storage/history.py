@@ -32,6 +32,8 @@ class StudyRecord:
             parts.append(self.initials)
         if self.birth_year:
             parts.append(self.birth_year)
+        if self.custom_label:
+            parts.append(self.custom_label)
         if parts:
             return " / ".join(parts)
         return self.analyzed_at.strftime("%Y-%m-%d %H:%M")
@@ -59,6 +61,18 @@ def _serialize_cells(cells: tuple[CellResult, ...]) -> str:
     )
 
 
+_EMPTY_DIAGNOSES_JSON = '{"diagnoses":[],"other_note":null}'
+
+
+def _serialize_diagnoses(metadata: PatientMetadata) -> str:
+    return json.dumps(
+        {
+            "diagnoses": sorted(d.value for d in metadata.diagnoses),
+            "other_note": metadata.other_diagnosis_note,
+        }
+    )
+
+
 _CREATE_STUDIES = """
 CREATE TABLE IF NOT EXISTS studies (
     id               INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -68,7 +82,7 @@ CREATE TABLE IF NOT EXISTS studies (
     custom_label     TEXT,
     age              INTEGER NOT NULL,
     sex              TEXT    NOT NULL,
-    exclusions_json  TEXT    NOT NULL,
+    exclusions_json  TEXT    NOT NULL,  -- write-only: reserved for v2.0 trend analysis
     category         TEXT    NOT NULL,
     description      TEXT    NOT NULL,
     cells_json       TEXT    NOT NULL,
@@ -95,6 +109,15 @@ class HistoryStore:
         cur = self._conn.cursor()
         cur.execute(_CREATE_STUDIES)
         cur.execute(_CREATE_SETTINGS)
+        try:
+            cur.execute(
+                f"""
+                ALTER TABLE studies ADD COLUMN diagnoses_json TEXT NOT NULL
+                    DEFAULT '{_EMPTY_DIAGNOSES_JSON}'
+                """
+            )
+        except sqlite3.OperationalError:
+            pass
         self._conn.commit()
 
     def add(
@@ -106,14 +129,15 @@ class HistoryStore:
     ) -> int:
         """Wstawia rekord i zwraca nowe id. eeg_path.name zapisywany jako eeg_filename."""
         exclusions_json = json.dumps([e.value for e in metadata.exclusions])
+        diagnoses_json = _serialize_diagnoses(metadata)
         cells_json = _serialize_cells(result.cells)
         eeg_filename = eeg_path.name if eeg_path is not None else None
         cur = self._conn.execute(
             """
             INSERT INTO studies
                 (analyzed_at, initials, birth_year, custom_label, age, sex,
-                 exclusions_json, category, description, cells_json, eeg_filename)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 exclusions_json, diagnoses_json, category, description, cells_json, eeg_filename)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 result.analyzed_at.isoformat(),
@@ -123,6 +147,7 @@ class HistoryStore:
                 metadata.age,
                 metadata.sex.value,
                 exclusions_json,
+                diagnoses_json,
                 result.category.value,
                 result.description,
                 cells_json,
@@ -130,26 +155,36 @@ class HistoryStore:
             ),
         )
         self._conn.commit()
-        row_id: int = cur.lastrowid  # type: ignore[assignment]
-        return row_id
+        assert cur.lastrowid is not None, "INSERT did not return a rowid"
+        return cur.lastrowid
 
     def _rows_to_records(self, rows: list[sqlite3.Row]) -> list[StudyRecord]:
-        return [
-            StudyRecord(
-                id=row["id"],
-                analyzed_at=datetime.fromisoformat(row["analyzed_at"]),
-                initials=row["initials"],
-                birth_year=row["birth_year"],
-                custom_label=row["custom_label"],
-                age=row["age"],
-                sex=row["sex"],
-                category=row["category"],
-                description=row["description"],
-                cells_json=row["cells_json"],
-                eeg_filename=row["eeg_filename"],
+        records: list[StudyRecord] = []
+        for row in rows:
+            try:
+                analyzed_at = datetime.fromisoformat(row["analyzed_at"])
+            except ValueError:
+                print(
+                    f"history: skipping record id={row['id']} — invalid analyzed_at value",
+                    file=sys.stderr,
+                )
+                continue
+            records.append(
+                StudyRecord(
+                    id=row["id"],
+                    analyzed_at=analyzed_at,
+                    initials=row["initials"],
+                    birth_year=row["birth_year"],
+                    custom_label=row["custom_label"],
+                    age=row["age"],
+                    sex=row["sex"],
+                    category=row["category"],
+                    description=row["description"],
+                    cells_json=row["cells_json"],
+                    eeg_filename=row["eeg_filename"],
+                )
             )
-            for row in rows
-        ]
+        return records
 
     def list_recent(self, limit: int = 200) -> list[StudyRecord]:
         """Zwraca rekordy posortowane malejąco po analyzed_at."""
@@ -211,6 +246,29 @@ class HistoryStore:
             (*params, limit),
         ).fetchall()
         return self._rows_to_records(rows)
+
+    def update_identification(
+        self,
+        study_id: int,
+        *,
+        initials: str | None,
+        birth_year: str | None,
+        custom_label: str | None,
+    ) -> bool:
+        """Aktualizuje pola identyfikacji dziecka w istniejącym rekordzie.
+
+        Zwraca True gdy rekord istnieje i został zaktualizowany.
+        """
+        cur = self._conn.execute(
+            """
+            UPDATE studies
+            SET initials = ?, birth_year = ?, custom_label = ?
+            WHERE id = ?
+            """,
+            (initials, birth_year, custom_label, study_id),
+        )
+        self._conn.commit()
+        return cur.rowcount > 0
 
     def delete(self, study_id: int) -> None:
         self._conn.execute("DELETE FROM studies WHERE id = ?", (study_id,))

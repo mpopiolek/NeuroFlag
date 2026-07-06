@@ -7,7 +7,9 @@ from typing import TYPE_CHECKING
 import customtkinter as ctk
 
 from app.domain.types import CellResult
+from app.ui import theme as t
 from app.ui.app_window import AppState
+from app.ui.components import widgets as w
 from app.ui.components.rag_colors import (
     CATEGORY_COLOR as _CATEGORY_COLOR,
 )
@@ -24,8 +26,8 @@ from app.ui.components.rag_colors import (
 if TYPE_CHECKING:
     from app.ui.app_window import AppWindow
 
-_CELL_W = 130
-_CELL_H = 82
+_CELL_W = 132
+_CELL_H = 86
 
 
 class ResultsGridView(ctk.CTkFrame):
@@ -41,42 +43,48 @@ class ResultsGridView(ctk.CTkFrame):
         self._app_state = app_state
 
         if app_state.analysis_result is None:
-            ctk.CTkLabel(
-                self,
-                text="Brak wynik\u00f3w analizy. "
-                "Wr\u00f3\u0107 do importu i spr\u00f3buj ponownie.",
-                text_color="#CC0000",
-            ).pack(padx=40, pady=40, anchor="w")
-            ctk.CTkButton(
-                self,
+            container = w.page_container(self)
+            error_label = w.body_label(
+                container,
+                "Brak wynik\u00f3w analizy. Wr\u00f3\u0107 do importu i spr\u00f3buj ponownie.",
+                wraplength=t.WRAP_WIDTH,
+            )
+            error_label.configure(text_color=t.COLOR_ERROR)
+            error_label.pack(anchor="w")
+            w.secondary_button(
+                container,
                 text="\u2190 Powr\u00f3t do importu",
                 command=self._on_new_study,
                 width=160,
-            ).pack(padx=40, anchor="w")
+            ).pack(anchor="w", pady=(12, 0))
             return
         result = app_state.analysis_result
 
-        container = ctk.CTkFrame(self, fg_color="transparent")
-        container.pack(fill="both", expand=True, padx=40, pady=30)
+        container = w.page_container(self)
 
         cat_color = _CATEGORY_COLOR[result.category]
         ctk.CTkLabel(
             container,
             text=result.category.value,
-            font=ctk.CTkFont(size=24, weight="bold"),
+            font=t.font_title(),
             text_color=cat_color,
         ).pack(anchor="w", pady=(0, 8))
 
-        ctk.CTkLabel(
+        w.body_label(
             container,
-            text=result.description,
-            wraplength=820,
+            result.description,
+            wraplength=t.WRAP_WIDTH + 100,
             justify="left",
-            font=ctk.CTkFont(size=13),
-        ).pack(anchor="w", pady=(0, 22))
+        ).pack(anchor="w", pady=(0, 24))
 
-        grid_frame = ctk.CTkFrame(container, fg_color="transparent")
-        grid_frame.pack(anchor="w", pady=(0, 24))
+        grid_frame = ctk.CTkFrame(
+            container,
+            fg_color=t.COLOR_SURFACE,
+            corner_radius=t.CORNER_RADIUS,
+            border_width=1,
+            border_color=t.COLOR_BORDER,
+        )
+        grid_frame.pack(anchor="w", pady=(0, 24), padx=2, ipadx=8, ipady=8)
 
         for col in range(5):
             grid_frame.columnconfigure(col, weight=1, minsize=_CELL_W + 8)
@@ -87,14 +95,14 @@ class ResultsGridView(ctk.CTkFrame):
         btn_row = ctk.CTkFrame(container, fg_color="transparent")
         btn_row.pack(anchor="w", pady=(0, 0))
 
-        ctk.CTkButton(
+        w.secondary_button(
             btn_row,
             text="\u2190 Nowe badanie",
             command=self._on_new_study,
             width=160,
         ).pack(side="left", padx=(0, 12))
 
-        ctk.CTkButton(
+        w.primary_button(
             btn_row,
             text="Zapisz raport PDF",
             command=self._on_save_pdf,
@@ -104,7 +112,7 @@ class ResultsGridView(ctk.CTkFrame):
         store = app_state.history_store
         assert store is not None
         if store.has_any():
-            ctk.CTkButton(
+            w.secondary_button(
                 btn_row,
                 text="Historia badań",
                 command=self._on_history,
@@ -125,11 +133,11 @@ class ResultsGridView(ctk.CTkFrame):
         cell_frame = ctk.CTkFrame(
             parent,
             fg_color=bg,
-            corner_radius=8,
+            corner_radius=t.CORNER_RADIUS_SM,
             width=_CELL_W,
             height=_CELL_H,
         )
-        cell_frame.grid(row=row, column=col, padx=4, pady=4, sticky="nsew")
+        cell_frame.grid(row=row, column=col, padx=5, pady=5, sticky="nsew")
         cell_frame.grid_propagate(False)
 
         ctk.CTkLabel(
@@ -142,14 +150,14 @@ class ResultsGridView(ctk.CTkFrame):
         ctk.CTkLabel(
             cell_frame,
             text=task_label,
-            font=ctk.CTkFont(size=9),
+            font=t.font_caption(),
             text_color=fg,
         ).place(relx=0.5, rely=0.52, anchor="center")
 
         ctk.CTkLabel(
             cell_frame,
             text=cell.band,
-            font=ctk.CTkFont(size=10),
+            font=t.font_small(),
             text_color=fg,
         ).place(relx=0.5, rely=0.8, anchor="center")
 

@@ -19,7 +19,13 @@ from reportlab.platypus import (
 )
 
 from app import __version__
-from app.domain.types import AnalysisResult, CellColor, NormsConfig, PatientMetadata
+from app.domain.types import (
+    AnalysisResult,
+    CellColor,
+    NormsConfig,
+    PatientMetadata,
+    format_clinical_diagnoses,
+)
 from app.ui.components.rag_colors import RAG_COLOR_BG, TASK_LABELS
 
 _FONTS_DIR = Path(os.environ.get("WINDIR", "C:/Windows")) / "Fonts"
@@ -149,6 +155,14 @@ def generate_report(
             style_body,
         )
     )
+    diagnoses_label = format_clinical_diagnoses(metadata)
+    if diagnoses_label:
+        story.append(
+            Paragraph(
+                f"Diagnozy: <b>{diagnoses_label}</b>",
+                style_body,
+            )
+        )
     story.append(Spacer(1, 0.2 * cm))
     story.append(
         Paragraph(

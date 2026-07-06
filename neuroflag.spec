@@ -66,8 +66,7 @@ datas = [
     (str(ROOT / "norms.json"), "."),
     (str(ROOT / "norms.json.template"), "."),
     (str(ROOT / "docs" / "README-norms.md"), "docs"),
-    # Czcionki i ikony GUI (katalog tworzony podczas implementacji UI)
-    # (str(ROOT / "app" / "ui" / "assets"), "app/ui/assets"),
+    (str(ROOT / "app" / "ui" / "assets"), "app/ui/assets"),
     # Moduły CustomTkinter zawierają zasoby (motywy, czcionki)
     # Lokalizacja zależy od wirtualnego środowiska — PyInstaller wykrywa je
     # automatycznie przez collect_data_files; poniższa linia jest fallbackiem.

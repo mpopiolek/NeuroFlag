@@ -11,6 +11,23 @@ class ExclusionDiagnosis(Enum):
     EPILEPSY = "epilepsy"
 
 
+class ClinicalDiagnosis(Enum):
+    ASD = "asd"
+    ADHD = "adhd"
+    DEPRESSION_ANXIETY = "depression_anxiety"
+    DYSLEXIA = "dyslexia"
+    OTHER = "other"
+
+
+_CLINICAL_LABELS_PL: dict[ClinicalDiagnosis, str] = {
+    ClinicalDiagnosis.ASD: "ASD / autyzm",
+    ClinicalDiagnosis.ADHD: "ADHD",
+    ClinicalDiagnosis.DEPRESSION_ANXIETY: "Depresja lub zaburzenia lękowe",
+    ClinicalDiagnosis.DYSLEXIA: "Dysleksja",
+    ClinicalDiagnosis.OTHER: "Inne",
+}
+
+
 class CellColor(Enum):
     RED = "red"
     YELLOW = "yellow"
@@ -33,12 +50,27 @@ class PatientMetadata:
     age: int
     sex: Sex
     exclusions: frozenset[ExclusionDiagnosis] = field(default_factory=frozenset)
+    diagnoses: frozenset[ClinicalDiagnosis] = field(default_factory=frozenset)
+    other_diagnosis_note: str | None = None
     initials: str | None = None
     birth_year: str | None = None
     custom_label: str | None = None
 
     def is_excluded(self) -> bool:
         return len(self.exclusions) > 0
+
+
+def format_clinical_diagnoses(metadata: PatientMetadata) -> str:
+    """Zwraca polskie etykiety diagnoz informacyjnych, rozdzielone przecinkami."""
+    if not metadata.diagnoses:
+        return ""
+    labels: list[str] = []
+    for diagnosis in sorted(metadata.diagnoses, key=lambda d: d.value):
+        label = _CLINICAL_LABELS_PL[diagnosis]
+        if diagnosis is ClinicalDiagnosis.OTHER and metadata.other_diagnosis_note:
+            label = f"{label} ({metadata.other_diagnosis_note})"
+        labels.append(label)
+    return ", ".join(labels)
 
 
 @dataclass(frozen=True)
