@@ -1,10 +1,10 @@
 ---
 change_id: pipeline-signal-fidelity
 title: Fidelity sygnału w pipeline
-status: impl_reviewed
+status: archived
 created: 2026-07-01
 updated: 2026-07-06
-archived_at: null
+archived_at: 2026-07-06T09:30:00Z
 ---
 
 ## Notes
