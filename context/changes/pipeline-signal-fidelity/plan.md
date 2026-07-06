@@ -364,11 +364,11 @@ Brak migracji danych użytkownika. Istniejący `sample_digitrack.eeg` w forkach 
 
 #### Automated
 
-- [x] 4.1 Wszystkie testy integration: `python -m pytest tests/integration/ -v`
-- [x] 4.2 Unit pipeline: `python -m pytest tests/unit/test_pipeline.py -v`
-- [x] 4.3 Mypy: `mypy app/ --strict`
-- [x] 4.4 Pełna suite: `python -m pytest -q`
+- [x] 4.1 Wszystkie testy integration: `python -m pytest tests/integration/ -v` — 6e5fd36
+- [x] 4.2 Unit pipeline: `python -m pytest tests/unit/test_pipeline.py -v` — 6e5fd36
+- [x] 4.3 Mypy: `mypy app/ --strict` — 6e5fd36
+- [x] 4.4 Pełna suite: `python -m pytest -q` — 6e5fd36
 
 #### Manual
 
-- [x] 4.5 Probe/fixture — brak wyłącznie zer po filtracji; segmentacja adnotacji nietknięta
+- [x] 4.5 Probe/fixture — brak wyłącznie zer po filtracji; segmentacja adnotacji nietknięta — 6e5fd36
