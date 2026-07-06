@@ -60,6 +60,8 @@ _TASK_KEYWORDS: dict[str, tuple[str, ...]] = {
     ),
 }
 _MIN_ANNOTATION_DURATION_S = 1.0
+# Minimalny czas segmentu dla stabilnego filtra pasmowego MNE (FIR @ 256 Hz, Theta 4–8 Hz).
+_MIN_USABLE_SEGMENT_S = 16.0
 
 
 def _load_mne() -> ModuleType:
@@ -130,6 +132,9 @@ def _annotation_segment_end(
     if duration >= _MIN_ANNOTATION_DURATION_S:
         return min(onset + duration, recording_end)
     if next_onset is not None and next_onset > onset + _MIN_ANNOTATION_DURATION_S:
+        gap = next_onset - onset
+        if gap < _MIN_USABLE_SEGMENT_S:
+            return min(onset + _DEFAULT_SEGMENT_SECONDS, recording_end)
         return next_onset
     return min(onset + _DEFAULT_SEGMENT_SECONDS, recording_end)
 

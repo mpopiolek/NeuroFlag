@@ -214,6 +214,31 @@ def test_detect_task_segments_zp_ends_at_next_unrelated_marker() -> None:
     assert segments["ZP"] == (460.0, 620.0)
 
 
+def test_detect_task_segments_zp_extends_when_next_marker_too_soon() -> None:
+    """Scenariusz EDF: ZP + Artefakt po 6.5 s — segment musi trwać ≥16 s (filtr MNE)."""
+    sfreq = 250.0
+    duration = 900.0
+    n_samples = int(duration * sfreq)
+    info = mne.create_info(["C3", "O1"], sfreq=sfreq, ch_types=["eeg", "eeg"])
+    raw = mne.io.RawArray(np.zeros((2, n_samples)), info)
+    raw.set_annotations(
+        mne.Annotations(
+            [157.4, 305.9, 459.1, 465.6],
+            [0.0, 0.0, 0.0, 0.0],
+            [
+                "10:51:38 Oczy otwarte",
+                "10:54:06 Oczy zamknięte",
+                "10:56:40 zadanie poznawcze matematyka",
+                "Artefakt",
+            ],
+        )
+    )
+    segments = detect_task_segments(raw)
+    assert segments["OO"] == (157.4, 305.9)
+    assert segments["OZ"] == (305.9, 459.1)
+    assert segments["ZP"] == (459.1, 639.1)
+
+
 @patch("app.domain.pipeline._load_raw")
 def test_run_returns_ten_finite_amplitudes(mock_load: object) -> None:
     # fidelity bounds: see tests/integration/test_pipeline_fidelity.py

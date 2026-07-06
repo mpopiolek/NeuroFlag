@@ -110,3 +110,4 @@ def test_digitrack_run_returns_ten_finite_amplitudes(
     result = run(FIXTURE, real_norms_config)
     assert len(result) == 10
     assert all(np.isfinite(v) for v in result)
+    assert any(v > 1.0 for v in result)

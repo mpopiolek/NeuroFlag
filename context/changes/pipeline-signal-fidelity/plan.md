@@ -353,22 +353,22 @@ Brak migracji danych użytkownika. Istniejący `sample_digitrack.eeg` w forkach 
 
 #### Automated
 
-- [x] 3.1 R5 tests: `python -m pytest tests/integration/test_pipeline_fidelity.py -v -k digitrack`
-- [x] 3.2 Pełna suite: `python -m pytest -q`
+- [x] 3.1 R5 tests: `python -m pytest tests/integration/test_pipeline_fidelity.py -v -k digitrack` — 38d12c6
+- [x] 3.2 Pełna suite: `python -m pytest -q` — 38d12c6
 
 #### Manual
 
-- [x] 3.3 Wartości bliskie 0 → Phase 4 kalibracja, nie osłabianie smoke
+- [x] 3.3 Wartości bliskie 0 → Phase 4 kalibracja, nie osłabianie smoke — 38d12c6
 
 ### Phase 4: Production Fixes Driven by Tests
 
 #### Automated
 
-- [ ] 4.1 Wszystkie testy integration: `python -m pytest tests/integration/ -v`
-- [ ] 4.2 Unit pipeline: `python -m pytest tests/unit/test_pipeline.py -v`
-- [ ] 4.3 Mypy: `mypy app/ --strict`
-- [ ] 4.4 Pełna suite: `python -m pytest -q`
+- [x] 4.1 Wszystkie testy integration: `python -m pytest tests/integration/ -v`
+- [x] 4.2 Unit pipeline: `python -m pytest tests/unit/test_pipeline.py -v`
+- [x] 4.3 Mypy: `mypy app/ --strict`
+- [x] 4.4 Pełna suite: `python -m pytest -q`
 
 #### Manual
 
-- [ ] 4.5 Probe/fixture — brak wyłącznie zer po filtracji; segmentacja adnotacji nietknięta
+- [x] 4.5 Probe/fixture — brak wyłącznie zer po filtracji; segmentacja adnotacji nietknięta
