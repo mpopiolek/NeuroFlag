@@ -64,7 +64,7 @@ def test_run_preserves_amplitude_bounds_on_clean_synthetic(
     mock_load: object,
     real_norms_config: NormsConfig,
 ) -> None:
-    mock_load.return_value = _synthetic_raw_with_annotations()
+    mock_load.return_value = _synthetic_raw_with_annotations(peak_uv=30.0)
     result = run(Path("synthetic.edf"), real_norms_config)
     assert len(result) == 10
     assert all(_AMPLITUDE_FLOOR_UV < v < _AMPLITUDE_CEILING_UV for v in result)

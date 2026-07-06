@@ -128,12 +128,14 @@ def _annotation_segment_end(
     duration: float,
     next_onset: float | None,
     recording_end: float,
+    *,
+    enforce_min_segment_length: bool = False,
 ) -> float:
     if duration >= _MIN_ANNOTATION_DURATION_S:
         return min(onset + duration, recording_end)
     if next_onset is not None and next_onset > onset + _MIN_ANNOTATION_DURATION_S:
         gap = next_onset - onset
-        if gap < _MIN_USABLE_SEGMENT_S:
+        if enforce_min_segment_length and gap < _MIN_USABLE_SEGMENT_S:
             return min(onset + _DEFAULT_SEGMENT_SECONDS, recording_end)
         return next_onset
     return min(onset + _DEFAULT_SEGMENT_SECONDS, recording_end)
@@ -198,7 +200,13 @@ def _segments_from_annotations(raw: mne.io.BaseRaw) -> dict[str, tuple[float, fl
             next_onset: float | None = selected[index + 1][1]
         else:
             next_onset = _next_annotation_onset_after(raw, onset)
-        end = _annotation_segment_end(onset, duration, next_onset, recording_end)
+        end = _annotation_segment_end(
+            onset,
+            duration,
+            next_onset,
+            recording_end,
+            enforce_min_segment_length=(index == len(selected) - 1),
+        )
         if end <= onset:
             return {}
         segments[task] = (onset, end)

@@ -3,7 +3,7 @@
 Uruchom ręcznie (NIE w CI):
     python tests/fixtures/generate_digitrack_fixture.py
 
-Wynikowy plik: tests/fixtures/sample_digitrack.eeg (~1–2 MB)
+Wynikowy plik: tests/fixtures/sample_digitrack.eeg (~4–5 MB)
 - Pierwsze 120_000 próbek (480 s / 8 min przy 250 Hz) — minimum dla fallback 3×3 min
 - PII wyzerowane (offset 0x00C4–0x0143)
 - Pole total_blocks zaktualizowane do 120_000
