@@ -41,7 +41,7 @@ _ROW_CLINICAL_START = 2
 class MetadataFormView(ctk.CTkFrame):
     def __init__(
         self,
-        master: ctk.CTk,
+        master: ctk.CTkBaseClass,
         app_window: AppWindow,
         app_state: AppState,
         **kwargs: object,

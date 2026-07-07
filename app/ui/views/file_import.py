@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 class FileImportView(ctk.CTkFrame):
     def __init__(
         self,
-        master: ctk.CTk,
+        master: ctk.CTkBaseClass,
         app_window: AppWindow,
         app_state: AppState,
         **kwargs: object,

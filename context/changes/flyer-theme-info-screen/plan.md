@@ -397,13 +397,13 @@ od razu. Istniejące PDF-y historyczne bez kontaktów w stopce — oczekiwane.
 
 #### Automated
 
-- [ ] 2.1 `python -m pytest tests/unit/test_info_content.py -q` — przechodzi
-- [ ] 2.2 `python -m pytest -q` — pełna suite zielona
-- [ ] 2.3 `mypy app/ --strict` — bez błędów
+- [x] 2.1 `python -m pytest tests/unit/test_info_content.py -q` — przechodzi
+- [x] 2.2 `python -m pytest -q` — pełna suite zielona
+- [x] 2.3 `mypy app/ --strict` — bez błędów
 
 #### Manual
 
-- [ ] 2.4 Przycisk Informacje na wszystkich widokach; dialog, GitHub, info_box RODO
+- [x] 2.4 Przycisk Informacje na wszystkich widokach; dialog, GitHub, info_box RODO
 
 ### Phase 3: Stopka PDF, szablon GitHub, README
 
