@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import struct
+from datetime import date
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -10,9 +11,11 @@ from app.domain.eeg_file import (
     EEGFileError,
     _DIGITRACK_SIGNATURE,
     _parse_digitrack_patient_field,
+    _parse_short_date_text,
     get_channel_names,
     read_patient_header_info,
     read_raw_digitrack,
+    read_recording_date,
     resolve_brainvision_companions,
     validate_eeg_header,
     validate_extension,
@@ -264,3 +267,39 @@ def test_read_patient_header_info_fixture_has_no_pii() -> None:
     initials, birth_year = read_patient_header_info(_FIXTURE)
     assert initials is None
     assert birth_year is None
+
+
+# ---------------------------------------------------------------------------
+# read_recording_date
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("03.04.25", "2025-04-03"),
+        ("18.12.25", "2025-12-18"),
+        ("16.01.2026", "2026-01-16"),
+        ("", None),
+        ("invalid", None),
+    ],
+)
+def test_parse_short_date_text(text: str, expected: str | None) -> None:
+    parsed = _parse_short_date_text(text)
+    if expected is None:
+        assert parsed is None
+    else:
+        assert parsed is not None
+        assert parsed.isoformat() == expected
+
+
+def test_read_recording_date_digitrack(tmp_path: Path) -> None:
+    eeg = tmp_path / "session.eeg"
+    eeg.write_bytes(_digitrack_header_with_patient("X M 24-DEC-1989 Barnaba_KOBRYN"))
+    assert read_recording_date(eeg) == date(2025, 4, 3)
+
+
+def test_read_recording_date_digitrack_no_pii(tmp_path: Path) -> None:
+    eeg = tmp_path / "anon.eeg"
+    eeg.write_bytes(_minimal_digitrack_header())
+    assert read_recording_date(eeg) is None

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from datetime import datetime
+from datetime import date, datetime
 
 import pytest
 
@@ -22,7 +22,12 @@ from app.domain.types import (
     Sex,
     format_clinical_diagnoses,
 )
-from app.reports.pdf_generator import DISCLAIMER_PL, generate_report
+from app.reports.pdf_generator import (
+    DISCLAIMER_PL,
+    format_analysis_metadata_line,
+    format_report_subtitle,
+    generate_report,
+)
 
 _RULES = RecommendationRules(
     indication_min_red=5,
@@ -174,3 +179,33 @@ def test_pdf_includes_diagnoses_when_present() -> None:
 
 def test_pdf_omits_diagnoses_when_empty() -> None:
     assert format_clinical_diagnoses(_METADATA) == ""
+
+
+def test_format_report_subtitle_with_recording_date() -> None:
+    assert (
+        format_report_subtitle(date(2026, 1, 16))
+        == "Raport przesiewowy EEG na podstawie badania z dnia: 16.01.2026"
+    )
+
+
+def test_format_report_subtitle_without_recording_date() -> None:
+    assert format_report_subtitle(None) == "Raport przesiewowy EEG"
+
+
+def test_format_analysis_metadata_line_uses_analysis_date_label() -> None:
+    line = format_analysis_metadata_line(_METADATA, _RESULT.analyzed_at)
+    assert line.startswith("Data analizy badania:")
+    assert "23.06.2026" in line
+    assert "8 lat" in line
+    assert "Dziewczynka" in line
+
+
+def test_pdf_subtitle_differs_when_recording_date_provided() -> None:
+    without_date = generate_report(_METADATA, _RESULT, _CONFIG)
+    with_date = generate_report(
+        _METADATA,
+        _RESULT,
+        _CONFIG,
+        recording_date=date(2026, 1, 16),
+    )
+    assert without_date != with_date

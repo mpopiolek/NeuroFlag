@@ -181,7 +181,12 @@ class ResultsGridView(ctk.CTkFrame):
         try:
             from app.reports.pdf_generator import generate_report
 
-            pdf_bytes = generate_report(metadata, result, norms_config)
+            pdf_bytes = generate_report(
+                metadata,
+                result,
+                norms_config,
+                recording_date=self._app_state.recording_date,
+            )
             Path(path).write_bytes(pdf_bytes)
             messagebox.showinfo("Raport zapisany", f"Raport PDF zapisano w:\n{path}")
         except Exception as exc:
@@ -198,6 +203,7 @@ class ResultsGridView(ctk.CTkFrame):
     def _on_new_study(self) -> None:
         self._app_state.analysis_result = None
         self._app_state.eeg_path = None
+        self._app_state.recording_date = None
         self._app_state.metadata = None
         self._app_state.cancel_event.clear()
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import io
 import os
+from datetime import date, datetime
 from pathlib import Path
 
 from reportlab.lib import colors
@@ -63,11 +64,33 @@ _PAGE_W, _PAGE_H = A4
 _MARGIN = 2 * cm
 
 
+def format_report_subtitle(recording_date: date | None) -> str:
+    if recording_date is not None:
+        rec_date_str = recording_date.strftime("%d.%m.%Y")
+        return f"Raport przesiewowy EEG na podstawie badania z dnia: {rec_date_str}"
+    return "Raport przesiewowy EEG"
+
+
+def format_analysis_metadata_line(
+    metadata: PatientMetadata,
+    analyzed_at: datetime,
+) -> str:
+    date_str = analyzed_at.strftime("%d.%m.%Y")
+    sex_label = "Dziewczynka" if metadata.sex.value == "Z" else "Ch\u0142opiec"
+    return (
+        f"Data analizy badania: <b>{date_str}</b> &nbsp;&nbsp; "
+        f"Wiek: <b>{metadata.age} lat</b> &nbsp;&nbsp; "
+        f"P\u0142e\u0107: <b>{sex_label}</b>"
+    )
+
+
 
 def generate_report(
     metadata: PatientMetadata,
     result: AnalysisResult,
     config: NormsConfig,
+    *,
+    recording_date: date | None = None,
 ) -> bytes:
     """Generuje raport PDF; nigdy nie zawiera wartości µV."""
     buf = io.BytesIO()
@@ -143,16 +166,12 @@ def generate_report(
 
     # ── Sekcja 1: Nagłówek / Intro ──────────────────────────────────────────
     story.append(Paragraph("NeuroFlag", style_h1))
-    story.append(Paragraph("Raport przesiewowy EEG", style_body))
+    story.append(Paragraph(format_report_subtitle(recording_date), style_body))
     story.append(Spacer(1, 0.3 * cm))
 
-    date_str = result.analyzed_at.strftime("%d.%m.%Y")
-    sex_label = "Dziewczynka" if metadata.sex.value == "Z" else "Ch\u0142opiec"
     story.append(
         Paragraph(
-            f"Data badania: <b>{date_str}</b> &nbsp;&nbsp; "
-            f"Wiek: <b>{metadata.age} lat</b> &nbsp;&nbsp; "
-            f"P\u0142e\u0107: <b>{sex_label}</b>",
+            format_analysis_metadata_line(metadata, result.analyzed_at),
             style_body,
         )
     )
@@ -240,8 +259,9 @@ def generate_report(
     story.append(Paragraph("Klauzula odpowiedzialno\u015bci", style_h2))
     story.append(Paragraph(DISCLAIMER_PL, style_small_italic))
     story.append(Spacer(1, 0.3 * cm))
+    footer_date = result.analyzed_at.strftime("%d.%m.%Y")
     story.append(
-        Paragraph(f"NeuroFlag v{__version__} | {date_str}", style_footer)
+        Paragraph(f"NeuroFlag v{__version__} | {footer_date}", style_footer)
     )
 
     doc.build(story)
