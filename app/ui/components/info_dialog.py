@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import tkinter.messagebox
 import webbrowser
 
 import customtkinter as ctk
@@ -9,7 +10,7 @@ from app.ui import theme as t
 from app.ui.components import widgets as w
 
 
-def show_info_dialog(parent: ctk.CTk, *, app_window: ctk.CTk) -> None:
+def show_info_dialog(parent: ctk.CTkBaseClass, *, app_window: ctk.CTk) -> None:
     InfoDialog(parent, app_window=app_window)
 
 
@@ -17,7 +18,7 @@ class InfoDialog(ctk.CTkToplevel):
     _DIALOG_WIDTH = 560
     _DIALOG_MAX_HEIGHT = 620
 
-    def __init__(self, parent: ctk.CTk, *, app_window: ctk.CTk) -> None:
+    def __init__(self, parent: ctk.CTkBaseClass, *, app_window: ctk.CTk) -> None:
         super().__init__(parent)
         self.title("Informacje — NeuroFlag")
         self.resizable(False, False)
@@ -159,7 +160,14 @@ class InfoDialog(ctk.CTkToplevel):
         return frame
 
     def _open_github_issue(self) -> None:
-        webbrowser.open(content.GITHUB_NEW_ISSUE_URL)
+        try:
+            webbrowser.open(content.GITHUB_NEW_ISSUE_URL)
+        except OSError:
+            tkinter.messagebox.showerror(
+                "Nie można otworzyć przeglądarki",
+                "Skopiuj adres i otwórz go ręcznie w przeglądarce:\n\n"
+                f"{content.GITHUB_NEW_ISSUE_URL}",
+            )
 
     def _center_on_window(self, app_window: ctk.CTk) -> None:
         self.update_idletasks()

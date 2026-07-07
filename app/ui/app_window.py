@@ -11,7 +11,7 @@ from app.domain.types import AnalysisResult, NormsConfig, PatientMetadata
 from app.storage.history import HistoryStore, resolve_history_db_path
 from app.ui import theme as ui_theme
 from app.ui.components import widgets as w
-from app.ui.components.info_dialog import show_info_dialog
+from app.ui.components import InfoDialog
 
 
 @dataclass
@@ -51,6 +51,7 @@ class AppWindow(ctk.CTk):
         )
         self._state.history_store = HistoryStore(resolve_history_db_path())
         self._current_view: ctk.CTkFrame | None = None
+        self._info_dialog: InfoDialog | None = None
 
         self._shell = ctk.CTkFrame(self, fg_color="transparent")
         self._shell.pack(fill="both", expand=True)
@@ -69,7 +70,17 @@ class AppWindow(ctk.CTk):
         self._view_host.pack(fill="both", expand=True)
 
     def _show_info(self) -> None:
-        show_info_dialog(self, app_window=self)
+        if self._info_dialog is not None and self._info_dialog.winfo_exists():
+            self._info_dialog.lift()
+            self._info_dialog.focus_set()
+            return
+        dialog = InfoDialog(self, app_window=self)
+        self._info_dialog = dialog
+        dialog.bind(
+            "<Destroy>",
+            lambda _event: setattr(self, "_info_dialog", None),
+            add="+",
+        )
 
     @property
     def app_state(self) -> AppState:
