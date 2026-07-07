@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import threading
 from dataclasses import replace
+from datetime import date
 from pathlib import Path
 from tkinter import filedialog
 from typing import TYPE_CHECKING
@@ -9,7 +10,12 @@ from typing import TYPE_CHECKING
 import customtkinter as ctk
 
 from app.domain.channels import get_missing_canonical
-from app.domain.eeg_file import EEGFileError, get_channel_names, read_patient_header_info
+from app.domain.eeg_file import (
+    EEGFileError,
+    get_channel_names,
+    read_patient_header_info,
+    read_recording_date,
+)
 from app.ui import theme as t
 from app.ui.app_window import AppState
 from app.ui.components import widgets as w
@@ -30,6 +36,7 @@ class FileImportView(ctk.CTkFrame):
         self._app_window = app_window
         self._app_state = app_state
         self._app_state.eeg_path = None
+        self._app_state.recording_date = None
         self._selected_path: Path | None = None
         self._validating = False
 
@@ -159,6 +166,7 @@ class FileImportView(ctk.CTkFrame):
         path = Path(chosen)
         self._selected_path = path
         self._app_state.eeg_path = None
+        self._app_state.recording_date = None
         self._analyze_button.configure(state="disabled")
         self._path_label.configure(text=path.name, text_color=t.COLOR_TEXT)
         self._status_label.pack_forget()
@@ -178,13 +186,23 @@ class FileImportView(ctk.CTkFrame):
         error: EEGFileError | None = None
         channels: list[str] = []
         patient_info: tuple[str | None, str | None] = (None, None)
+        recording_date: date | None = None
         try:
             eeg_file.validate_eeg_header(path)
             channels = get_channel_names(path)
             patient_info = read_patient_header_info(path)
+            recording_date = read_recording_date(path)
         except EEGFileError as exc:
             error = exc
-        self.after(0, self._on_result, path, error, channels, patient_info)
+        self.after(
+            0,
+            self._on_result,
+            path,
+            error,
+            channels,
+            patient_info,
+            recording_date,
+        )
 
     def _on_result(
         self,
@@ -192,6 +210,7 @@ class FileImportView(ctk.CTkFrame):
         error: EEGFileError | None,
         channels: list[str],
         patient_info: tuple[str | None, str | None],
+        recording_date: date | None,
     ) -> None:
         self._validating = False
         self._progress.stop()
@@ -200,6 +219,7 @@ class FileImportView(ctk.CTkFrame):
 
         if error is not None:
             self._app_state.eeg_path = None
+            self._app_state.recording_date = None
             self._status_label.configure(
                 text=f"✗ {error}",
                 text_color=t.COLOR_ERROR,
@@ -209,6 +229,7 @@ class FileImportView(ctk.CTkFrame):
             return
 
         self._app_state.eeg_path = path
+        self._app_state.recording_date = recording_date
         self._app_state.available_channels = channels
         self._app_state.channel_overrides = {}
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import struct
+from datetime import date
 from pathlib import Path
 from types import ModuleType
 from typing import TYPE_CHECKING
@@ -189,15 +190,33 @@ def _parse_digitrack_patient_field(patient_field: str) -> tuple[str | None, str 
     return initials, birth_year
 
 
-def _read_digitrack_patient_header_info(path: Path) -> tuple[str | None, str | None]:
+def _parse_short_date_text(text: str) -> date | None:
+    """Parsuje datę w formacie ``DD.MM.YY`` lub ``DD.MM.YYYY``."""
+    parts = text.strip().split(".")
+    if len(parts) != 3:
+        return None
+    try:
+        day = int(parts[0])
+        month = int(parts[1])
+        year_raw = int(parts[2])
+    except ValueError:
+        return None
+    year = 2000 + year_raw if year_raw < 100 else year_raw
+    try:
+        return date(year, month, day)
+    except ValueError:
+        return None
+
+
+def _read_digitrack_pii_parts(path: Path) -> list[str] | None:
     try:
         with open(path, "rb") as fh:
             header = fh.read(512)
     except OSError:
-        return None, None
+        return None
 
     if _DIGITRACK_SIGNATURE not in header:
-        return None, None
+        return None
 
     block = header[_DIGITRACK_PII_START:_DIGITRACK_PII_END]
     parts = [
@@ -205,10 +224,46 @@ def _read_digitrack_patient_header_info(path: Path) -> tuple[str | None, str | N
         for part in block.split(b"\x00")
         if part.strip()
     ]
-    if len(parts) < 4:
-        return None, None
+    return parts or None
 
+
+def _read_digitrack_patient_header_info(path: Path) -> tuple[str | None, str | None]:
+    parts = _read_digitrack_pii_parts(path)
+    if parts is None or len(parts) < 4:
+        return None, None
     return _parse_digitrack_patient_field(parts[3])
+
+
+def _read_digitrack_recording_date(path: Path) -> date | None:
+    parts = _read_digitrack_pii_parts(path)
+    if parts is None:
+        return None
+    return _parse_short_date_text(parts[0])
+
+
+def read_recording_date(path: Path) -> date | None:
+    """Czyta datę nagrania z nagłówka pliku EDF lub DigiTrack.
+
+    Zwraca ``None`` gdy data jest niedostępna lub plik nieobsługiwany.
+    Wszystkie wyjątki są przechwytywane — nie blokuje wczytywania pliku.
+    """
+    suffix = path.suffix.lower()
+    if suffix == ".eeg":
+        return _read_digitrack_recording_date(path)
+    if suffix != ".edf":
+        return None
+    try:
+        mne = _load_mne()
+        raw = mne.io.read_raw_edf(path, preload=False, verbose=False)
+        meas = raw.info.get("meas_date")
+        if meas is None:
+            return None
+        recorded = meas.date()
+        if not isinstance(recorded, date):
+            return None
+        return recorded
+    except Exception:
+        return None
 
 
 def read_patient_header_info(path: Path) -> tuple[str | None, str | None]:

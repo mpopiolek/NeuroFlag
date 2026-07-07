@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import threading
 from dataclasses import dataclass, field
+from datetime import date
 from pathlib import Path
 
 import customtkinter as ctk
@@ -16,6 +17,7 @@ class AppState:
     norms_config: NormsConfig
     metadata: PatientMetadata | None = None
     eeg_path: Path | None = None
+    recording_date: date | None = None
     analysis_result: AnalysisResult | None = None
     cancel_event: threading.Event = field(default_factory=threading.Event)
     channel_overrides: dict[str, str] = field(default_factory=dict)
