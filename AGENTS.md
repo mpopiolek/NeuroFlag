@@ -109,7 +109,7 @@ Wersje są przypięte:
   scipy==1.14.1
   numpy==2.2.0
   reportlab==4.2.5
-  pytest==8.3.4
+  pytest==9.0.3
   mypy==1.13.0
 
 Przy dodawaniu nowej zależności:
