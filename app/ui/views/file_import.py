@@ -230,7 +230,7 @@ class FileImportView(ctk.CTkFrame):
     def _show_identification_section(
         self, patient_info: tuple[str | None, str | None]
     ) -> None:
-        """Pokazuje sekcję identyfikacji. Czyści pola i pre-fill z nagłówka EDF."""
+        """Pokazuje sekcję identyfikacji. Czyści pola i pre-fill z nagłówka pliku."""
         initials, birth_year = patient_info
 
         self._initials_entry.delete(0, "end")

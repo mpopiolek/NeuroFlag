@@ -9,7 +9,9 @@ import pytest
 from app.domain.eeg_file import (
     EEGFileError,
     _DIGITRACK_SIGNATURE,
+    _parse_digitrack_patient_field,
     get_channel_names,
+    read_patient_header_info,
     read_raw_digitrack,
     resolve_brainvision_companions,
     validate_eeg_header,
@@ -22,7 +24,7 @@ _FIXTURE = Path(__file__).parent.parent / "fixtures" / "sample_digitrack.eeg"
 def _minimal_digitrack_header() -> bytes:
     """Buduje minimalny nagłówek pliku EEGDigiTrack z jednym kanałem EEG."""
     buf = bytearray(0x0480 + 0x40)  # nagłówek + jeden rekord kanału
-    # Sygnatuta na offset 0x014C
+    # Sygnatura na offset 0x014C
     buf[0x014C : 0x014C + len(_DIGITRACK_SIGNATURE)] = _DIGITRACK_SIGNATURE
     # sfreq = 250 Hz na offset 0x0004 (uint16 LE)
     struct.pack_into("<H", buf, 0x0004, 250)
@@ -32,6 +34,20 @@ def _minimal_digitrack_header() -> bytes:
     buf[0x0480 : 0x0480 + 2] = b"C3"
     struct.pack_into("<f", buf, 0x0480 + 0x18, 0.179266)
     return bytes(buf)
+
+
+def _digitrack_header_with_patient(patient_field: str) -> bytes:
+    header = bytearray(_minimal_digitrack_header())
+    pii = b"\x00".join(
+        [
+            b"03.04.25",
+            b"5",
+            b"13.39.54",
+            patient_field.encode("ascii"),
+        ]
+    )
+    header[0x00C4 : 0x00C4 + len(pii)] = pii
+    return bytes(header)
 
 
 # ---------------------------------------------------------------------------
@@ -195,3 +211,56 @@ def test_read_raw_digitrack_calibration_zero_raises(tmp_path: Path) -> None:
     eeg.write_bytes(bytes(header))
     with pytest.raises(EEGFileError, match=r"kalibracja kanału"):
         read_raw_digitrack(eeg)
+
+
+# ---------------------------------------------------------------------------
+# read_patient_header_info — DigiTrack
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("patient_field", "expected_initials", "expected_birth_year"),
+    [
+        ("X M 06-JUL-1996 Michal_KUCZYNSKI", "MK", "1996"),
+        ("X M 24-DEC-1989 Barnaba_KOBRYN", "BK", "1989"),
+    ],
+)
+def test_parse_digitrack_patient_field(
+    patient_field: str,
+    expected_initials: str,
+    expected_birth_year: str,
+) -> None:
+    initials, birth_year = _parse_digitrack_patient_field(patient_field)
+    assert initials == expected_initials
+    assert birth_year == expected_birth_year
+
+
+def test_read_patient_header_info_digitrack(tmp_path: Path) -> None:
+    eeg = tmp_path / "patient.eeg"
+    eeg.write_bytes(_digitrack_header_with_patient("X M 24-DEC-1989 Barnaba_KOBRYN"))
+    initials, birth_year = read_patient_header_info(eeg)
+    assert initials == "BK"
+    assert birth_year == "1989"
+
+
+def test_read_patient_header_info_digitrack_no_pii(tmp_path: Path) -> None:
+    eeg = tmp_path / "anon.eeg"
+    eeg.write_bytes(_minimal_digitrack_header())
+    initials, birth_year = read_patient_header_info(eeg)
+    assert initials is None
+    assert birth_year is None
+
+
+def test_read_patient_header_info_brainvision_eeg_returns_none(tmp_path: Path) -> None:
+    eeg = tmp_path / "brainvision.eeg"
+    eeg.write_bytes(b"NOT_A_DIGITRACK_FILE\x00" * 30)
+    initials, birth_year = read_patient_header_info(eeg)
+    assert initials is None
+    assert birth_year is None
+
+
+@pytest.mark.skipif(not _FIXTURE.exists(), reason="Brak fixture sample_digitrack.eeg")
+def test_read_patient_header_info_fixture_has_no_pii() -> None:
+    initials, birth_year = read_patient_header_info(_FIXTURE)
+    assert initials is None
+    assert birth_year is None

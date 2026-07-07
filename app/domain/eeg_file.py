@@ -14,6 +14,8 @@ SUPPORTED_EXTENSIONS: frozenset[str] = frozenset({".edf", ".vhdr", ".eeg"})
 
 # Sygnatura w nagłówku binarnym pliku EEGDigiTrack (Elmiko Medical)
 _DIGITRACK_SIGNATURE: bytes = b"EEGDigiTrack"
+_DIGITRACK_PII_START: int = 0x00C4
+_DIGITRACK_PII_END: int = 0x014C
 
 # Próg kalibracji oddzielający kanały EEG od kanałów pomocniczych (ECG, EMG).
 # Kanały EEG Elmiko EEG-1042 mają kalibrację ~0.179 µV/LSB — zdecydowanie poniżej progu.
@@ -164,15 +166,62 @@ def read_raw_digitrack(path: Path) -> mne.io.RawArray:
     return mne.io.RawArray(data_v, info, verbose=False)
 
 
+def _parse_digitrack_patient_field(patient_field: str) -> tuple[str | None, str | None]:
+    """Parsuje pole pacjenta DigiTrack, np. ``X M 06-JUL-1996 Michal_KUCZYNSKI``."""
+    tokens = patient_field.split()
+    if not tokens:
+        return None, None
+
+    name_token = tokens[-1]
+    initials: str | None = None
+    if "_" in name_token:
+        first, last = name_token.split("_", 1)
+        if first and last:
+            initials = f"{first[0].upper()}{last[0].upper()}"
+
+    birth_year: str | None = None
+    for token in tokens:
+        year_suffix = token[-4:]
+        if len(year_suffix) == 4 and year_suffix.isdigit():
+            birth_year = year_suffix
+            break
+
+    return initials, birth_year
+
+
+def _read_digitrack_patient_header_info(path: Path) -> tuple[str | None, str | None]:
+    try:
+        with open(path, "rb") as fh:
+            header = fh.read(512)
+    except OSError:
+        return None, None
+
+    if _DIGITRACK_SIGNATURE not in header:
+        return None, None
+
+    block = header[_DIGITRACK_PII_START:_DIGITRACK_PII_END]
+    parts = [
+        part.decode("ascii", errors="replace").strip()
+        for part in block.split(b"\x00")
+        if part.strip()
+    ]
+    if len(parts) < 4:
+        return None, None
+
+    return _parse_digitrack_patient_field(parts[3])
+
+
 def read_patient_header_info(path: Path) -> tuple[str | None, str | None]:
-    """Czyta inicjały i rok urodzenia z nagłówka pliku EDF.
+    """Czyta inicjały i rok urodzenia z nagłówka pliku EDF lub DigiTrack.
 
     Zwraca (initials, birth_year) lub (None, None) przy braku danych.
-    Obsługuje wyłącznie .edf — BrainVision i DigiTrack nie mają
-    strukturalnych danych pacjenta w nagłówku.
+    BrainVision nie ma strukturalnych danych pacjenta w nagłówku.
     Wszystkie wyjątki są przechwytywane — nie blokuje wczytywania pliku.
     """
-    if path.suffix.lower() != ".edf":
+    suffix = path.suffix.lower()
+    if suffix == ".eeg":
+        return _read_digitrack_patient_header_info(path)
+    if suffix != ".edf":
         return None, None
     try:
         mne = _load_mne()
