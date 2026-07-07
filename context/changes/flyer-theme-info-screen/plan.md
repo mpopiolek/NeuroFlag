@@ -386,12 +386,12 @@ od razu. Istniejące PDF-y historyczne bez kontaktów w stopce — oczekiwane.
 
 #### Automated
 
-- [x] 1.1 `python -m pytest -q` — wszystkie testy przechodzą
-- [x] 1.2 `mypy app/ --strict` — bez błędów typów
+- [x] 1.1 `python -m pytest -q` — wszystkie testy przechodzą — 405c29a
+- [x] 1.2 `mypy app/ --strict` — bez błędów typów — 405c29a
 
 #### Manual
 
-- [x] 1.3 Przyciski pomarańcz; RAG bez zmian; pomarańcz vs żółty RAG rozróżnialne na wynikach
+- [x] 1.3 Przyciski pomarańcz; RAG bez zmian; pomarańcz vs żółty RAG rozróżnialne na wynikach — 405c29a
 
 ### Phase 2: Chrome AppWindow + dialog Informacje
 
