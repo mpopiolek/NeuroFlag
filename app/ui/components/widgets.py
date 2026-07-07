@@ -59,7 +59,12 @@ def body_label(
     return ctk.CTkLabel(parent, **label_kwargs)
 
 
-def info_box(parent: ctk.CTkBaseClass, text: str, *, wraplength: int = t.WRAP_WIDTH) -> ctk.CTkFrame:
+def info_box(
+    parent: ctk.CTkBaseClass,
+    text: str,
+    *,
+    wraplength: int = t.WRAP_WIDTH,
+) -> ctk.CTkFrame:
     frame = ctk.CTkFrame(
         parent,
         fg_color=t.COLOR_SURFACE,

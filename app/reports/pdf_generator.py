@@ -51,7 +51,8 @@ except Exception:
 
 DISCLAIMER_PL: str = (
     "Analiza przeprowadzona wyłącznie lokalnie; żadne dane nie zostały wysłane poza to urządzenie. "
-    "Identyfikatory zapisane w nagłówku pliku EEG przez aparat nie są wyświetlane ani zapisywane w raporcie. "
+    "Identyfikatory zapisane w nagłówku pliku EEG przez aparat nie są wyświetlane "
+    "ani zapisywane w raporcie. "
     "Raport jest narzędziem przesiewowym i nie stanowi diagnozy medycznej. "
     "Wyniki należy interpretować wyłącznie w połączeniu z pełną oceną kliniczną "
     "przez uprawnionego specjalisty. Autorzy aplikacji NeuroFlag nie ponoszą "
@@ -183,8 +184,10 @@ def generate_report(
     grid_data: list[list[Paragraph]] = [[], []]
     for idx, cell in enumerate(result.cells):
         task_label = TASK_LABELS.get(cell.task, cell.task)
-        bg_hex = RAG_COLOR_BG[cell.color]
-        fg = colors.white if cell.color in (CellColor.RED, CellColor.GREEN) else colors.HexColor("#1A1A1A")
+        if cell.color in (CellColor.RED, CellColor.GREEN):
+            fg = colors.white
+        else:
+            fg = colors.HexColor("#1A1A1A")
         cell_style = ParagraphStyle(
             f"cell_{idx}",
             parent=style_normal,
@@ -194,7 +197,11 @@ def generate_report(
             textColor=fg,
             leading=11,
         )
-        text = f"{cell.channel}<br/><font size='7'>{task_label}</font><br/><font size='7'>{cell.band}</font>"
+        text = (
+            f"{cell.channel}<br/>"
+            f"<font size='7'>{task_label}</font><br/>"
+            f"<font size='7'>{cell.band}</font>"
+        )
         para = Paragraph(text, cell_style)
         grid_data[idx // 5].append(para)
 

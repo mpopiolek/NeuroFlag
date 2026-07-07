@@ -53,7 +53,11 @@ def _parse_debug_slow_analysis(argv: list[str]) -> float:
             try:
                 delay = max(delay, float(arg.split("=", 1)[1]))
             except ValueError:
-                print(f"BŁĄD: nieprawidłowa wartość dla --debug-slow-analysis: {arg.split('=', 1)[1]}", file=sys.stderr)
+                bad = arg.split("=", 1)[1]
+                print(
+                    f"BŁĄD: nieprawidłowa wartość dla --debug-slow-analysis: {bad}",
+                    file=sys.stderr,
+                )
     return delay
 
 
