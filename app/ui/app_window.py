@@ -163,6 +163,7 @@ class AppWindow(ctk.CTk):
         primary_text: str = "Dalej →",
         primary_cmd: Callable[[], None] | None = None,
         primary_visible: bool = False,
+        primary_state: w.ButtonState = "normal",
     ) -> None:
         if back_visible:
             self._back_btn.configure(text=back_text, command=back_cmd, state="normal")
@@ -174,11 +175,14 @@ class AppWindow(ctk.CTk):
             self._primary_btn.configure(
                 text=primary_text,
                 command=primary_cmd,
-                state="normal",
+                state=primary_state,
             )
             self._primary_btn.pack(side="right")
         else:
             self._primary_btn.pack_forget()
+
+    def set_footer_primary_state(self, state: w.ButtonState) -> None:
+        self._primary_btn.configure(state=state)
 
     def _clear_footer(self) -> None:
         self._back_btn.configure(command=None, state="disabled")

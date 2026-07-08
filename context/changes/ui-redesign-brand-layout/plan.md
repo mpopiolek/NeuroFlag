@@ -438,25 +438,25 @@ Redukcja „migania” ekranów: analiza jako overlay, mapowanie kanałów jako 
 
 #### Automated
 
-- [x] 2.1 `python -m pytest tests/unit/test_navigation.py tests/unit/test_theme.py -q` — pass
-- [x] 2.2 `mypy app/ --strict` — pass
+- [x] 2.1 `python -m pytest tests/unit/test_navigation.py tests/unit/test_theme.py -q` — pass — 803c1d7
+- [x] 2.2 `mypy app/ --strict` — pass — 803c1d7
 
 #### Manual
 
-- [x] 2.3 Nagłówek, miętowy pasek, stepper aktualizuje się po nawigacji
-- [x] 2.4 Przycisk Historia w nagłówku (gdy są wpisy)
+- [x] 2.3 Nagłówek, miętowy pasek, stepper aktualizuje się po nawigacji — 803c1d7
+- [x] 2.4 Przycisk Historia w nagłówku (gdy są wpisy) — 803c1d7
 
 ### Phase 3: Widoki formularzy — układ dwukolumnowy
 
 #### Automated
 
-- [ ] 3.1 `mypy app/ --strict` — pass
-- [ ] 3.2 `python -m pytest -q` — pass
+- [x] 3.1 `mypy app/ --strict` — pass
+- [x] 3.2 `python -m pytest -q` — pass
 
 #### Manual
 
-- [ ] 3.3 Metadata i import: 2 kolumny, panel kontekstu, stopka shell
-- [ ] 3.4 Okno 900 px (minimum): kolumny stackują się pionowo
+- [x] 3.3 Metadata i import: 2 kolumny, panel kontekstu, stopka shell
+- [x] 3.4 Okno 900 px (minimum): kolumny stackują się pionowo
 
 ### Phase 4: Wyniki, historia i Informacje
 

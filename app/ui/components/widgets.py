@@ -232,7 +232,7 @@ def context_panel(
 
 
 def two_column_body(parent: ctk.CTkBaseClass) -> tuple[ctk.CTkFrame, ctk.CTkFrame]:
-    """Układ dwukolumnowy 60/40 (formularz | kontekst)."""
+    """Układ dwukolumnowy 60/40 (formularz | kontekst); stack poniżej breakpointu."""
     container = ctk.CTkFrame(parent, fg_color="transparent")
     container.pack(fill="both", expand=True)
     container.columnconfigure(0, weight=t.COL_FORM_WEIGHT)
@@ -244,6 +244,37 @@ def two_column_body(parent: ctk.CTkBaseClass) -> tuple[ctk.CTkFrame, ctk.CTkFram
 
     context_col = ctk.CTkFrame(container, fg_color="transparent")
     context_col.grid(row=0, column=1, sticky="nsew", padx=(12, 0))
+
+    layout_state: dict[str, bool | None] = {"stacked": None}
+
+    def sync_layout() -> None:
+        width = container.winfo_width()
+        if width <= 1:
+            return
+        stacked = width < t.BREAKPOINT_STACK_COLS
+        if layout_state["stacked"] == stacked:
+            return
+        layout_state["stacked"] = stacked
+        if stacked:
+            container.columnconfigure(0, weight=1)
+            container.columnconfigure(1, weight=0)
+            container.rowconfigure(0, weight=0)
+            container.rowconfigure(1, weight=1)
+            form_col.grid(row=0, column=0, sticky="nsew", padx=0, pady=(0, 12))
+            context_col.grid(row=1, column=0, sticky="nsew", padx=0, pady=0)
+        else:
+            container.rowconfigure(0, weight=1)
+            container.rowconfigure(1, weight=0)
+            container.columnconfigure(0, weight=t.COL_FORM_WEIGHT)
+            container.columnconfigure(1, weight=t.COL_CONTEXT_WEIGHT)
+            form_col.grid(row=0, column=0, sticky="nsew", padx=(0, 12), pady=0)
+            context_col.grid(row=0, column=1, sticky="nsew", padx=(12, 0), pady=0)
+
+    def on_configure(_event: object | None = None) -> None:
+        container.after_idle(sync_layout)
+
+    container.bind("<Configure>", on_configure, add="+")
+    container.after_idle(sync_layout)
 
     return form_col, context_col
 
