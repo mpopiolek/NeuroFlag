@@ -36,6 +36,7 @@ def _back_label_for(view_class: type[ctk.CTkFrame]) -> str:
     from app.ui.views.analysis import AnalysisView
     from app.ui.views.channel_mapping import ChannelMappingView
     from app.ui.views.file_import import FileImportView
+    from app.ui.views.info_view import InfoView
     from app.ui.views.metadata_form import MetadataFormView
     from app.ui.views.results_grid import ResultsGridView
 
@@ -45,6 +46,8 @@ def _back_label_for(view_class: type[ctk.CTkFrame]) -> str:
         ChannelMappingView: "← Wróć do mapowania",
         AnalysisView: "← Wróć do analizy",
         ResultsGridView: "← Wróć do wyników",
+        InfoView: "← Wróć do informacji",
+        HistoryView: "← Wróć do historii",
     }
     return labels.get(view_class, "← Wstecz")
 
@@ -67,65 +70,47 @@ class HistoryView(ctk.CTkFrame):
         self._return_view = return_view or MetadataFormView
         self._show_all = False
 
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(0, weight=1)
+
         self._outer = w.page_container(self)
         self._outer.columnconfigure(0, weight=1)
-        self._outer.rowconfigure(3, weight=1)
+        self._outer.rowconfigure(2, weight=1)
 
         w.page_title(self._outer, "Historia badań").grid(
             row=0, column=0, sticky="w", pady=(0, 4)
         )
 
+        header_block = ctk.CTkFrame(self._outer, fg_color="transparent")
+        header_block.grid(row=1, column=0, sticky="ew", pady=(0, 8))
+
         self._filter_label = ctk.CTkLabel(
-            self._outer,
+            header_block,
             text="",
             font=t.font_small(),
             text_color=t.COLOR_TEXT_SECONDARY,
             anchor="w",
         )
-        self._filter_label.grid(row=1, column=0, sticky="ew", pady=(0, 4))
-
-        self._controls_row = ctk.CTkFrame(self._outer, fg_color="transparent")
-        self._controls_row.grid(row=2, column=0, sticky="w", pady=(0, 8))
+        self._filter_label.pack(anchor="w", fill="x")
 
         self._toggle_btn = w.secondary_button(
-            self._controls_row,
+            header_block,
             text="Pokaż wszystkie",
             width=150,
             command=self._on_toggle_all,
         )
 
         self._list_frame = ctk.CTkScrollableFrame(self._outer, fg_color="transparent")
-        self._list_frame.grid(row=3, column=0, sticky="nsew")
+        self._list_frame.grid(row=2, column=0, sticky="nsew")
         self._sync_scrollbar = w.bind_auto_hide_scrollbar(self._list_frame)
 
-        self._outer.bind("<Configure>", self._on_outer_configure, add="+")
-        self.bind("<Configure>", self._on_outer_configure, add="+")
-
         self._build_list()
-        self.after_idle(self._fit_list_height)
 
         self._app_window.set_footer(
             back_text=_back_label_for(self._return_view),
             back_cmd=self._on_back,
             back_visible=True,
         )
-
-    def _on_outer_configure(self, _event: object | None = None) -> None:
-        self.after_idle(self._fit_list_height)
-
-    def _fit_list_height(self) -> None:
-        self.update_idletasks()
-        list_y = self._list_frame.winfo_y()
-        outer_h = self._outer.winfo_height()
-        if list_y <= 0 or outer_h <= 0:
-            return
-        available = outer_h - list_y - 4
-        if available < 80:
-            return
-        current = self._list_frame.cget("height")
-        if current != available:
-            self._list_frame.configure(height=available)
-        self._sync_scrollbar()
 
     def _patient_filter_label(self) -> str:
         metadata = self._app_state.metadata
@@ -167,7 +152,7 @@ class HistoryView(ctk.CTkFrame):
             metadata.initials or metadata.birth_year or metadata.custom_label
         )
         if has_patient_fields:
-            self._toggle_btn.pack(anchor="w")
+            self._toggle_btn.pack(anchor="w", pady=(8, 0))
         else:
             self._toggle_btn.pack_forget()
 
@@ -181,13 +166,13 @@ class HistoryView(ctk.CTkFrame):
                 self._list_frame,
                 empty_text,
                 secondary=True,
-            ).pack(anchor="w", pady=16)
-            self.after_idle(self._fit_list_height)
+            ).pack(anchor="nw", pady=(0, 8))
+            self._sync_scrollbar()
             return
 
         for record in records:
             self._make_row(record)
-        self.after_idle(self._fit_list_height)
+        self._sync_scrollbar()
 
     def _on_toggle_all(self) -> None:
         self._show_all = not self._show_all

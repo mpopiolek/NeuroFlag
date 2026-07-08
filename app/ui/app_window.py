@@ -13,7 +13,6 @@ from app.domain.types import AnalysisResult, NormsConfig, PatientMetadata
 from app.storage.history import HistoryStore, resolve_history_db_path
 from app.ui import theme as ui_theme
 from app.ui.components import widgets as w
-from app.ui.components import show_info_dialog
 from app.ui.components.stepper import WorkflowStepper
 
 
@@ -135,7 +134,19 @@ class AppWindow(ctk.CTk):
         self._clear_footer()
 
     def _show_info(self) -> None:
-        show_info_dialog(self, app_window=self)
+        self.open_info()
+
+    def open_info(self) -> None:
+        """Otwiera Informacje jako widok główny; powrót wraca na poprzedni ekran."""
+        from app.ui.views.info_view import InfoView
+        from app.ui.views.metadata_form import MetadataFormView
+
+        if isinstance(self._current_view, InfoView):
+            return
+        return_view: type[ctk.CTkFrame] = (
+            type(self._current_view) if self._current_view is not None else MetadataFormView
+        )
+        self.show_view(InfoView, return_view=return_view, preserve_stepper=True)
 
     def open_history(self) -> None:
         """Otwiera historię; powrót wraca na widok aktywny w momencie kliknięcia."""
@@ -203,7 +214,13 @@ class AppWindow(ctk.CTk):
     def app_state(self) -> AppState:
         return self._state
 
-    def show_view(self, view_class: type[ctk.CTkFrame], **kwargs: object) -> None:
+    def show_view(
+        self,
+        view_class: type[ctk.CTkFrame],
+        *,
+        preserve_stepper: bool = False,
+        **kwargs: object,
+    ) -> None:
         self._dismiss_analysis_overlay()
         self._clear_footer()
         if self._current_view is not None:
@@ -216,7 +233,8 @@ class AppWindow(ctk.CTk):
             **kwargs,
         )
         self._current_view.pack(fill="both", expand=True)
-        self._update_stepper_for_view(view_class)
+        if not preserve_stepper:
+            self._update_stepper_for_view(view_class)
         self._update_history_button_state()
 
     def start_analysis_overlay(self) -> None:
