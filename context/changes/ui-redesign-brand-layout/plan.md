@@ -426,13 +426,13 @@ Redukcja „migania” ekranów: analiza jako overlay, mapowanie kanałów jako 
 
 #### Automated
 
-- [x] 1.1 `python -m pytest tests/unit/test_theme.py -q` — pass
-- [x] 1.2 `mypy app/ --strict` — pass
-- [x] 1.3 `python -m pytest -q` — pełny pass
+- [x] 1.1 `python -m pytest tests/unit/test_theme.py -q` — pass — a43fd54
+- [x] 1.2 `mypy app/ --strict` — pass — a43fd54
+- [x] 1.3 `python -m pytest -q` — pełny pass — a43fd54
 
 #### Manual
 
-- [x] 1.4 Checkbox/radio/selector granatowe; primary CTA pomarańczowe
+- [x] 1.4 Checkbox/radio/selector granatowe; primary CTA pomarańczowe — a43fd54
 
 ### Phase 2: Shell aplikacji (nagłówek, stepper, stopka)
 

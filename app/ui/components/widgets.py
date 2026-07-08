@@ -193,6 +193,7 @@ def context_panel(
     body: str,
     *,
     icon: str = "🔒",
+    wraplength: int = 320,
 ) -> ctk.CTkFrame:
     """Panel prawej kolumny z tytułem i treścią pomocniczą."""
     frame = ctk.CTkFrame(
@@ -224,7 +225,7 @@ def context_panel(
         text_color=t.COLOR_TEXT_SECONDARY,
         justify="left",
         anchor="w",
-        wraplength=320,
+        wraplength=wraplength,
     ).pack(fill="x", padx=16, pady=(0, 16))
     return frame
 
