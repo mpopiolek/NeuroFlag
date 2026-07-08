@@ -28,6 +28,7 @@ def show_info_dialog(parent: ctk.CTkBaseClass, *, app_window: ctk.CTk) -> None:
 class InfoDialog(ctk.CTkToplevel):
     _DIALOG_WIDTH = 560
     _DIALOG_MAX_HEIGHT = 620
+    _STRIPE_WIDTH = 4
 
     def __init__(self, parent: ctk.CTkBaseClass, *, app_window: ctk.CTk) -> None:
         super().__init__(parent)
@@ -82,14 +83,47 @@ class InfoDialog(ctk.CTkToplevel):
         self.after(100, lambda: self.attributes("-topmost", False))
         self._center_on_window(app_window)
 
+    def _section_card(self, parent: ctk.CTkScrollableFrame, title: str) -> ctk.CTkFrame:
+        card = w.surface_card(parent)
+        card.pack(fill="x", pady=(0, 16))
+
+        inner = ctk.CTkFrame(card, fg_color="transparent")
+        inner.pack(fill="x", padx=0, pady=0)
+        inner.columnconfigure(1, weight=1)
+
+        stripe = ctk.CTkFrame(
+            inner,
+            fg_color=t.COLOR_NAVY,
+            width=self._STRIPE_WIDTH,
+            corner_radius=0,
+        )
+        stripe.grid(row=0, column=0, rowspan=2, sticky="ns")
+        stripe.grid_propagate(False)
+
+        header = ctk.CTkFrame(inner, fg_color="transparent")
+        header.grid(row=0, column=1, sticky="ew", padx=(12, 16), pady=(12, 8))
+
+        ctk.CTkLabel(
+            header,
+            text=title,
+            font=t.font_subheading(),
+            text_color=t.COLOR_NAVY,
+            anchor="w",
+        ).pack(anchor="w", fill="x")
+
+        body = ctk.CTkFrame(inner, fg_color="transparent")
+        body.grid(row=1, column=1, sticky="ew", padx=(12, 16), pady=(0, 12))
+        body.columnconfigure(0, weight=1)
+        return body
+
     def _add_section(self, parent: ctk.CTkScrollableFrame, title: str, text: str) -> None:
-        self._section_header(parent, title).pack(fill="x", pady=(0, 6))
+        body = self._section_card(parent, title)
         w.body_label(
-            parent,
+            body,
             text,
             secondary=True,
             wraplength=t.WRAP_WIDTH - 80,
-        ).pack(anchor="w", pady=(0, 16))
+        ).pack(anchor="w")
 
     def _add_bullet_section(
         self,
@@ -97,14 +131,14 @@ class InfoDialog(ctk.CTkToplevel):
         title: str,
         bullets: tuple[str, ...],
     ) -> None:
-        self._section_header(parent, title).pack(fill="x", pady=(0, 6))
+        body = self._section_card(parent, title)
         bullet_text = "\n".join(f"• {item}" for item in bullets)
         w.body_label(
-            parent,
+            body,
             bullet_text,
             secondary=True,
             wraplength=t.WRAP_WIDTH - 80,
-        ).pack(anchor="w", pady=(0, 16))
+        ).pack(anchor="w")
 
     def _add_contact_section(
         self,
@@ -112,63 +146,48 @@ class InfoDialog(ctk.CTkToplevel):
         title: str,
         contact: content.ContactInfo,
     ) -> None:
-        self._section_header(parent, title).pack(fill="x", pady=(0, 6))
+        body = self._section_card(parent, title)
         lines = [contact.name, contact.role]
         if contact.phone is not None:
             lines.append(f"tel. {contact.phone}")
         lines.append(contact.email)
         w.body_label(
-            parent,
+            body,
             "\n".join(lines),
             secondary=True,
             wraplength=t.WRAP_WIDTH - 80,
-        ).pack(anchor="w", pady=(0, 16))
+        ).pack(anchor="w")
 
     def _add_technical_section(self, parent: ctk.CTkScrollableFrame) -> None:
-        self._section_header(parent, "Problemy z aplikacją").pack(fill="x", pady=(0, 6))
+        body = self._section_card(parent, "Problemy z aplikacją")
         contact = content.TECH_CONTACT
         w.body_label(
-            parent,
+            body,
             f"{contact.name}\n{contact.email}",
             secondary=True,
             wraplength=t.WRAP_WIDTH - 80,
         ).pack(anchor="w", pady=(0, 8))
 
         w.body_label(
-            parent,
+            body,
             content.GITHUB_REPO_URL,
             secondary=True,
             wraplength=t.WRAP_WIDTH - 80,
         ).pack(anchor="w", pady=(0, 8))
 
         w.body_label(
-            parent,
+            body,
             content.OFFLINE_NOTE,
             secondary=True,
             wraplength=t.WRAP_WIDTH - 80,
         ).pack(anchor="w", pady=(0, 8))
 
         w.primary_button(
-            parent,
+            body,
             text="Zgłoś błąd na GitHubie",
             command=self._open_github_issue,
             width=220,
-        ).pack(anchor="w", pady=(0, 8))
-
-    def _section_header(self, parent: ctk.CTkBaseClass, title: str) -> ctk.CTkFrame:
-        frame = ctk.CTkFrame(
-            parent,
-            fg_color=t.COLOR_SECTION_NAVY,
-            corner_radius=t.CORNER_RADIUS_SM,
-        )
-        ctk.CTkLabel(
-            frame,
-            text=title,
-            font=t.font_subheading(),
-            text_color=t.COLOR_ON_NAVY,
-            anchor="w",
-        ).pack(padx=12, pady=8, anchor="w", fill="x")
-        return frame
+        ).pack(anchor="w")
 
     def _open_github_issue(self) -> None:
         try:

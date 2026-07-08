@@ -231,12 +231,19 @@ def context_panel(
     return frame
 
 
-def two_column_body(parent: ctk.CTkBaseClass) -> tuple[ctk.CTkFrame, ctk.CTkFrame]:
-    """Układ dwukolumnowy 60/40 (formularz | kontekst); stack poniżej breakpointu."""
+def two_column_body(
+    parent: ctk.CTkBaseClass,
+    *,
+    left_weight: int | None = None,
+    right_weight: int | None = None,
+) -> tuple[ctk.CTkFrame, ctk.CTkFrame]:
+    """Układ dwukolumnowy (domyślnie 60/40); stack poniżej breakpointu."""
+    col_left = left_weight if left_weight is not None else t.COL_FORM_WEIGHT
+    col_right = right_weight if right_weight is not None else t.COL_CONTEXT_WEIGHT
     container = ctk.CTkFrame(parent, fg_color="transparent")
     container.pack(fill="both", expand=True)
-    container.columnconfigure(0, weight=t.COL_FORM_WEIGHT)
-    container.columnconfigure(1, weight=t.COL_CONTEXT_WEIGHT)
+    container.columnconfigure(0, weight=col_left)
+    container.columnconfigure(1, weight=col_right)
     container.rowconfigure(0, weight=1)
 
     form_col = ctk.CTkFrame(container, fg_color="transparent")
@@ -265,8 +272,8 @@ def two_column_body(parent: ctk.CTkBaseClass) -> tuple[ctk.CTkFrame, ctk.CTkFram
         else:
             container.rowconfigure(0, weight=1)
             container.rowconfigure(1, weight=0)
-            container.columnconfigure(0, weight=t.COL_FORM_WEIGHT)
-            container.columnconfigure(1, weight=t.COL_CONTEXT_WEIGHT)
+            container.columnconfigure(0, weight=col_left)
+            container.columnconfigure(1, weight=col_right)
             form_col.grid(row=0, column=0, sticky="nsew", padx=(0, 12), pady=0)
             context_col.grid(row=0, column=1, sticky="nsew", padx=(12, 0), pady=0)
 
@@ -293,5 +300,6 @@ def category_chip(
         text_color=fg,
         fg_color=bg,
         corner_radius=12,
-        width=84,
+        padx=10,
+        pady=2,
     )

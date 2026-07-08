@@ -30,7 +30,18 @@ class ChannelMappingView(ctk.CTkFrame):
         self._app_state = app_state
         self._missing_channels = missing_channels
 
-        container = w.page_container(self)
+        page = w.page_container(self)
+        page.columnconfigure(0, weight=1)
+        page.rowconfigure(0, weight=1)
+
+        center = ctk.CTkFrame(page, fg_color="transparent")
+        center.grid(row=0, column=0, sticky="n")
+
+        card = w.surface_card(center)
+        card.pack(fill="x", padx=0, pady=0)
+
+        container = ctk.CTkFrame(card, fg_color="transparent")
+        container.pack(fill="x", padx=24, pady=24)
 
         w.page_title(container, "Mapowanie kanałów EEG").pack(anchor="w", pady=(0, 8))
 
@@ -41,7 +52,7 @@ class ChannelMappingView(ctk.CTkFrame):
                 'Przypisz kanały z pliku do wymaganych pozycji i kliknij "Kontynuuj".'
             ),
             secondary=True,
-            wraplength=t.WRAP_WIDTH,
+            wraplength=480,
             justify="left",
         ).pack(anchor="w", pady=(0, 20))
 
@@ -73,34 +84,25 @@ class ChannelMappingView(ctk.CTkFrame):
             text="",
             text_color=t.COLOR_ERROR,
             font=t.font_body(),
-            wraplength=t.WRAP_WIDTH,
+            wraplength=480,
         )
         self._status_label.pack(anchor="w", pady=(4, 0))
 
-        button_row = ctk.CTkFrame(container, fg_color="transparent")
-        button_row.pack(anchor="w", pady=(16, 0))
-
-        self._continue_button = w.primary_button(
-            button_row,
-            text="Kontynuuj",
-            command=self._on_continue,
-            state="disabled",
-            width=140,
+        self._app_window.set_footer(
+            back_text="← Anuluj",
+            back_cmd=self._on_cancel,
+            back_visible=True,
+            primary_text="Kontynuuj",
+            primary_cmd=self._on_continue,
+            primary_visible=True,
+            primary_state="disabled",
         )
-        self._continue_button.pack(side="left", padx=(0, 12))
-
-        w.secondary_button(
-            button_row,
-            text="← Anuluj",
-            command=self._on_cancel,
-            width=120,
-        ).pack(side="left")
 
     def _refresh_continue_button(self) -> None:
         all_set = all(
             self._menus[ch].get() != _PLACEHOLDER for ch in self._missing_channels
         )
-        self._continue_button.configure(state="normal" if all_set else "disabled")
+        self._app_window.set_footer_primary_state("normal" if all_set else "disabled")
 
     def _on_continue(self) -> None:
         overrides: dict[str, str] = {}

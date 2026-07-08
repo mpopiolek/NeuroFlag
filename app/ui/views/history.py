@@ -71,17 +71,9 @@ class HistoryView(ctk.CTkFrame):
         self._outer.columnconfigure(0, weight=1)
         self._outer.rowconfigure(3, weight=1)
 
-        header_row = ctk.CTkFrame(self._outer, fg_color="transparent")
-        header_row.grid(row=0, column=0, sticky="ew", pady=(0, 4))
-
-        w.page_title(header_row, "Historia badań").pack(side="left")
-
-        w.secondary_button(
-            header_row,
-            text=_back_label_for(self._return_view),
-            command=self._on_back,
-            width=180,
-        ).pack(side="right")
+        w.page_title(self._outer, "Historia badań").grid(
+            row=0, column=0, sticky="w", pady=(0, 4)
+        )
 
         self._filter_label = ctk.CTkLabel(
             self._outer,
@@ -111,6 +103,12 @@ class HistoryView(ctk.CTkFrame):
 
         self._build_list()
         self.after_idle(self._fit_list_height)
+
+        self._app_window.set_footer(
+            back_text=_back_label_for(self._return_view),
+            back_cmd=self._on_back,
+            back_visible=True,
+        )
 
     def _on_outer_configure(self, _event: object | None = None) -> None:
         self.after_idle(self._fit_list_height)
@@ -212,7 +210,7 @@ class HistoryView(ctk.CTkFrame):
             text=date_str,
             font=t.font_small(),
             text_color=t.COLOR_TEXT_SECONDARY,
-            width=130,
+            width=118,
             anchor="w",
         ).grid(row=0, column=0, padx=(12, 6), pady=10, sticky="w")
 
@@ -228,15 +226,9 @@ class HistoryView(ctk.CTkFrame):
         cat_bg = _CATEGORY_BG.get(category, t.COLOR_TEXT_MUTED) if category else t.COLOR_TEXT_MUTED
         cat_fg = _CATEGORY_FG.get(category, t.COLOR_ON_ACCENT) if category else t.COLOR_ON_ACCENT
         cat_short = record.category.split(" ")[0]
-        ctk.CTkLabel(
-            row,
-            text=cat_short,
-            font=t.font_caption(),
-            text_color=cat_fg,
-            fg_color=cat_bg,
-            corner_radius=4,
-            width=84,
-        ).grid(row=0, column=2, padx=6, pady=10)
+        w.category_chip(row, cat_short, cat_bg, cat_fg).grid(
+            row=0, column=2, padx=6, pady=10, sticky="w"
+        )
 
         edit_btn = w.secondary_button(
             row,
