@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from app.ui import info_content as content
+
+_README_PATH = Path(__file__).resolve().parents[2] / "README.md"
 
 
 def _all_info_strings() -> tuple[str, ...]:
@@ -38,3 +42,9 @@ def test_expert_contact_phone() -> None:
 @pytest.mark.parametrize("text", _all_info_strings())
 def test_info_strings_have_no_neurod_branding(text: str) -> None:
     assert "NEUROD" not in text.upper()
+
+
+def test_readme_contains_contact_emails() -> None:
+    readme = _README_PATH.read_text(encoding="utf-8")
+    assert content.EXPERT_CONTACT.email in readme
+    assert content.TECH_CONTACT.email in readme

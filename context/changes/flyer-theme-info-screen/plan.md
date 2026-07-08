@@ -397,22 +397,22 @@ od razu. Istniejące PDF-y historyczne bez kontaktów w stopce — oczekiwane.
 
 #### Automated
 
-- [x] 2.1 `python -m pytest tests/unit/test_info_content.py -q` — przechodzi
-- [x] 2.2 `python -m pytest -q` — pełna suite zielona
-- [x] 2.3 `mypy app/ --strict` — bez błędów
+- [x] 2.1 `python -m pytest tests/unit/test_info_content.py -q` — przechodzi — c87983a
+- [x] 2.2 `python -m pytest -q` — pełna suite zielona — c87983a
+- [x] 2.3 `mypy app/ --strict` — bez błędów — c87983a
 
 #### Manual
 
-- [x] 2.4 Przycisk Informacje na wszystkich widokach; dialog, GitHub, info_box RODO
+- [x] 2.4 Przycisk Informacje na wszystkich widokach; dialog, GitHub, info_box RODO — c87983a
 
 ### Phase 3: Stopka PDF, szablon GitHub, README
 
 #### Automated
 
-- [ ] 3.1 `python -m pytest -q` — w tym test stopki PDF
-- [ ] 3.2 `mypy app/ --strict`
-- [ ] 3.3 Plik `.github/ISSUE_TEMPLATE/bug_report.md` istnieje
+- [x] 3.1 `python -m pytest -q` — w tym test stopki PDF
+- [x] 3.2 `mypy app/ --strict`
+- [x] 3.3 Plik `.github/ISSUE_TEMPLATE/bug_report.md` istnieje
 
 #### Manual
 
-- [ ] 3.4 PDF ze stopką kontaktów; szablon issue na GitHubie po push
+- [x] 3.4 PDF ze stopką kontaktów; szablon issue na GitHubie po push
