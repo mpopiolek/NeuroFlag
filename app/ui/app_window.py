@@ -8,6 +8,7 @@ from pathlib import Path
 
 import customtkinter as ctk
 
+from app.domain.errors import PipelineError
 from app.domain.types import AnalysisResult, NormsConfig, PatientMetadata
 from app.storage.history import HistoryStore, resolve_history_db_path
 from app.ui import theme as ui_theme
@@ -53,6 +54,7 @@ class AppWindow(ctk.CTk):
         )
         self._state.history_store = HistoryStore(resolve_history_db_path())
         self._current_view: ctk.CTkFrame | None = None
+        self._analysis_overlay: ctk.CTkFrame | None = None
 
         self._shell = ctk.CTkFrame(self, fg_color="transparent")
         self._shell.pack(fill="both", expand=True)
@@ -202,6 +204,7 @@ class AppWindow(ctk.CTk):
         return self._state
 
     def show_view(self, view_class: type[ctk.CTkFrame], **kwargs: object) -> None:
+        self._dismiss_analysis_overlay()
         self._clear_footer()
         if self._current_view is not None:
             self._current_view.destroy()
@@ -215,3 +218,59 @@ class AppWindow(ctk.CTk):
         self._current_view.pack(fill="both", expand=True)
         self._update_stepper_for_view(view_class)
         self._update_history_button_state()
+
+    def start_analysis_overlay(self) -> None:
+        """Uruchamia nakładkę analizy nad aktywnym widokiem (bez zmiany widoku)."""
+        if self._analysis_overlay is not None:
+            return
+        self._state.cancel_event.clear()
+        self._state.analysis_result = None
+        self._clear_footer()
+        self._stepper.set_active_step(3)
+        self._stepper.set_completed_through(2)
+
+        from app.ui.components.analysis_overlay import AnalysisOverlay
+
+        self._analysis_overlay = AnalysisOverlay(
+            master=self._view_host,
+            app_window=self,
+            app_state=self._state,
+        )
+        self._analysis_overlay.place(relx=0, rely=0, relwidth=1, relheight=1)
+        self._analysis_overlay.lift()
+
+    def _dismiss_analysis_overlay(self) -> None:
+        if self._analysis_overlay is not None:
+            self._analysis_overlay.destroy()
+            self._analysis_overlay = None
+
+    def finish_analysis_overlay(
+        self,
+        *,
+        result: AnalysisResult | None = None,
+        error: PipelineError | None = None,
+        cancelled: bool = False,
+    ) -> None:
+        """Kończy overlay: sukces → wyniki; błąd/anulowanie → powrót do importu."""
+        self._dismiss_analysis_overlay()
+
+        if result is not None:
+            self._state.analysis_result = result
+            self._stepper.set_active_step(4)
+            self._stepper.set_completed_through(3)
+            from app.ui.views.results_grid import ResultsGridView
+
+            self.show_view(ResultsGridView)
+            return
+
+        from app.ui.views.file_import import FileImportView
+
+        self._stepper.set_active_step(2)
+        self._stepper.set_completed_through(1)
+        if isinstance(self._current_view, FileImportView):
+            if error is not None:
+                self._current_view.show_analysis_error(error)
+            elif cancelled:
+                self._current_view.restore_after_analysis_cancelled()
+            else:
+                self._current_view.restore_import_footer()

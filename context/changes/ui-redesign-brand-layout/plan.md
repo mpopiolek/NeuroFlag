@@ -464,23 +464,24 @@ Redukcja „migania” ekranów: analiza jako overlay, mapowanie kanałów jako 
 
 #### Automated
 
-- [x] 4.1 `mypy app/ --strict` — pass
-- [x] 4.2 `python -m pytest -q` — pass
+- [x] 4.1 `mypy app/ --strict` — pass — 424e67b
+- [x] 4.2 `python -m pytest -q` — pass — 424e67b
 
 #### Manual
 
-- [x] 4.3 Dashboard wyników 40/60; RAG bez zmian
-- [x] 4.4 Historia: chipy kategorii; Informacje: lekkie karty
-- [x] 4.5 PDF generuje się poprawnie
+- [x] 4.3 Dashboard wyników 40/60; RAG bez zmian — 424e67b
+- [x] 4.4 Historia: chipy kategorii; Informacje: lekkie karty — 424e67b
+- [x] 4.5 PDF generuje się poprawnie — 424e67b
 
 ### Phase 5: UX przejść (overlay analizy, modal mapowania)
 
 #### Automated
 
-- [ ] 5.1 `mypy app/ --strict` — pass
-- [ ] 5.2 `python -m pytest -q` — pass
+- [x] 5.1 `mypy app/ --strict` — pass
+- [x] 5.2 `python -m pytest -q` — pass
 
 #### Manual
 
-- [ ] 5.3 Overlay analizy zamiast pełnego ekranu
-- [ ] 5.4 Modal mapowania kanałów; Anuluj działa
+- [x] 5.3 Overlay analizy zamiast pełnego ekranu
+- [x] 5.4 Modal mapowania kanałów; Anuluj działa
+- [x] 5.5 Anuluj analizy: overlay znika, można ponowić

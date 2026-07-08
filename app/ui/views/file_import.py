@@ -16,10 +16,12 @@ from app.domain.eeg_file import (
     read_patient_header_info,
     read_recording_date,
 )
+from app.domain.errors import PipelineError
 from app.ui import context_copy
 from app.ui import theme as t
 from app.ui.app_window import AppState
 from app.ui.components import widgets as w
+from app.ui.views.analysis import format_pipeline_error
 
 if TYPE_CHECKING:
     from app.ui.app_window import AppWindow
@@ -174,6 +176,34 @@ class FileImportView(ctk.CTkFrame):
         )
 
         self._restore_from_state()
+
+    def restore_import_footer(self) -> None:
+        self._app_window.set_footer(
+            back_text="← Wróć",
+            back_cmd=self._on_back,
+            back_visible=True,
+            primary_text="Analizuj",
+            primary_cmd=self._on_analyze,
+            primary_visible=True,
+            primary_state="normal" if self._app_state.ready_for_analysis() else "disabled",
+        )
+
+    def restore_after_analysis_cancelled(self) -> None:
+        self._status_label.grid(row=_ROW_STATUS, column=0, sticky="w", pady=(0, 8))
+        self._status_label.configure(
+            text="Analiza została anulowana.",
+            text_color=t.COLOR_TEXT_MUTED,
+        )
+        self.restore_import_footer()
+
+    def show_analysis_error(self, error: PipelineError) -> None:
+        self._status_label.grid(row=_ROW_STATUS, column=0, sticky="w", pady=(0, 8))
+        self._status_label.configure(
+            text=f"✗ {format_pipeline_error(error)}",
+            text_color=t.COLOR_ERROR,
+        )
+        self._set_analyze_enabled(True)
+        self.restore_import_footer()
 
     def _restore_from_state(self) -> None:
         path = self._app_state.eeg_path
@@ -350,14 +380,17 @@ class FileImportView(ctk.CTkFrame):
 
         missing = get_missing_canonical(self._app_state.available_channels)
         if missing:
-            from app.ui.views.channel_mapping import ChannelMappingView
+            from app.ui.components.channel_mapping_dialog import show_channel_mapping_dialog
 
-            self._app_window.show_view(ChannelMappingView, missing_channels=missing)
+            show_channel_mapping_dialog(
+                self.winfo_toplevel(),
+                self._app_state,
+                missing,
+                on_continue=self._app_window.start_analysis_overlay,
+            )
             return
 
-        from app.ui.views.analysis import AnalysisView
-
-        self._app_window.show_view(AnalysisView)
+        self._app_window.start_analysis_overlay()
 
     def _on_back(self) -> None:
         from app.ui.views.metadata_form import MetadataFormView

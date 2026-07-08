@@ -3,18 +3,14 @@ from __future__ import annotations
 import sys
 import threading
 import tkinter.messagebox
-from typing import TYPE_CHECKING
+from collections.abc import Callable
+from dataclasses import dataclass
 
 import customtkinter as ctk
 
 from app.domain.errors import AnalysisCancelledError, PipelineError
 from app.domain.types import AnalysisResult
-from app.ui import theme as t
 from app.ui.app_window import AppState
-from app.ui.components import widgets as w
-
-if TYPE_CHECKING:
-    from app.ui.app_window import AppWindow
 
 _RODO_NOTICE = (
     "Badanie zostało zapisane w lokalnej historii na tym urządzeniu.\n\n"
@@ -51,61 +47,60 @@ def format_pipeline_error(exc: PipelineError) -> str:
     return exc.user_message_pl
 
 
-class AnalysisView(ctk.CTkFrame):
+def persist_analysis_result(app_state: AppState, result: AnalysisResult) -> None:
+    """Zapisuje wynik w historii lokalnej (z jednorazowym komunikatem RODO)."""
+    store = app_state.history_store
+    assert store is not None
+    try:
+        if not store.is_notice_shown():
+            tkinter.messagebox.showinfo("Historia badań", _RODO_NOTICE)
+            store.mark_notice_shown()
+        assert app_state.metadata is not None
+        store.add(
+            app_state.metadata,
+            result,
+            eeg_path=app_state.eeg_path,
+        )
+    except Exception as exc:  # noqa: BLE001
+        print(f"[historia] Błąd zapisu: {exc}", file=sys.stderr)
+
+
+@dataclass
+class AnalysisCallbacks:
+    on_success: Callable[[AnalysisResult], None]
+    on_error: Callable[[PipelineError], None]
+    on_cancelled: Callable[[], None]
+
+
+class AnalysisRunner:
+    """Wątek analizy EEG — współdzielony przez overlay i legacy AnalysisView."""
+
     def __init__(
         self,
-        master: ctk.CTkBaseClass,
-        app_window: AppWindow,
         app_state: AppState,
-        **kwargs: object,
+        root: ctk.CTkBaseClass,
+        callbacks: AnalysisCallbacks,
     ) -> None:
-        super().__init__(master, **kwargs)
-        self._app_window = app_window
         self._app_state = app_state
+        self._root = root
+        self._callbacks = callbacks
+
+    def start(self) -> None:
         self._app_state.cancel_event.clear()
         self._app_state.analysis_result = None
+        threading.Thread(target=self._worker, daemon=True).start()
 
-        self._container = w.page_container(self)
-
-        w.page_title(self._container, "Trwa analiza EEG…").pack(anchor="w", pady=(0, 20))
-
-        self._status_label = w.body_label(
-            self._container,
-            "Przetwarzanie sygna\u0142u\u2026",
-            wraplength=t.WRAP_WIDTH,
-            justify="left",
-        )
-        self._status_label.pack(anchor="w", pady=(0, 12))
-
-        self._progress = ctk.CTkProgressBar(
-            self._container, mode="indeterminate", width=480
-        )
-        self._progress.pack(anchor="w", pady=(0, 20))
-        self._progress.start()
-
-        self._cancel_button = w.secondary_button(
-            self._container,
-            text="Anuluj",
-            command=self._on_cancel,
-            width=120,
-        )
-        self._cancel_button.pack(anchor="w")
-
-        threading.Thread(target=self._analysis_worker, daemon=True).start()
-
-    def _on_cancel(self) -> None:
+    def request_cancel(self) -> None:
         self._app_state.cancel_event.set()
-        self._cancel_button.configure(state="disabled", text="Anulowanie\u2026")
 
-    def _analysis_worker(self) -> None:
+    def _worker(self) -> None:
         from app.domain import algorithm, pipeline
 
         if self._app_state.eeg_path is None:
-            self.after(
+            self._root.after(
                 0,
-                self._on_done,
+                self._callbacks.on_error,
                 PipelineError("no_file", "Brak wybranego pliku EEG."),
-                None,
             )
             return
         path = self._app_state.eeg_path
@@ -125,7 +120,7 @@ class AnalysisView(ctk.CTkFrame):
             )
             result = algorithm.classify(amplitudes, config)
         except AnalysisCancelledError:
-            self.after(0, self._on_cancelled)
+            self._root.after(0, self._callbacks.on_cancelled)
             return
         except PipelineError as exc:
             error = exc
@@ -135,85 +130,22 @@ class AnalysisView(ctk.CTkFrame):
                 f"Nieoczekiwany b\u0142\u0105d analizy: {type(exc).__name__}",
             )
 
-        self.after(0, self._on_done, error, result)
-
-    def _on_cancelled(self) -> None:
-        self._progress.stop()
-        self._status_label.configure(
-            text="Analiza zosta\u0142a anulowana.",
-            text_color=t.COLOR_TEXT_MUTED,
-        )
-        self._cancel_button.pack_forget()
-        self._show_back_button()
-
-    def _on_done(
-        self, error: PipelineError | None, result: AnalysisResult | None = None
-    ) -> None:
-        self._progress.stop()
-        self._cancel_button.pack_forget()
-
         if error is not None:
-            self._status_label.configure(
-                text=f"\u2717 {format_pipeline_error(error)}",
-                text_color=t.COLOR_ERROR,
-            )
-            self._show_error_details(error)
-            self._show_back_button()
+            self._root.after(0, self._callbacks.on_error, error)
             return
-
         if result is not None:
-            store = self._app_state.history_store
-            assert store is not None
-            try:
-                if not store.is_notice_shown():
-                    tkinter.messagebox.showinfo("Historia badań", _RODO_NOTICE)
-                    store.mark_notice_shown()
-                assert self._app_state.metadata is not None
-                store.add(
-                    self._app_state.metadata,
-                    result,
-                    eeg_path=self._app_state.eeg_path,
-                )
-            except Exception as exc:  # noqa: BLE001
-                print(f"[historia] Błąd zapisu: {exc}", file=sys.stderr)
+            self._root.after(0, self._callbacks.on_success, result)
 
-        self._app_state.analysis_result = result
 
-        from app.ui.views.results_grid import ResultsGridView
+class AnalysisView(ctk.CTkFrame):
+    """Legacy — nawigacja zastąpiona przez AnalysisOverlay (Phase 5)."""
 
-        self._app_window.show_view(ResultsGridView)
-
-    def _show_error_details(self, error: PipelineError) -> None:
-        details_frame = ctk.CTkFrame(
-            self._container,
-            fg_color=t.COLOR_SURFACE,
-            corner_radius=t.CORNER_RADIUS_SM,
-            border_width=1,
-            border_color=t.COLOR_BORDER,
-        )
-        details_frame.pack(anchor="w", pady=(8, 0), fill="x")
-        ctk.CTkLabel(
-            details_frame,
-            text="Szczeg\u00f3\u0142y",
-            font=t.font_small(),
-            text_color=t.COLOR_TEXT,
-        ).pack(anchor="w", padx=12, pady=(8, 2))
-        ctk.CTkLabel(
-            details_frame,
-            text=f"Typ b\u0142\u0119du: {_error_code_pl(error.code)}",
-            font=t.font_caption(),
-            text_color=t.COLOR_TEXT_SECONDARY,
-        ).pack(anchor="w", padx=16, pady=(0, 10))
-
-    def _show_back_button(self) -> None:
-        w.secondary_button(
-            self._container,
-            text="\u2190 Wr\u00f3\u0107 do importu",
-            command=self._on_back,
-            width=160,
-        ).pack(anchor="w", pady=(16, 0))
-
-    def _on_back(self) -> None:
-        from app.ui.views.file_import import FileImportView
-
-        self._app_window.show_view(FileImportView)
+    def __init__(
+        self,
+        master: ctk.CTkBaseClass,
+        app_window: object,
+        app_state: AppState,
+        **kwargs: object,
+    ) -> None:
+        super().__init__(master, **kwargs)
+        del app_window, app_state, kwargs
