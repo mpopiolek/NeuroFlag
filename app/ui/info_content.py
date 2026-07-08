@@ -21,6 +21,8 @@ EXPERT_CONTACT = ContactInfo(
     email="malgorzata.chojak@mail.umcs.pl",
 )
 
+EXPERT_CONTACT_SHORT_ROLE: str = "Kierownik Lab. Neuroedukacji UMCS"
+
 TECH_CONTACT = ContactInfo(
     name="Małgorzata Popiołek",
     role="Wsparcie techniczne aplikacji NeuroFlag",

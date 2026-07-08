@@ -11,7 +11,18 @@ from app.ui.components import widgets as w
 
 
 def show_info_dialog(parent: ctk.CTkBaseClass, *, app_window: ctk.CTk) -> None:
-    InfoDialog(parent, app_window=app_window)
+    existing = getattr(parent, "_info_dialog", None)
+    if isinstance(existing, InfoDialog) and existing.winfo_exists():
+        existing.lift()
+        existing.focus_set()
+        return
+    dialog = InfoDialog(parent, app_window=app_window)
+    setattr(parent, "_info_dialog", dialog)
+    dialog.bind(
+        "<Destroy>",
+        lambda _event: setattr(parent, "_info_dialog", None),
+        add="+",
+    )
 
 
 class InfoDialog(ctk.CTkToplevel):

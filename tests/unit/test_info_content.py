@@ -48,3 +48,7 @@ def test_readme_contains_contact_emails() -> None:
     readme = _README_PATH.read_text(encoding="utf-8")
     assert content.EXPERT_CONTACT.email in readme
     assert content.TECH_CONTACT.email in readme
+    assert content.EXPERT_CONTACT.name in readme
+    assert content.TECH_CONTACT.name in readme
+    assert content.EXPERT_CONTACT.phone is not None
+    assert content.EXPERT_CONTACT.phone in readme

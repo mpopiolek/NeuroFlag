@@ -265,8 +265,12 @@ Spójne kontakty na wydruku PDF oraz dokumentacja zgłaszania błędów w repozy
 - Import `EXPERT_CONTACT`, `TECH_CONTACT` z `app.ui.info_content`
 - Po `Paragraph(f"NeuroFlag v{__version__} | {footer_date}", style_footer)` dodać:
   - Linia merytoryczna: imię, rola skrócona, tel., e-mail eksperta
-  - Linia techniczna: imię, e-mail wsparcia, URL repo (bez hyperlinku — ReportLab plain text)
+  - Linia techniczna: URL repo (bez hyperlinku — ReportLab plain text)
 - Styl: istniejący `style_footer` lub `style_small` — mniejsza czcionka, nie psuje layoutu A4
+
+**Implementation Note**: Linia techniczna w PDF zawiera wyłącznie URL repozytorium — bez
+imienia i e-maila wsparcia technicznego (decyzja prywatności). Pełny kontakt techniczny
+pozostaje w dialogu Informacje i README.
 
 #### 2. Test PDF stopki
 

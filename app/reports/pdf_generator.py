@@ -28,7 +28,7 @@ from app.domain.types import (
     format_clinical_diagnoses,
 )
 from app.ui.components.rag_colors import RAG_COLOR_BG, TASK_LABELS
-from app.ui.info_content import EXPERT_CONTACT, GITHUB_REPO_URL
+from app.ui.info_content import EXPERT_CONTACT, EXPERT_CONTACT_SHORT_ROLE, GITHUB_REPO_URL
 
 _FONTS_DIR = Path(os.environ.get("WINDIR", "C:/Windows")) / "Fonts"
 
@@ -88,7 +88,7 @@ def format_analysis_metadata_line(
 def format_pdf_expert_footer_line() -> str:
     expert = EXPERT_CONTACT
     phone = f"tel. {expert.phone}" if expert.phone is not None else ""
-    return f"{expert.name}, Kierownik Lab. Neuroedukacji UMCS, {phone}, {expert.email}"
+    return f"{expert.name}, {EXPERT_CONTACT_SHORT_ROLE}, {phone}, {expert.email}"
 
 
 def format_pdf_tech_footer_line() -> str:
