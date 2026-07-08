@@ -409,10 +409,10 @@ od razu. Istniejące PDF-y historyczne bez kontaktów w stopce — oczekiwane.
 
 #### Automated
 
-- [x] 3.1 `python -m pytest -q` — w tym test stopki PDF
-- [x] 3.2 `mypy app/ --strict`
-- [x] 3.3 Plik `.github/ISSUE_TEMPLATE/bug_report.md` istnieje
+- [x] 3.1 `python -m pytest -q` — w tym test stopki PDF — 6f58425
+- [x] 3.2 `mypy app/ --strict` — 6f58425
+- [x] 3.3 Plik `.github/ISSUE_TEMPLATE/bug_report.md` istnieje — 6f58425
 
 #### Manual
 
-- [x] 3.4 PDF ze stopką kontaktów; szablon issue na GitHubie po push
+- [x] 3.4 PDF ze stopką kontaktów; szablon issue na GitHubie po push — 6f58425

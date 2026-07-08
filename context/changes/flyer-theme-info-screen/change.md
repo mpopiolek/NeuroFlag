@@ -1,8 +1,8 @@
 ---
 title: Motyw z ulotki NEUROD i ekran Informacje
-status: implementing
+status: implemented
 created: 2026-07-07
-updated: 2026-07-07
+updated: 2026-07-08
 ---
 
 ## Notes
