@@ -149,6 +149,26 @@ def test_detect_task_segments_zp_aliases_matematyka_poznawcza_and_mat() -> None:
     assert segments2["ZP"][0] == 460.0
 
 
+def test_detect_task_segments_zp_alias_truncated_zadanie_pozna() -> None:
+    """EDF często obcina etykiety — „zadanie pozna” zamiast „zadanie poznawcze”."""
+    sfreq = 250.0
+    duration = 900.0
+    n_samples = int(duration * sfreq)
+    info = mne.create_info(["C3", "O1"], sfreq=sfreq, ch_types=["eeg", "eeg"])
+    raw = mne.io.RawArray(np.zeros((2, n_samples)), info)
+    raw.set_annotations(
+        mne.Annotations(
+            [65.0, 239.0, 418.0],
+            [0.0, 0.0, 0.0],
+            ["oczy otwarte", "oczy zamkniete", "zadanie pozna"],
+        )
+    )
+    segments = detect_task_segments(raw)
+    assert segments["OO"][0] == 65.0
+    assert segments["OZ"][0] == 239.0
+    assert segments["ZP"][0] == 418.0
+
+
 def test_detect_task_segments_oo_starts_at_first_marker_not_zero() -> None:
     sfreq = 250.0
     duration = 900.0

@@ -49,6 +49,7 @@ _TASK_KEYWORDS: dict[str, tuple[str, ...]] = {
     "ZP": (
         "MATEMATYKA POZNAWCZA",
         "ZADANIE POZNAWCZE",
+        "ZADANIE POZNA",
         "ZADANIE PAMIECIOWE",
         "ZADANIE PAMIĘCIOWE",
         "OBLICZENIA",
