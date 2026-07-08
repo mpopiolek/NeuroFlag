@@ -32,17 +32,39 @@ def _category_from_value(value: str) -> ScreeningCategory | None:
         return None
 
 
+def _back_label_for(view_class: type[ctk.CTkFrame]) -> str:
+    from app.ui.views.analysis import AnalysisView
+    from app.ui.views.channel_mapping import ChannelMappingView
+    from app.ui.views.file_import import FileImportView
+    from app.ui.views.metadata_form import MetadataFormView
+    from app.ui.views.results_grid import ResultsGridView
+
+    labels: dict[type[ctk.CTkFrame], str] = {
+        MetadataFormView: "← Wróć do danych",
+        FileImportView: "← Wróć do importu",
+        ChannelMappingView: "← Wróć do mapowania",
+        AnalysisView: "← Wróć do analizy",
+        ResultsGridView: "← Wróć do wyników",
+    }
+    return labels.get(view_class, "← Wstecz")
+
+
 class HistoryView(ctk.CTkFrame):
     def __init__(
         self,
         master: ctk.CTkBaseClass,
         app_window: AppWindow,
         app_state: AppState,
+        *,
+        return_view: type[ctk.CTkFrame] | None = None,
         **kwargs: object,
     ) -> None:
+        from app.ui.views.metadata_form import MetadataFormView
+
         super().__init__(master, **kwargs)
         self._app_window = app_window
         self._app_state = app_state
+        self._return_view = return_view or MetadataFormView
         self._show_all = False
 
         self._outer = w.page_container(self)
@@ -56,9 +78,9 @@ class HistoryView(ctk.CTkFrame):
 
         w.secondary_button(
             header_row,
-            text="← Wróć do wyników",
+            text=_back_label_for(self._return_view),
             command=self._on_back,
-            width=160,
+            width=180,
         ).pack(side="right")
 
         self._filter_label = ctk.CTkLabel(
@@ -152,9 +174,14 @@ class HistoryView(ctk.CTkFrame):
             self._toggle_btn.pack_forget()
 
         if not records:
+            empty_text = (
+                "Brak zapisanych badań w historii."
+                if self._show_all or metadata is None or not has_patient_fields
+                else "Brak zapisanych badań dla tego dziecka."
+            )
             w.body_label(
                 self._list_frame,
-                "Brak zapisanych badań dla tego dziecka.",
+                empty_text,
                 secondary=True,
             ).pack(anchor="w", pady=16)
             self.after_idle(self._fit_list_height)
@@ -273,9 +300,7 @@ class HistoryView(ctk.CTkFrame):
         self._build_list()
 
     def _on_back(self) -> None:
-        from app.ui.views.results_grid import ResultsGridView
-
-        self._app_window.show_view(ResultsGridView)
+        self._app_window.show_view(self._return_view)
 
 
 class _EditStudyDialog(ctk.CTkToplevel):

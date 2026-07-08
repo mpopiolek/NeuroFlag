@@ -119,6 +119,7 @@ def secondary_button(
         border_width=1,
         border_color=t.COLOR_BORDER,
         text_color=t.COLOR_TEXT,
+        text_color_disabled=t.COLOR_TEXT_MUTED,
         hover_color=t.COLOR_SURFACE,
         state=state,
     )

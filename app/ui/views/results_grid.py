@@ -196,9 +196,7 @@ class ResultsGridView(ctk.CTkFrame):
             )
 
     def _on_history(self) -> None:
-        from app.ui.views.history import HistoryView
-
-        self._app_window.show_view(HistoryView)
+        self._app_window.open_history()
 
     def _on_new_study(self) -> None:
         self._app_state.analysis_result = None

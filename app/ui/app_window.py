@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import threading
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
@@ -12,6 +13,7 @@ from app.storage.history import HistoryStore, resolve_history_db_path
 from app.ui import theme as ui_theme
 from app.ui.components import widgets as w
 from app.ui.components import show_info_dialog
+from app.ui.components.stepper import WorkflowStepper
 
 
 @dataclass
@@ -42,9 +44,9 @@ class AppWindow(ctk.CTk):
         ui_theme.apply_app_theme()
         super().__init__()
         self.title("NeuroFlag — Badanie przesiewowe EEG")
-        self.geometry("920x680")
-        self.minsize(820, 600)
-        self.configure(fg_color=ui_theme.COLOR_SURFACE_ELEVATED)
+        self.geometry("1000x720")
+        self.minsize(900, 640)
+        self.configure(fg_color=ui_theme.COLOR_ROW_BG)
         self._state = AppState(
             norms_config=norms_config,
             analysis_step_delay_s=analysis_step_delay_s,
@@ -55,27 +57,148 @@ class AppWindow(ctk.CTk):
         self._shell = ctk.CTkFrame(self, fg_color="transparent")
         self._shell.pack(fill="both", expand=True)
 
-        self._chrome = ctk.CTkFrame(self._shell, fg_color="transparent")
-        self._chrome.pack(fill="x", padx=ui_theme.PAGE_PAD_X, pady=(12, 0))
+        self._header = ctk.CTkFrame(
+            self._shell,
+            fg_color=ui_theme.COLOR_HEADER_BG,
+            corner_radius=0,
+        )
+        self._header.pack(fill="x")
+
+        header_inner = ctk.CTkFrame(self._header, fg_color="transparent")
+        header_inner.pack(fill="x", padx=ui_theme.PAGE_PAD_X, pady=(14, 12))
+
+        ctk.CTkLabel(
+            header_inner,
+            text="NeuroFlag",
+            font=ui_theme.font_heading(),
+            text_color=ui_theme.COLOR_NAVY,
+            anchor="w",
+        ).pack(side="left")
+
+        stepper_host = ctk.CTkFrame(header_inner, fg_color="transparent")
+        stepper_host.pack(side="left", expand=True, fill="x", padx=(24, 24))
+        self._stepper = WorkflowStepper(stepper_host)
+        self._stepper.pack(anchor="center")
+
+        header_actions = ctk.CTkFrame(header_inner, fg_color="transparent")
+        header_actions.pack(side="right")
+
+        self._history_btn = w.secondary_button(
+            header_actions,
+            text="Historia",
+            command=self._on_history,
+            width=110,
+        )
+        self._history_btn.pack(side="right", padx=(8, 0))
 
         w.secondary_button(
-            self._chrome,
+            header_actions,
             text="Informacje",
             command=self._show_info,
-            width=120,
+            width=110,
         ).pack(side="right")
 
-        self._view_host = ctk.CTkFrame(self._shell, fg_color="transparent")
+        self._mint_stripe = ctk.CTkFrame(
+            self._shell,
+            fg_color=ui_theme.COLOR_MINT_STRIPE,
+            height=4,
+            corner_radius=0,
+        )
+        self._mint_stripe.pack(fill="x")
+        self._mint_stripe.pack_propagate(False)
+
+        self._view_host = ctk.CTkFrame(self._shell, fg_color=ui_theme.COLOR_ROW_BG)
         self._view_host.pack(fill="both", expand=True)
+
+        self._footer = ctk.CTkFrame(
+            self._shell,
+            fg_color=ui_theme.COLOR_HEADER_BG,
+            corner_radius=0,
+        )
+        self._footer.pack(fill="x")
+
+        footer_inner = ctk.CTkFrame(self._footer, fg_color="transparent")
+        footer_inner.pack(fill="x", padx=ui_theme.PAGE_PAD_X, pady=12)
+
+        self._back_btn = w.secondary_button(
+            footer_inner,
+            text="← Wstecz",
+            width=140,
+        )
+        self._primary_btn = w.primary_button(
+            footer_inner,
+            text="Dalej →",
+            width=160,
+        )
+        self._clear_footer()
 
     def _show_info(self) -> None:
         show_info_dialog(self, app_window=self)
+
+    def open_history(self) -> None:
+        """Otwiera historię; powrót wraca na widok aktywny w momencie kliknięcia."""
+        from app.ui.views.history import HistoryView
+        from app.ui.views.metadata_form import MetadataFormView
+
+        if isinstance(self._current_view, HistoryView):
+            return
+        return_view: type[ctk.CTkFrame] = (
+            type(self._current_view) if self._current_view is not None else MetadataFormView
+        )
+        self.show_view(HistoryView, return_view=return_view)
+
+    def _on_history(self) -> None:
+        self.open_history()
+
+    def _update_history_button_state(self) -> None:
+        """Historia zawsze dostępna — pusty stan obsługuje HistoryView."""
+        self._history_btn.configure(state="normal")
+
+    def set_footer(
+        self,
+        *,
+        back_text: str = "← Wstecz",
+        back_cmd: Callable[[], None] | None = None,
+        back_visible: bool = False,
+        primary_text: str = "Dalej →",
+        primary_cmd: Callable[[], None] | None = None,
+        primary_visible: bool = False,
+    ) -> None:
+        if back_visible:
+            self._back_btn.configure(text=back_text, command=back_cmd, state="normal")
+            self._back_btn.pack(side="left")
+        else:
+            self._back_btn.pack_forget()
+
+        if primary_visible:
+            self._primary_btn.configure(
+                text=primary_text,
+                command=primary_cmd,
+                state="normal",
+            )
+            self._primary_btn.pack(side="right")
+        else:
+            self._primary_btn.pack_forget()
+
+    def _clear_footer(self) -> None:
+        self._back_btn.configure(command=None, state="disabled")
+        self._primary_btn.configure(command=None, state="disabled")
+        self._back_btn.pack_forget()
+        self._primary_btn.pack_forget()
+
+    def _update_stepper_for_view(self, view_class: type[ctk.CTkFrame]) -> None:
+        from app.ui.navigation import VIEW_STEP
+
+        step = VIEW_STEP.get(view_class, 1)
+        self._stepper.set_active_step(step)
+        self._stepper.set_completed_through(max(0, step - 1))
 
     @property
     def app_state(self) -> AppState:
         return self._state
 
     def show_view(self, view_class: type[ctk.CTkFrame], **kwargs: object) -> None:
+        self._clear_footer()
         if self._current_view is not None:
             self._current_view.destroy()
             self._current_view = None
@@ -86,3 +209,5 @@ class AppWindow(ctk.CTk):
             **kwargs,
         )
         self._current_view.pack(fill="both", expand=True)
+        self._update_stepper_for_view(view_class)
+        self._update_history_button_state()
