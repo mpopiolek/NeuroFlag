@@ -204,6 +204,8 @@ Przebudowa `AppWindow` w stały szkielet Wariantu B: nagłówek, miętowy pasek,
 
 **Implementation Note**: Po automated verification — potwierdzenie manualne przed Phase 3.
 
+**Addendum (impl-review 2026-07-08):** Przycisk Historia zawsze aktywny (pusty stan w `HistoryView`). Nawigacja powrotu: `open_history()` + `return_view=type(bieżący_widok)` zamiast `return_target` string.
+
 ---
 
 ## Phase 3: Widoki formularzy — układ dwukolumnowy
@@ -444,19 +446,19 @@ Redukcja „migania” ekranów: analiza jako overlay, mapowanie kanałów jako 
 #### Manual
 
 - [x] 2.3 Nagłówek, miętowy pasek, stepper aktualizuje się po nawigacji — 803c1d7
-- [x] 2.4 Przycisk Historia w nagłówku (gdy są wpisy) — 803c1d7
+- [x] 2.4 Przycisk Historia w nagłówku (zawsze aktywny; pusty stan w widoku) — 803c1d7
 
 ### Phase 3: Widoki formularzy — układ dwukolumnowy
 
 #### Automated
 
-- [x] 3.1 `mypy app/ --strict` — pass
-- [x] 3.2 `python -m pytest -q` — pass
+- [x] 3.1 `mypy app/ --strict` — pass — c0047d1
+- [x] 3.2 `python -m pytest -q` — pass — c0047d1
 
 #### Manual
 
-- [x] 3.3 Metadata i import: 2 kolumny, panel kontekstu, stopka shell
-- [x] 3.4 Okno 900 px (minimum): kolumny stackują się pionowo
+- [x] 3.3 Metadata i import: 2 kolumny, panel kontekstu, stopka shell — c0047d1
+- [x] 3.4 Okno 900 px (minimum): kolumny stackują się pionowo — c0047d1
 
 ### Phase 4: Wyniki, historia i Informacje
 

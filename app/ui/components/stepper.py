@@ -94,7 +94,7 @@ class WorkflowStepper(ctk.CTkFrame):
                 )
                 title.configure(
                     text=_STEP_LABELS[index],
-                    font=t.font_caption(),
+                    font=t.font_subheading(),
                     text_color=t.COLOR_NAVY,
                 )
             elif step_num < self._active_step or (

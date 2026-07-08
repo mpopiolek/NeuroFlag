@@ -44,9 +44,7 @@ class FileImportView(ctk.CTkFrame):
         super().__init__(master, **kwargs)
         self._app_window = app_window
         self._app_state = app_state
-        self._app_state.eeg_path = None
-        self._app_state.recording_date = None
-        self._selected_path: Path | None = None
+        self._selected_path = self._app_state.eeg_path
         self._validating = False
 
         page = w.page_container(self)
@@ -175,6 +173,43 @@ class FileImportView(ctk.CTkFrame):
             primary_state="disabled",
         )
 
+        self._restore_from_state()
+
+    def _restore_from_state(self) -> None:
+        path = self._app_state.eeg_path
+        if path is None:
+            return
+
+        self._path_label.configure(text=path.name, text_color=t.COLOR_TEXT)
+        self._status_label.grid(row=_ROW_STATUS, column=0, sticky="w", pady=(0, 8))
+
+        missing = get_missing_canonical(self._app_state.available_channels)
+        if missing:
+            self._status_label.configure(
+                text="⚠ Brak C3/O1 — wybór kanału wymagany przed analizą",
+                text_color=t.COLOR_WARNING,
+            )
+        else:
+            self._status_label.configure(
+                text="✓ Plik wczytany poprawnie",
+                text_color=t.COLOR_SUCCESS,
+            )
+
+        metadata = self._app_state.metadata
+        self._initials_entry.delete(0, "end")
+        self._birth_year_entry.delete(0, "end")
+        self._custom_label_entry.delete(0, "end")
+        if metadata is not None:
+            if metadata.initials:
+                self._initials_entry.insert(0, metadata.initials)
+            if metadata.birth_year:
+                self._birth_year_entry.insert(0, metadata.birth_year)
+            if metadata.custom_label:
+                self._custom_label_entry.insert(0, metadata.custom_label)
+
+        self._id_frame.grid(row=_ROW_ID, column=0, sticky="ew", pady=(0, 4))
+        self._set_analyze_enabled(True)
+
     def _on_anonymize_change(self) -> None:
         self._app_state.anonymize_header = bool(self._anonymize_var.get())
 
@@ -245,6 +280,8 @@ class FileImportView(ctk.CTkFrame):
         patient_info: tuple[str | None, str | None],
         recording_date: date | None,
     ) -> None:
+        if not self.winfo_exists():
+            return
         self._validating = False
         self._progress.stop()
         self._progress.grid_remove()
