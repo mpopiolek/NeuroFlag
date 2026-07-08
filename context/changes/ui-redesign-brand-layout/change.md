@@ -1,7 +1,7 @@
 ---
 id: ui-redesign-brand-layout
 title: Redesign UI — układ i kolorystyka NEUROD
-status: implementing
+status: implemented
 created: 2026-07-08
 updated: 2026-07-08
 ---

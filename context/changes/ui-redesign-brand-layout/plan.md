@@ -477,11 +477,11 @@ Redukcja „migania” ekranów: analiza jako overlay, mapowanie kanałów jako 
 
 #### Automated
 
-- [x] 5.1 `mypy app/ --strict` — pass
-- [x] 5.2 `python -m pytest -q` — pass
+- [x] 5.1 `mypy app/ --strict` — pass — c48f64b
+- [x] 5.2 `python -m pytest -q` — pass — c48f64b
 
 #### Manual
 
-- [x] 5.3 Overlay analizy zamiast pełnego ekranu
-- [x] 5.4 Modal mapowania kanałów; Anuluj działa
-- [x] 5.5 Anuluj analizy: overlay znika, można ponowić
+- [x] 5.3 Overlay analizy zamiast pełnego ekranu — c48f64b
+- [x] 5.4 Modal mapowania kanałów; Anuluj działa — c48f64b
+- [x] 5.5 Anuluj analizy: overlay znika, można ponowić — c48f64b
