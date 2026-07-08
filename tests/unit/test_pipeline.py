@@ -259,6 +259,29 @@ def test_detect_task_segments_zp_extends_when_next_marker_too_soon() -> None:
     assert segments["ZP"] == (459.1, 639.1)
 
 
+def test_mean_abs_after_artifact_rejection_ignores_single_bad_second() -> None:
+    from app.domain.pipeline import _mean_abs_after_artifact_rejection
+
+    sfreq = 250.0
+    n = int(10 * sfreq)
+    clean = 30.0 * np.sin(2 * np.pi * 6.0 * np.arange(n) / sfreq)
+    data = clean.copy()
+    # Jedna sekunda z dużym skokiem — nie powinna odrzucić całego segmentu.
+    data[int(5 * sfreq) : int(6 * sfreq)] += 500.0
+    amp = _mean_abs_after_artifact_rejection(data, sfreq, reject_uv=200.0)
+    assert amp is not None
+    assert amp > 0.0
+
+
+def test_mean_abs_after_artifact_rejection_rejects_all_bad_windows() -> None:
+    from app.domain.pipeline import _mean_abs_after_artifact_rejection
+
+    sfreq = 250.0
+    n = int(3 * sfreq)
+    data = 300.0 * np.sin(2 * np.pi * 2.0 * np.arange(n) / sfreq)
+    assert _mean_abs_after_artifact_rejection(data, sfreq, reject_uv=200.0) is None
+
+
 @patch("app.domain.pipeline._load_raw")
 def test_run_returns_ten_finite_amplitudes(mock_load: object) -> None:
     # fidelity bounds: see tests/integration/test_pipeline_fidelity.py

@@ -21,6 +21,7 @@ from app.domain.types import NormEntry, NormsConfig
 
 if TYPE_CHECKING:
     import mne.io
+    from numpy.typing import NDArray
 
 _REQUIRED_CHANNELS = ("C3", "O1")
 _TASK_ORDER = ("OO", "OZ", "ZP")
@@ -63,6 +64,7 @@ _TASK_KEYWORDS: dict[str, tuple[str, ...]] = {
 _MIN_ANNOTATION_DURATION_S = 1.0
 # Minimalny czas segmentu dla stabilnego filtra pasmowego MNE (FIR @ 256 Hz, Theta 4–8 Hz).
 _MIN_USABLE_SEGMENT_S = 16.0
+_ARTIFACT_EPOCH_SECONDS = 1.0  # okna odrzucania artefaktów (p-p per okno, nie cały segment)
 
 
 def _load_mne() -> ModuleType:
@@ -310,13 +312,36 @@ def _load_raw(path: Path) -> mne.io.BaseRaw:
     )
 
 
+def _mean_abs_after_artifact_rejection(
+    data_uv: NDArray[np.floating],
+    sfreq: float,
+    *,
+    reject_uv: float,
+) -> float | None:
+    """Odrzuca okna 1 s przekraczające próg p-p; zwraca mean|uV| z czystych okien."""
+    flat = data_uv.reshape(-1)
+    window = max(1, int(sfreq * _ARTIFACT_EPOCH_SECONDS))
+    n_samples = flat.size
+    if n_samples < window:
+        if float(np.ptp(flat)) > reject_uv:
+            return None
+        return float(np.mean(np.abs(flat)))
+    good: list[NDArray[np.floating]] = []
+    for start in range(0, n_samples - window + 1, window):
+        chunk = flat[start : start + window]
+        if float(np.ptp(chunk)) <= reject_uv:
+            good.append(chunk)
+    if not good:
+        return None
+    return float(np.mean(np.abs(np.concatenate(good))))
+
+
 def _amplitude_for_norm(
     raw: mne.io.BaseRaw,
     norm: NormEntry,
     segments: dict[str, tuple[float, float]],
     config: NormsConfig,
 ) -> float:
-    mne = _load_mne()
     t_start, t_end = segments[norm.task]
     if t_end <= t_start:
         raise PipelineError(
@@ -346,17 +371,20 @@ def _amplitude_for_norm(
             "empty_segment",
             f"Pusty segment dla zadania {norm.task} i kanału {norm.channel}.",
         )
-    segment_data = cropped.get_data()[np.newaxis, ...]
-    epochs = mne.EpochsArray(segment_data, cropped.info, verbose=False)
-    epochs.drop_bad(reject={"eeg": _REJECT_EEG_VOLTS}, verbose=False)
-    if len(epochs) == 0:
+    data_uv = cropped.get_data()[0] * 1e6
+    reject_uv = _REJECT_EEG_VOLTS * 1e6
+    amplitude = _mean_abs_after_artifact_rejection(
+        data_uv,
+        float(cropped.info["sfreq"]),
+        reject_uv=reject_uv,
+    )
+    if amplitude is None:
         raise PipelineError(
             "artifact_rejection",
             f"Segment zadania {norm.task} ({norm.channel}, {norm.band}) "
             "został odrzucony z powodu artefaktów.",
         )
-    data_uv = epochs.get_data(units="uV")
-    return float(np.mean(np.abs(data_uv)))
+    return amplitude
 
 
 def run(
