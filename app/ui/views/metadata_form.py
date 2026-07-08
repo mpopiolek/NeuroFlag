@@ -10,6 +10,7 @@ from app.domain.types import (
     PatientMetadata,
     Sex,
 )
+from app.ui import context_copy
 from app.ui import theme as t
 from app.ui.app_window import AppState
 from app.ui.components import widgets as w
@@ -50,15 +51,22 @@ class MetadataFormView(ctk.CTkFrame):
         self._app_window = app_window
         self._app_state = app_state
 
-        form = w.page_container(self)
-        form.rowconfigure(1, weight=1)
-        form.columnconfigure(0, weight=1)
+        page = w.page_container(self)
+        form_col, context_col = w.two_column_body(page)
 
-        w.page_title(form, "Dane dziecka").grid(
-            row=0, column=0, sticky="w", pady=(0, 16)
+        card = w.surface_card(form_col)
+        card.pack(fill="both", expand=True)
+
+        card_inner = ctk.CTkFrame(card, fg_color="transparent")
+        card_inner.pack(fill="both", expand=True, padx=20, pady=20)
+        card_inner.rowconfigure(1, weight=1)
+        card_inner.columnconfigure(0, weight=1)
+
+        w.section_title(card_inner, "Dane dziecka").grid(
+            row=0, column=0, sticky="w", pady=(0, 12)
         )
 
-        body = ctk.CTkScrollableFrame(form, fg_color="transparent")
+        body = ctk.CTkScrollableFrame(card_inner, fg_color="transparent")
         body.grid(row=1, column=0, sticky="nsew")
         body.columnconfigure(0, weight=1)
 
@@ -171,27 +179,20 @@ class MetadataFormView(ctk.CTkFrame):
         )
         self._warning_label.grid_remove()
 
-        next_row = warning_row + 1
-        self._next_button = w.primary_button(
-            body,
-            text="Dalej →",
-            command=self._on_next,
-            width=160,
-        )
-        self._next_button.grid(row=next_row, column=0, sticky="w", pady=(12, 0))
-
-        w.info_box(
-            body,
-            (
-                "Analiza odbywa się wyłącznie na tym komputerze. "
-                "Aplikacja nie wysyła żadnych danych do internetu. "
-                "Opcjonalne diagnozy, inicjały i rok urodzenia są zapisywane lokalnie "
-                "w historii badań i raporcie PDF; nie wpływają na wynik przesiewowy. "
-                "Identyfikatory pacjenta z nagłówka pliku EEG nie są wyświetlane ani zapisywane."
-            ),
-        ).grid(row=next_row + 1, column=0, sticky="ew", pady=(16, 0))
-
         self._sync_scrollbar = w.bind_auto_hide_scrollbar(body)
+
+        w.context_panel(
+            context_col,
+            "Prywatność i dane lokalne",
+            context_copy.CONTEXT_METADATA,
+        ).pack(fill="both", expand=True, anchor="n")
+
+        self._app_window.set_footer(
+            primary_text="Dalej →",
+            primary_cmd=self._on_continue,
+            primary_visible=True,
+            back_visible=False,
+        )
 
         self._restore_from_state()
 
@@ -229,10 +230,10 @@ class MetadataFormView(ctk.CTkFrame):
         any_checked = any(var.get() for var in self._exclusion_vars.values())
         if any_checked:
             self._warning_label.grid()
-            self._next_button.configure(state="disabled")
+            self._app_window.set_footer_primary_state("disabled")
         else:
             self._warning_label.grid_remove()
-            self._next_button.configure(state="normal")
+            self._app_window.set_footer_primary_state("normal")
 
     def _read_other_note(self) -> str | None:
         if not self._clinical_vars[ClinicalDiagnosis.OTHER].get():
@@ -242,7 +243,7 @@ class MetadataFormView(ctk.CTkFrame):
             return None
         return str(note[:_OTHER_NOTE_MAX_LEN])
 
-    def _on_next(self) -> None:
+    def _on_continue(self) -> None:
         exclusions = frozenset(
             exclusion
             for exclusion, var in self._exclusion_vars.items()

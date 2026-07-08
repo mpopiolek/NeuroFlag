@@ -26,8 +26,12 @@ from app.ui.components.rag_colors import (
 if TYPE_CHECKING:
     from app.ui.app_window import AppWindow
 
-_CELL_W = 132
-_CELL_H = 86
+_CELL_W_MIN = 120
+_CELL_H_MIN = 80
+_CELL_W_MAX = 150
+_CELL_H_MAX = 95
+_CELL_PAD = 5
+_GRID_COLS = 5
 
 
 class ResultsGridView(ctk.CTkFrame):
@@ -41,6 +45,11 @@ class ResultsGridView(ctk.CTkFrame):
         super().__init__(master, **kwargs)
         self._app_window = app_window
         self._app_state = app_state
+        self._grid_frame: ctk.CTkFrame | None = None
+        self._cell_frames: list[ctk.CTkFrame] = []
+        self._category_label: ctk.CTkLabel | None = None
+        self._description_label: ctk.CTkLabel | None = None
+        self._page: ctk.CTkFrame | None = None
 
         if app_state.analysis_result is None:
             container = w.page_container(self)
@@ -51,73 +60,120 @@ class ResultsGridView(ctk.CTkFrame):
             )
             error_label.configure(text_color=t.COLOR_ERROR)
             error_label.pack(anchor="w")
-            w.secondary_button(
-                container,
-                text="\u2190 Powr\u00f3t do importu",
-                command=self._on_new_study,
-                width=160,
-            ).pack(anchor="w", pady=(12, 0))
+            self._app_window.set_footer(
+                back_text="\u2190 Powr\u00f3t do importu",
+                back_cmd=self._on_new_study,
+                back_visible=True,
+            )
             return
         result = app_state.analysis_result
 
-        container = w.page_container(self)
+        page = w.page_container(self)
+        page.columnconfigure(0, weight=1)
+        page.rowconfigure(1, weight=1)
+        self._page = page
 
         cat_color = _CATEGORY_COLOR[result.category]
-        ctk.CTkLabel(
-            container,
-            text=result.category.value,
-            font=t.font_title(),
-            text_color=cat_color,
-        ).pack(anchor="w", pady=(0, 8))
+        summary_card = w.surface_card(page)
+        summary_card.grid(row=0, column=0, sticky="ew", pady=(0, 16))
 
-        w.body_label(
-            container,
-            result.description,
-            wraplength=t.WRAP_WIDTH + 100,
-            justify="left",
-        ).pack(anchor="w", pady=(0, 24))
+        summary_inner = ctk.CTkFrame(summary_card, fg_color="transparent")
+        summary_inner.pack(fill="x")
+        summary_inner.columnconfigure(1, weight=1)
 
-        grid_frame = ctk.CTkFrame(
-            container,
-            fg_color=t.COLOR_SURFACE,
-            corner_radius=t.CORNER_RADIUS,
-            border_width=1,
-            border_color=t.COLOR_BORDER,
+        stripe = ctk.CTkFrame(
+            summary_inner,
+            fg_color=cat_color,
+            width=4,
+            corner_radius=0,
         )
-        grid_frame.pack(anchor="w", pady=(0, 24), padx=2, ipadx=8, ipady=8)
+        stripe.grid(row=0, column=0, rowspan=2, sticky="ns")
+        stripe.grid_propagate(False)
 
-        for col in range(5):
-            grid_frame.columnconfigure(col, weight=1, minsize=_CELL_W + 8)
+        summary_content = ctk.CTkFrame(summary_inner, fg_color="transparent")
+        summary_content.grid(row=0, column=1, sticky="ew", padx=(16, 20), pady=(16, 8))
+        summary_content.columnconfigure(0, weight=1)
+
+        self._category_label = ctk.CTkLabel(
+            summary_content,
+            text=result.category.value,
+            font=t.font_heading(),
+            text_color=t.COLOR_TEXT,
+            anchor="w",
+            justify="left",
+        )
+        self._category_label.grid(row=0, column=0, sticky="ew", pady=(0, 8))
+
+        self._description_label = w.body_label(
+            summary_content,
+            result.description,
+            justify="left",
+        )
+        self._description_label.grid(row=1, column=0, sticky="ew", pady=(0, 16))
+
+        grid_card = w.surface_card(page)
+        grid_card.grid(row=1, column=0, sticky="nsew")
+
+        grid_inner = ctk.CTkFrame(grid_card, fg_color="transparent")
+        grid_inner.pack(fill="both", expand=True, padx=12, pady=12)
+
+        self._grid_frame = ctk.CTkFrame(grid_inner, fg_color="transparent")
+        self._grid_frame.pack(fill="both", expand=True)
+
+        for col in range(_GRID_COLS):
+            self._grid_frame.columnconfigure(col, weight=1, minsize=_CELL_W_MIN + _CELL_PAD * 2)
 
         for idx, cell in enumerate(result.cells):
-            self._make_cell(grid_frame, cell, row=idx // 5, col=idx % 5)
+            self._make_cell(self._grid_frame, cell, row=idx // _GRID_COLS, col=idx % _GRID_COLS)
 
-        btn_row = ctk.CTkFrame(container, fg_color="transparent")
-        btn_row.pack(anchor="w", pady=(0, 0))
+        page.bind("<Configure>", self._on_page_configure, add="+")
+        self._grid_frame.bind("<Configure>", self._on_grid_configure, add="+")
+        grid_card.bind("<Configure>", self._on_grid_configure, add="+")
+        self.after_idle(self._sync_text_wrap)
+        self.after_idle(self._update_cell_sizes)
 
-        w.secondary_button(
-            btn_row,
-            text="\u2190 Nowe badanie",
-            command=self._on_new_study,
-            width=160,
-        ).pack(side="left", padx=(0, 12))
+        self._app_window.set_footer(
+            back_text="\u2190 Nowe badanie",
+            back_cmd=self._on_new_study,
+            back_visible=True,
+            primary_text="Zapisz raport PDF",
+            primary_cmd=self._on_save_pdf,
+            primary_visible=True,
+        )
 
-        w.primary_button(
-            btn_row,
-            text="Zapisz raport PDF",
-            command=self._on_save_pdf,
-            width=200,
-        ).pack(side="left", padx=(0, 12))
+    def _on_page_configure(self, _event: object | None = None) -> None:
+        self.after_idle(self._sync_text_wrap)
 
-        store = app_state.history_store
-        assert store is not None
-        if store.has_any():
-            w.secondary_button(
-                btn_row,
-                text="Historia badań",
-                command=self._on_history,
-                width=160,
-            ).pack(side="left")
+    def _sync_text_wrap(self) -> None:
+        if self._page is None or self._category_label is None or self._description_label is None:
+            return
+        self._page.update_idletasks()
+        width = self._page.winfo_width()
+        if width <= 1:
+            return
+        wrap = max(200, width - 72)
+        self._category_label.configure(wraplength=wrap)
+        self._description_label.configure(wraplength=wrap)
+
+    def _on_grid_configure(self, _event: object | None = None) -> None:
+        self.after_idle(self._update_cell_sizes)
+
+    def _update_cell_sizes(self) -> None:
+        if self._grid_frame is None:
+            return
+        self._grid_frame.update_idletasks()
+        frame_w = self._grid_frame.winfo_width()
+        if frame_w <= 1:
+            return
+        pad_total = _CELL_PAD * 2 * _GRID_COLS
+        cell_w = (frame_w - pad_total) // _GRID_COLS
+        cell_w = max(_CELL_W_MIN, min(_CELL_W_MAX, cell_w))
+        cell_h = max(_CELL_H_MIN, min(_CELL_H_MAX, int(cell_w * 0.65)))
+        min_col = cell_w + _CELL_PAD * 2
+        for col in range(_GRID_COLS):
+            self._grid_frame.columnconfigure(col, weight=1, minsize=min_col)
+        for cell_frame in self._cell_frames:
+            cell_frame.configure(width=cell_w, height=cell_h)
 
     def _make_cell(
         self,
@@ -134,11 +190,12 @@ class ResultsGridView(ctk.CTkFrame):
             parent,
             fg_color=bg,
             corner_radius=t.CORNER_RADIUS_SM,
-            width=_CELL_W,
-            height=_CELL_H,
+            width=_CELL_W_MIN,
+            height=_CELL_H_MIN,
         )
-        cell_frame.grid(row=row, column=col, padx=5, pady=5, sticky="nsew")
+        cell_frame.grid(row=row, column=col, padx=_CELL_PAD, pady=_CELL_PAD, sticky="nsew")
         cell_frame.grid_propagate(False)
+        self._cell_frames.append(cell_frame)
 
         ctk.CTkLabel(
             cell_frame,
@@ -194,11 +251,6 @@ class ResultsGridView(ctk.CTkFrame):
                 "B\u0142\u0105d zapisu PDF",
                 f"Nie mo\u017cna zapisa\u0107 raportu:\n{exc}",
             )
-
-    def _on_history(self) -> None:
-        from app.ui.views.history import HistoryView
-
-        self._app_window.show_view(HistoryView)
 
     def _on_new_study(self) -> None:
         self._app_state.analysis_result = None

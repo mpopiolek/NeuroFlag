@@ -149,6 +149,26 @@ def test_detect_task_segments_zp_aliases_matematyka_poznawcza_and_mat() -> None:
     assert segments2["ZP"][0] == 460.0
 
 
+def test_detect_task_segments_zp_alias_truncated_zadanie_pozna() -> None:
+    """EDF często obcina etykiety — „zadanie pozna” zamiast „zadanie poznawcze”."""
+    sfreq = 250.0
+    duration = 900.0
+    n_samples = int(duration * sfreq)
+    info = mne.create_info(["C3", "O1"], sfreq=sfreq, ch_types=["eeg", "eeg"])
+    raw = mne.io.RawArray(np.zeros((2, n_samples)), info)
+    raw.set_annotations(
+        mne.Annotations(
+            [65.0, 239.0, 418.0],
+            [0.0, 0.0, 0.0],
+            ["oczy otwarte", "oczy zamkniete", "zadanie pozna"],
+        )
+    )
+    segments = detect_task_segments(raw)
+    assert segments["OO"][0] == 65.0
+    assert segments["OZ"][0] == 239.0
+    assert segments["ZP"][0] == 418.0
+
+
 def test_detect_task_segments_oo_starts_at_first_marker_not_zero() -> None:
     sfreq = 250.0
     duration = 900.0
@@ -237,6 +257,29 @@ def test_detect_task_segments_zp_extends_when_next_marker_too_soon() -> None:
     assert segments["OO"] == (157.4, 305.9)
     assert segments["OZ"] == (305.9, 459.1)
     assert segments["ZP"] == (459.1, 639.1)
+
+
+def test_mean_abs_after_artifact_rejection_ignores_single_bad_second() -> None:
+    from app.domain.pipeline import _mean_abs_after_artifact_rejection
+
+    sfreq = 250.0
+    n = int(10 * sfreq)
+    clean = 30.0 * np.sin(2 * np.pi * 6.0 * np.arange(n) / sfreq)
+    data = clean.copy()
+    # Jedna sekunda z dużym skokiem — nie powinna odrzucić całego segmentu.
+    data[int(5 * sfreq) : int(6 * sfreq)] += 500.0
+    amp = _mean_abs_after_artifact_rejection(data, sfreq, reject_uv=200.0)
+    assert amp is not None
+    assert amp > 0.0
+
+
+def test_mean_abs_after_artifact_rejection_rejects_all_bad_windows() -> None:
+    from app.domain.pipeline import _mean_abs_after_artifact_rejection
+
+    sfreq = 250.0
+    n = int(3 * sfreq)
+    data = 300.0 * np.sin(2 * np.pi * 2.0 * np.arange(n) / sfreq)
+    assert _mean_abs_after_artifact_rejection(data, sfreq, reject_uv=200.0) is None
 
 
 @patch("app.domain.pipeline._load_raw")

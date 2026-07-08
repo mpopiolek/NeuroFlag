@@ -32,80 +32,85 @@ def _category_from_value(value: str) -> ScreeningCategory | None:
         return None
 
 
+def _back_label_for(view_class: type[ctk.CTkFrame]) -> str:
+    from app.ui.views.analysis import AnalysisView
+    from app.ui.views.channel_mapping import ChannelMappingView
+    from app.ui.views.file_import import FileImportView
+    from app.ui.views.info_view import InfoView
+    from app.ui.views.metadata_form import MetadataFormView
+    from app.ui.views.results_grid import ResultsGridView
+
+    labels: dict[type[ctk.CTkFrame], str] = {
+        MetadataFormView: "← Wróć do danych",
+        FileImportView: "← Wróć do importu",
+        ChannelMappingView: "← Wróć do mapowania",
+        AnalysisView: "← Wróć do analizy",
+        ResultsGridView: "← Wróć do wyników",
+        InfoView: "← Wróć do informacji",
+        HistoryView: "← Wróć do historii",
+    }
+    return labels.get(view_class, "← Wstecz")
+
+
 class HistoryView(ctk.CTkFrame):
     def __init__(
         self,
         master: ctk.CTkBaseClass,
         app_window: AppWindow,
         app_state: AppState,
+        *,
+        return_view: type[ctk.CTkFrame] | None = None,
         **kwargs: object,
     ) -> None:
+        from app.ui.views.metadata_form import MetadataFormView
+
         super().__init__(master, **kwargs)
         self._app_window = app_window
         self._app_state = app_state
+        self._return_view = return_view or MetadataFormView
         self._show_all = False
+
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(0, weight=1)
 
         self._outer = w.page_container(self)
         self._outer.columnconfigure(0, weight=1)
-        self._outer.rowconfigure(3, weight=1)
+        self._outer.rowconfigure(2, weight=1)
 
-        header_row = ctk.CTkFrame(self._outer, fg_color="transparent")
-        header_row.grid(row=0, column=0, sticky="ew", pady=(0, 4))
+        w.page_title(self._outer, "Historia badań").grid(
+            row=0, column=0, sticky="w", pady=(0, 4)
+        )
 
-        w.page_title(header_row, "Historia badań").pack(side="left")
-
-        w.secondary_button(
-            header_row,
-            text="← Wróć do wyników",
-            command=self._on_back,
-            width=160,
-        ).pack(side="right")
+        header_block = ctk.CTkFrame(self._outer, fg_color="transparent")
+        header_block.grid(row=1, column=0, sticky="ew", pady=(0, 8))
 
         self._filter_label = ctk.CTkLabel(
-            self._outer,
+            header_block,
             text="",
             font=t.font_small(),
             text_color=t.COLOR_TEXT_SECONDARY,
             anchor="w",
         )
-        self._filter_label.grid(row=1, column=0, sticky="ew", pady=(0, 4))
-
-        self._controls_row = ctk.CTkFrame(self._outer, fg_color="transparent")
-        self._controls_row.grid(row=2, column=0, sticky="w", pady=(0, 8))
+        self._filter_label.pack(anchor="w", fill="x")
 
         self._toggle_btn = w.secondary_button(
-            self._controls_row,
+            header_block,
             text="Pokaż wszystkie",
             width=150,
             command=self._on_toggle_all,
         )
 
         self._list_frame = ctk.CTkScrollableFrame(self._outer, fg_color="transparent")
-        self._list_frame.grid(row=3, column=0, sticky="nsew")
+        self._list_frame.grid(row=2, column=0, sticky="nsew")
         self._sync_scrollbar = w.bind_auto_hide_scrollbar(self._list_frame)
 
-        self._outer.bind("<Configure>", self._on_outer_configure, add="+")
-        self.bind("<Configure>", self._on_outer_configure, add="+")
-
         self._build_list()
-        self.after_idle(self._fit_list_height)
 
-    def _on_outer_configure(self, _event: object | None = None) -> None:
-        self.after_idle(self._fit_list_height)
-
-    def _fit_list_height(self) -> None:
-        self.update_idletasks()
-        list_y = self._list_frame.winfo_y()
-        outer_h = self._outer.winfo_height()
-        if list_y <= 0 or outer_h <= 0:
-            return
-        available = outer_h - list_y - 4
-        if available < 80:
-            return
-        current = self._list_frame.cget("height")
-        if current != available:
-            self._list_frame.configure(height=available)
-        self._sync_scrollbar()
+        self._app_window.set_footer(
+            back_text=_back_label_for(self._return_view),
+            back_cmd=self._on_back,
+            back_visible=True,
+        )
 
     def _patient_filter_label(self) -> str:
         metadata = self._app_state.metadata
@@ -147,22 +152,27 @@ class HistoryView(ctk.CTkFrame):
             metadata.initials or metadata.birth_year or metadata.custom_label
         )
         if has_patient_fields:
-            self._toggle_btn.pack(anchor="w")
+            self._toggle_btn.pack(anchor="w", pady=(8, 0))
         else:
             self._toggle_btn.pack_forget()
 
         if not records:
+            empty_text = (
+                "Brak zapisanych badań w historii."
+                if self._show_all or metadata is None or not has_patient_fields
+                else "Brak zapisanych badań dla tego dziecka."
+            )
             w.body_label(
                 self._list_frame,
-                "Brak zapisanych badań dla tego dziecka.",
+                empty_text,
                 secondary=True,
-            ).pack(anchor="w", pady=16)
-            self.after_idle(self._fit_list_height)
+            ).pack(anchor="nw", pady=(0, 8))
+            self._sync_scrollbar()
             return
 
         for record in records:
             self._make_row(record)
-        self.after_idle(self._fit_list_height)
+        self._sync_scrollbar()
 
     def _on_toggle_all(self) -> None:
         self._show_all = not self._show_all
@@ -185,7 +195,7 @@ class HistoryView(ctk.CTkFrame):
             text=date_str,
             font=t.font_small(),
             text_color=t.COLOR_TEXT_SECONDARY,
-            width=130,
+            width=118,
             anchor="w",
         ).grid(row=0, column=0, padx=(12, 6), pady=10, sticky="w")
 
@@ -201,15 +211,9 @@ class HistoryView(ctk.CTkFrame):
         cat_bg = _CATEGORY_BG.get(category, t.COLOR_TEXT_MUTED) if category else t.COLOR_TEXT_MUTED
         cat_fg = _CATEGORY_FG.get(category, t.COLOR_ON_ACCENT) if category else t.COLOR_ON_ACCENT
         cat_short = record.category.split(" ")[0]
-        ctk.CTkLabel(
-            row,
-            text=cat_short,
-            font=t.font_caption(),
-            text_color=cat_fg,
-            fg_color=cat_bg,
-            corner_radius=4,
-            width=84,
-        ).grid(row=0, column=2, padx=6, pady=10)
+        w.category_chip(row, cat_short, cat_bg, cat_fg).grid(
+            row=0, column=2, padx=6, pady=10, sticky="w"
+        )
 
         edit_btn = w.secondary_button(
             row,
@@ -273,9 +277,7 @@ class HistoryView(ctk.CTkFrame):
         self._build_list()
 
     def _on_back(self) -> None:
-        from app.ui.views.results_grid import ResultsGridView
-
-        self._app_window.show_view(ResultsGridView)
+        self._app_window.show_view(self._return_view)
 
 
 class _EditStudyDialog(ctk.CTkToplevel):
