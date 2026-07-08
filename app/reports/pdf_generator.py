@@ -28,6 +28,7 @@ from app.domain.types import (
     format_clinical_diagnoses,
 )
 from app.ui.components.rag_colors import RAG_COLOR_BG, TASK_LABELS
+from app.ui.info_content import EXPERT_CONTACT, EXPERT_CONTACT_SHORT_ROLE, GITHUB_REPO_URL
 
 _FONTS_DIR = Path(os.environ.get("WINDIR", "C:/Windows")) / "Fonts"
 
@@ -84,6 +85,14 @@ def format_analysis_metadata_line(
     )
 
 
+def format_pdf_expert_footer_line() -> str:
+    expert = EXPERT_CONTACT
+    phone = f"tel. {expert.phone}" if expert.phone is not None else ""
+    return f"{expert.name}, {EXPERT_CONTACT_SHORT_ROLE}, {phone}, {expert.email}"
+
+
+def format_pdf_tech_footer_line() -> str:
+    return GITHUB_REPO_URL
 
 def generate_report(
     metadata: PatientMetadata,
@@ -262,6 +271,12 @@ def generate_report(
     footer_date = result.analyzed_at.strftime("%d.%m.%Y")
     story.append(
         Paragraph(f"NeuroFlag v{__version__} | {footer_date}", style_footer)
+    )
+    story.append(
+        Paragraph(format_pdf_expert_footer_line(), style_footer)
+    )
+    story.append(
+        Paragraph(format_pdf_tech_footer_line(), style_footer)
     )
 
     doc.build(story)

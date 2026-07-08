@@ -35,7 +35,7 @@ def _category_from_value(value: str) -> ScreeningCategory | None:
 class HistoryView(ctk.CTkFrame):
     def __init__(
         self,
-        master: ctk.CTk,
+        master: ctk.CTkBaseClass,
         app_window: AppWindow,
         app_state: AppState,
         **kwargs: object,
@@ -281,7 +281,7 @@ class HistoryView(ctk.CTkFrame):
 class _EditStudyDialog(ctk.CTkToplevel):
     def __init__(
         self,
-        master: ctk.CTk,
+        master: ctk.CTkBaseClass,
         *,
         record: StudyRecord,
         on_save: Callable[..., None],

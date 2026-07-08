@@ -54,7 +54,7 @@ def format_pipeline_error(exc: PipelineError) -> str:
 class AnalysisView(ctk.CTkFrame):
     def __init__(
         self,
-        master: ctk.CTk,
+        master: ctk.CTkBaseClass,
         app_window: AppWindow,
         app_state: AppState,
         **kwargs: object,

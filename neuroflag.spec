@@ -81,9 +81,8 @@ excludes = [
     "unittest",
     "email",
     "http",
-    # urllib — NIE wykluczać: pathlib (stdlib) importuje urllib.parse;
-    # brak modułu powoduje crash pyi_rth_pkgres przy starcie .exe
-    "xml",
+    # urllib / xml — NIE wykluczać: pyi_rth_pkgres → pkg_resources → plistlib
+    # wymaga xml; pathlib importuje urllib.parse — brak powoduje crash przy starcie .exe
     "xmlrpc",
     "pydoc",
     "doctest",

@@ -19,7 +19,7 @@ class ChannelMappingView(ctk.CTkFrame):
 
     def __init__(
         self,
-        master: ctk.CTk,
+        master: ctk.CTkBaseClass,
         app_window: AppWindow,
         app_state: AppState,
         missing_channels: list[str],

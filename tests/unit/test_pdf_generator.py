@@ -4,6 +4,7 @@ import re
 from datetime import date, datetime
 
 import pytest
+from reportlab.platypus import Paragraph as ReportLabParagraph
 
 from app.domain.types import (
     AnalysisResult,
@@ -25,9 +26,12 @@ from app.domain.types import (
 from app.reports.pdf_generator import (
     DISCLAIMER_PL,
     format_analysis_metadata_line,
+    format_pdf_expert_footer_line,
+    format_pdf_tech_footer_line,
     format_report_subtitle,
     generate_report,
 )
+from app.ui.info_content import EXPERT_CONTACT, TECH_CONTACT
 
 _RULES = RecommendationRules(
     indication_min_red=5,
@@ -209,3 +213,23 @@ def test_pdf_subtitle_differs_when_recording_date_provided() -> None:
         recording_date=date(2026, 1, 16),
     )
     assert without_date != with_date
+
+
+def test_pdf_footer_line_helpers_contain_contact_info() -> None:
+    assert EXPERT_CONTACT.email in format_pdf_expert_footer_line()
+    assert format_pdf_tech_footer_line() == "https://github.com/mpopiolek/NeuroFlag"
+
+
+def test_pdf_footer_contact_lines_in_report_story(monkeypatch: pytest.MonkeyPatch) -> None:
+    captured: list[str] = []
+
+    def track_paragraph(text: str, style: object) -> object:
+        captured.append(text)
+        return ReportLabParagraph(text, style)
+
+    monkeypatch.setattr("app.reports.pdf_generator.Paragraph", track_paragraph)
+    generate_report(_METADATA, _RESULT, _CONFIG)
+    story_text = " ".join(captured)
+    assert EXPERT_CONTACT.email in story_text
+    assert "https://github.com/mpopiolek/NeuroFlag" in story_text
+    assert TECH_CONTACT.email not in story_text

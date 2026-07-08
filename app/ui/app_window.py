@@ -10,6 +10,8 @@ import customtkinter as ctk
 from app.domain.types import AnalysisResult, NormsConfig, PatientMetadata
 from app.storage.history import HistoryStore, resolve_history_db_path
 from app.ui import theme as ui_theme
+from app.ui.components import widgets as w
+from app.ui.components import show_info_dialog
 
 
 @dataclass
@@ -50,6 +52,25 @@ class AppWindow(ctk.CTk):
         self._state.history_store = HistoryStore(resolve_history_db_path())
         self._current_view: ctk.CTkFrame | None = None
 
+        self._shell = ctk.CTkFrame(self, fg_color="transparent")
+        self._shell.pack(fill="both", expand=True)
+
+        self._chrome = ctk.CTkFrame(self._shell, fg_color="transparent")
+        self._chrome.pack(fill="x", padx=ui_theme.PAGE_PAD_X, pady=(12, 0))
+
+        w.secondary_button(
+            self._chrome,
+            text="Informacje",
+            command=self._show_info,
+            width=120,
+        ).pack(side="right")
+
+        self._view_host = ctk.CTkFrame(self._shell, fg_color="transparent")
+        self._view_host.pack(fill="both", expand=True)
+
+    def _show_info(self) -> None:
+        show_info_dialog(self, app_window=self)
+
     @property
     def app_state(self) -> AppState:
         return self._state
@@ -59,7 +80,7 @@ class AppWindow(ctk.CTk):
             self._current_view.destroy()
             self._current_view = None
         self._current_view = view_class(
-            master=self,
+            master=self._view_host,
             app_window=self,
             app_state=self._state,
             **kwargs,

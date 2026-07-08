@@ -1,0 +1,14 @@
+---
+title: Motyw z ulotki NEUROD i ekran Informacje
+status: archived
+created: 2026-07-07
+updated: 2026-07-08
+archived_at: 2026-07-08T16:03:00Z
+---
+
+## Notes
+
+Dostosowanie akcentów kolorystycznych aplikacji do ulotki NEUROD (pomarańcz + granat),
+stały przycisk „Informacje” z dialogiem kontaktowym (dr Małgorzata Chojak — merytoryka,
+Małgorzata Popiołek — wsparcie techniczne, link GitHub), rozszerzenie stopki PDF
+oraz szablon zgłoszeń błędów w repozytorium.

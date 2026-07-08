@@ -75,3 +75,23 @@ pyproject.toml         # Zależności i konfiguracja narzędzi
 - `context/foundation/stack-assessment.md` — ocena stosu technologicznego
 - `context/foundation/distribution.md` — procedura dystrybucji do placówek
 - `AGENTS.md` — reguły dla agentów AI pracujących w projekcie
+
+---
+
+## Kontakt i wsparcie
+
+### Konsultacje merytoryczne (EEG)
+
+**dr Małgorzata Chojak** — Kierownik Laboratorium Badań nad Neuroedukacją UMCS  
+tel. 508 216 957 · malgorzata.chojak@mail.umcs.pl
+
+### Wsparcie techniczne
+
+**Małgorzata Popiołek** — malgorzata.pe@gmail.com
+
+### Zgłaszanie błędów (GitHub)
+
+Problemy z aplikacją można zgłaszać w sekcji Issues:  
+https://github.com/mpopiolek/NeuroFlag/issues
+
+Analiza EEG w NeuroFlag odbywa się offline. Otwarcie strony GitHub wymaga połączenia z internetem.
