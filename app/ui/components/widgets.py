@@ -174,3 +174,91 @@ def bind_auto_hide_scrollbar(scrollable: ctk.CTkScrollableFrame) -> Callable[[],
     scrollable.bind("<Map>", on_configure, add="+")
     scrollable.after_idle(sync)
     return sync
+
+
+def surface_card(parent: ctk.CTkBaseClass) -> ctk.CTkFrame:
+    """Biała karta z obramowaniem — formularze i sekcje treści."""
+    return ctk.CTkFrame(
+        parent,
+        fg_color=t.COLOR_CARD,
+        corner_radius=t.CORNER_RADIUS_CARD,
+        border_width=1,
+        border_color=t.COLOR_BORDER,
+    )
+
+
+def context_panel(
+    parent: ctk.CTkBaseClass,
+    title: str,
+    body: str,
+    *,
+    icon: str = "🔒",
+) -> ctk.CTkFrame:
+    """Panel prawej kolumny z tytułem i treścią pomocniczą."""
+    frame = ctk.CTkFrame(
+        parent,
+        fg_color=t.COLOR_SURFACE,
+        corner_radius=t.CORNER_RADIUS,
+        border_width=1,
+        border_color=t.COLOR_BORDER,
+    )
+    header = ctk.CTkFrame(frame, fg_color="transparent")
+    header.pack(fill="x", padx=16, pady=(16, 8))
+    ctk.CTkLabel(
+        header,
+        text=icon,
+        font=t.font_body(),
+        text_color=t.COLOR_NAVY,
+    ).pack(side="left", padx=(0, 8))
+    ctk.CTkLabel(
+        header,
+        text=title,
+        font=t.font_heading(),
+        text_color=t.COLOR_NAVY,
+        anchor="w",
+    ).pack(side="left", fill="x", expand=True)
+    ctk.CTkLabel(
+        frame,
+        text=body,
+        font=t.font_small(),
+        text_color=t.COLOR_TEXT_SECONDARY,
+        justify="left",
+        anchor="w",
+        wraplength=320,
+    ).pack(fill="x", padx=16, pady=(0, 16))
+    return frame
+
+
+def two_column_body(parent: ctk.CTkBaseClass) -> tuple[ctk.CTkFrame, ctk.CTkFrame]:
+    """Układ dwukolumnowy 60/40 (formularz | kontekst)."""
+    container = ctk.CTkFrame(parent, fg_color="transparent")
+    container.pack(fill="both", expand=True)
+    container.columnconfigure(0, weight=t.COL_FORM_WEIGHT)
+    container.columnconfigure(1, weight=t.COL_CONTEXT_WEIGHT)
+    container.rowconfigure(0, weight=1)
+
+    form_col = ctk.CTkFrame(container, fg_color="transparent")
+    form_col.grid(row=0, column=0, sticky="nsew", padx=(0, 12))
+
+    context_col = ctk.CTkFrame(container, fg_color="transparent")
+    context_col.grid(row=0, column=1, sticky="nsew", padx=(12, 0))
+
+    return form_col, context_col
+
+
+def category_chip(
+    parent: ctk.CTkBaseClass,
+    text: str,
+    bg: str,
+    fg: str,
+) -> ctk.CTkLabel:
+    """Zaokrąglony badge kategorii wyniku (historia)."""
+    return ctk.CTkLabel(
+        parent,
+        text=text,
+        font=t.font_caption(),
+        text_color=fg,
+        fg_color=bg,
+        corner_radius=12,
+        width=84,
+    )
