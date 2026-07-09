@@ -1,6 +1,6 @@
-from __future__ import annotations
-
 """Kolejność wyświetlania komórek RAG w UI i PDF (nie kolejność pipeline)."""
+
+from __future__ import annotations
 
 from collections.abc import Sequence
 
