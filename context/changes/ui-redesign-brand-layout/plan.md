@@ -206,6 +206,8 @@ Przebudowa `AppWindow` w stały szkielet Wariantu B: nagłówek, miętowy pasek,
 
 **Addendum (impl-review 2026-07-08):** Przycisk Historia zawsze aktywny (pusty stan w `HistoryView`). Nawigacja powrotu: `open_history()` + `return_view=type(bieżący_widok)` zamiast `return_target` string.
 
+**Addendum (impl-review 2026-07-09):** Informacje jako pełnoekranowy `InfoView` (commit `90136fa`) zamiast modala — wzorzec `return_view` + `preserve_stepper=True`, spójny z Historią. `build_info_content()` w `info_dialog.py` pozostaje współdzielonym modułem treści.
+
 ---
 
 ## Phase 3: Widoki formularzy — układ dwukolumnowy
@@ -330,6 +332,8 @@ Dashboard wyników 40/60, chipy kategorii w historii, odświeżenie dialogu Info
 - PDF generuje się poprawnie po redesignie wyników
 
 **Implementation Note**: Po automated verification — potwierdzenie manualne przed Phase 5.
+
+**Addendum (impl-review 2026-07-09):** Dashboard wyników pozostaje w układzie pionowym (karta kategorii nad siatką RAG) zamiast `two_column_body` 40/60 — świadoma decyzja UX po implementacji; karty, pasek kategorii i dynamiczna siatka bez zmian.
 
 ---
 

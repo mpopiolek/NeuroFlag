@@ -140,6 +140,12 @@ class ChannelMappingDialog(ctk.CTkToplevel):
                 return
             overrides[canonical] = chosen
 
+        if len(set(overrides.values())) != len(overrides):
+            self._status_label.configure(
+                text="Każda pozycja (C3, O1) musi wskazywać inny kanał fizyczny."
+            )
+            return
+
         self._app_state.channel_overrides = overrides
         self.grab_release()
         self.destroy()

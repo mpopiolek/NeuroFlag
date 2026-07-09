@@ -24,6 +24,7 @@ class AppState:
     recording_date: date | None = None
     analysis_result: AnalysisResult | None = None
     cancel_event: threading.Event = field(default_factory=threading.Event)
+    analysis_in_progress: bool = False
     channel_overrides: dict[str, str] = field(default_factory=dict)
     available_channels: list[str] = field(default_factory=list)
     analysis_step_delay_s: float = 0.0
@@ -158,7 +159,7 @@ class AppWindow(ctk.CTk):
         return_view: type[ctk.CTkFrame] = (
             type(self._current_view) if self._current_view is not None else MetadataFormView
         )
-        self.show_view(HistoryView, return_view=return_view)
+        self.show_view(HistoryView, return_view=return_view, preserve_stepper=True)
 
     def _on_history(self) -> None:
         self.open_history()
@@ -239,7 +240,7 @@ class AppWindow(ctk.CTk):
 
     def start_analysis_overlay(self) -> None:
         """Uruchamia nakładkę analizy nad aktywnym widokiem (bez zmiany widoku)."""
-        if self._analysis_overlay is not None:
+        if self._analysis_overlay is not None or self._state.analysis_in_progress:
             return
         self._state.cancel_event.clear()
         self._state.analysis_result = None
@@ -259,6 +260,7 @@ class AppWindow(ctk.CTk):
 
     def _dismiss_analysis_overlay(self) -> None:
         if self._analysis_overlay is not None:
+            self._state.cancel_event.set()
             self._analysis_overlay.destroy()
             self._analysis_overlay = None
 

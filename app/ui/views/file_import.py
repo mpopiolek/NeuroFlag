@@ -63,12 +63,13 @@ class FileImportView(ctk.CTkFrame):
             row=_ROW_TITLE, column=0, sticky="w", pady=(0, 16)
         )
 
-        w.primary_button(
+        self._load_btn = w.primary_button(
             inner,
             text="Wybierz plik EEG",
             command=self._on_load_file,
             width=180,
-        ).grid(row=_ROW_PICK, column=0, sticky="w", pady=(0, 12))
+        )
+        self._load_btn.grid(row=_ROW_PICK, column=0, sticky="w", pady=(0, 12))
 
         self._path_label = w.body_label(
             inner,
@@ -262,11 +263,14 @@ class FileImportView(ctk.CTkFrame):
 
         path = Path(chosen)
         self._selected_path = path
-        self._app_state.eeg_path = None
-        self._app_state.recording_date = None
         self._set_analyze_enabled(False)
+        self._load_btn.configure(state="disabled")
         self._path_label.configure(text=path.name, text_color=t.COLOR_TEXT)
-        self._status_label.grid_remove()
+        self._status_label.configure(
+            text="Wczytywanie pliku…",
+            text_color=t.COLOR_TEXT_MUTED,
+        )
+        self._status_label.grid(row=_ROW_STATUS, column=0, sticky="w", pady=(0, 8))
         self._id_frame.grid_remove()
         self._progress.grid(row=_ROW_PROGRESS, column=0, sticky="ew", pady=(0, 16))
         self._progress.start()
@@ -312,20 +316,27 @@ class FileImportView(ctk.CTkFrame):
     ) -> None:
         if not self.winfo_exists():
             return
+        if path != self._selected_path:
+            return
         self._validating = False
+        self._load_btn.configure(state="normal")
         self._progress.stop()
         self._progress.grid_remove()
         self._status_label.grid(row=_ROW_STATUS, column=0, sticky="w", pady=(0, 8))
 
         if error is not None:
-            self._app_state.eeg_path = None
-            self._app_state.recording_date = None
             self._status_label.configure(
                 text=f"✗ {error}",
                 text_color=t.COLOR_ERROR,
             )
-            self._id_frame.grid_remove()
-            self._set_analyze_enabled(False)
+            prior = self._app_state.eeg_path
+            if prior is not None:
+                self._path_label.configure(text=prior.name, text_color=t.COLOR_TEXT)
+                self._id_frame.grid(row=_ROW_ID, column=0, sticky="ew", pady=(0, 4))
+                self._set_analyze_enabled(True)
+            else:
+                self._id_frame.grid_remove()
+                self._set_analyze_enabled(False)
             return
 
         self._app_state.eeg_path = path
