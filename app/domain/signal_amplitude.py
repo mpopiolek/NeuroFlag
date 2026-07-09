@@ -30,6 +30,26 @@ LEGACY_PIPELINE_PARAMS = SignalAmplitudeParams(
     min_clean_seconds=0.0,
 )
 
+DEFAULT_PRODUCTION_PARAMS = SignalAmplitudeParams(
+    amplitude_method=AmplitudeMethod.WELCH_BAND_POWER,
+    reject_broadband_uv=200.0,
+    reject_filtered_uv=100.0,
+    min_clean_seconds=30.0,
+)
+
+# Eksport dla skryptów diagnostycznych (MNE drop_bad w V).
+LEGACY_REJECT_EEG_VOLTS = 200e-6
+
+
+def signal_params_from_config(config: NormsConfig) -> SignalAmplitudeParams:
+    """Mapuje NormsConfig na parametry 2-pass amplitudy."""
+    return SignalAmplitudeParams(
+        amplitude_method=config.amplitude_method,
+        reject_broadband_uv=config.reject_broadband_uv,
+        reject_filtered_uv=config.reject_filtered_uv,
+        min_clean_seconds=config.min_clean_seconds,
+    )
+
 
 def _epoch_samples(sfreq: float, epoch_seconds: float) -> int:
     return max(1, int(sfreq * epoch_seconds))

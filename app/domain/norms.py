@@ -321,7 +321,23 @@ def load(path: Path | None = None) -> NormsConfig:
         except ValueError as exc:
             raise NormsLoadError(str(exc)) from exc
     else:
-        amplitude_method = AmplitudeMethod.MEAN_ABS
+        amplitude_method = AmplitudeMethod.WELCH_BAND_POWER
+
+    reject_broadband_uv = (
+        _as_float(data["reject_broadband_uv"], "reject_broadband_uv")
+        if "reject_broadband_uv" in data
+        else 200.0
+    )
+    reject_filtered_uv = (
+        _as_float(data["reject_filtered_uv"], "reject_filtered_uv")
+        if "reject_filtered_uv" in data
+        else 100.0
+    )
+    min_clean_seconds = (
+        _as_float(data["min_clean_seconds"], "min_clean_seconds")
+        if "min_clean_seconds" in data
+        else 30.0
+    )
 
     return NormsConfig(
         version=_as_int(data["version"], "version"),
@@ -332,4 +348,7 @@ def load(path: Path | None = None) -> NormsConfig:
         category_descriptions=cat_desc,
         observation_checklist=obs_checklist,
         amplitude_method=amplitude_method,
+        reject_broadband_uv=reject_broadband_uv,
+        reject_filtered_uv=reject_filtered_uv,
+        min_clean_seconds=min_clean_seconds,
     )

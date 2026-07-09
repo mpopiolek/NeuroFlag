@@ -415,23 +415,23 @@ Przeniesienie zwycięskiej konfiguracji do `pipeline.run()`, testy regresji, akt
 
 #### Automated
 
-- [x] 3.1 `python -m pytest tests/unit/test_calibrate_script.py -q`
-- [x] 3.2 Smoke: `calibrate_against_expert_csv.py --max-combinations 4` exit 0
+- [x] 3.1 `python -m pytest tests/unit/test_calibrate_script.py -q` — 3a3210f
+- [x] 3.2 Smoke: `calibrate_against_expert_csv.py --max-combinations 4` exit 0 — 3a3210f
 
 #### Manual
 
-- [x] 3.3 Full local sweep report — top variant NF/mean_z ~0.6 for Theta ADHD
-- [x] 3.4 User accepts calibration report before Phase 4
+- [x] 3.3 Full local sweep report — top variant NF/mean_z ~0.6 for Theta ADHD — 3a3210f
+- [x] 3.4 User accepts calibration report before Phase 4 — 3a3210f
 
 ### Phase 4: Integracja produkcyjna
 
 #### Automated
 
-- [ ] 4.1 `python -m pytest -q`
-- [ ] 4.2 `mypy app/ --strict`
-- [ ] 4.3 `python -m app.main --validate-norms norms.json`
+- [x] 4.1 `python -m pytest -q`
+- [x] 4.2 `mypy app/ --strict`
+- [x] 4.3 `python -m app.main --validate-norms norms.json`
 
 #### Manual
 
-- [ ] 4.4 probe_pipeline ADHD/depresja — amplitudes in norm scale, profile near Wskazanie centroid (RAG category informational only)
-- [ ] 4.5 No regression on existing pipeline unit tests
+- [x] 4.4 probe_pipeline ADHD/depresja — amplitudes in norm scale, profile near Wskazanie centroid (RAG category informational only)
+- [x] 4.5 No regression on existing pipeline unit tests

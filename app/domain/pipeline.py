@@ -17,18 +17,18 @@ from app.domain.channels import (
 )
 from app.domain.eeg_file import validate_extension
 from app.domain.errors import AnalysisCancelledError, PipelineError
+from app.domain.signal_amplitude import compute_cell_amplitude, signal_params_from_config
 from app.domain.types import NormEntry, NormsConfig
 
 if TYPE_CHECKING:
     import mne.io
-    from numpy.typing import NDArray
 
 _REQUIRED_CHANNELS = ("C3", "O1")
 _TASK_ORDER = ("OO", "OZ", "ZP")
 _MIN_RECORDING_SECONDS = 480.0  # 8 min — minimum do analizy przesiewowej
 _MIN_RECORDING_TOLERANCE_S = 1.0  # tolerancja próbkowania (np. 479.996 s ≈ 8 min)
 _DEFAULT_SEGMENT_SECONDS = 180.0  # domyślna długość segmentu bez kolejnego znacznika
-_REJECT_EEG_VOLTS = 200e-6  # 200 µV peak-to-peak (dane MNE w V)
+_REJECT_EEG_VOLTS = 200e-6  # legacy — skrypt diagnose_patient_files.py (MNE drop_bad w V)
 
 _TASK_KEYWORDS: dict[str, tuple[str, ...]] = {
     "OO": (
@@ -64,7 +64,6 @@ _TASK_KEYWORDS: dict[str, tuple[str, ...]] = {
 _MIN_ANNOTATION_DURATION_S = 1.0
 # Minimalny czas segmentu dla stabilnego filtra pasmowego MNE (FIR @ 256 Hz, Theta 4–8 Hz).
 _MIN_USABLE_SEGMENT_S = 16.0
-_ARTIFACT_EPOCH_SECONDS = 1.0  # okna odrzucania artefaktów (p-p per okno, nie cały segment)
 
 
 def _load_mne() -> ModuleType:
@@ -317,79 +316,19 @@ def load_raw(path: Path) -> mne.io.BaseRaw:
     return _load_raw(path)
 
 
-def _mean_abs_after_artifact_rejection(
-    data_uv: NDArray[np.floating],
-    sfreq: float,
-    *,
-    reject_uv: float,
-) -> float | None:
-    """Odrzuca okna 1 s przekraczające próg p-p; zwraca mean|uV| z czystych okien."""
-    flat = data_uv.reshape(-1)
-    window = max(1, int(sfreq * _ARTIFACT_EPOCH_SECONDS))
-    n_samples = flat.size
-    if n_samples < window:
-        if float(np.ptp(flat)) > reject_uv:
-            return None
-        return float(np.mean(np.abs(flat)))
-    good: list[NDArray[np.floating]] = []
-    for start in range(0, n_samples - window + 1, window):
-        chunk = flat[start : start + window]
-        if float(np.ptp(chunk)) <= reject_uv:
-            good.append(chunk)
-    if not good:
-        return None
-    return float(np.mean(np.abs(np.concatenate(good))))
-
-
 def _amplitude_for_norm(
     raw: mne.io.BaseRaw,
     norm: NormEntry,
     segments: dict[str, tuple[float, float]],
     config: NormsConfig,
 ) -> float:
-    t_start, t_end = segments[norm.task]
-    if t_end <= t_start:
-        raise PipelineError(
-            "invalid_segment",
-            f"Nieprawidłowy segment zadania {norm.task}.",
-        )
-    band = config.band_ranges[norm.band]
-    cropped = raw.copy().crop(tmin=t_start, tmax=t_end).pick([norm.channel])
-    # Short segments (< 4096 samples ≈ 16 s at 256 Hz) cannot accommodate the
-    # FIR filter length required by MNE for low-frequency bands (e.g. Theta 4–8 Hz
-    # needs ~1690 taps at 256 Hz). IIR Butterworth order 4 (MNE default) has no
-    # minimum-length constraint and is standard for EEG frequency-band extraction.
-    _method: str = "iir" if cropped.n_times < 4096 else "fir"
-    cropped.notch_filter(
-        freqs=config.power_line_frequency,
-        method=_method,
-        verbose=False,
+    return compute_cell_amplitude(
+        raw,
+        norm,
+        segments,
+        config,
+        signal_params_from_config(config),
     )
-    cropped.filter(
-        l_freq=band.l_freq,
-        h_freq=band.h_freq,
-        method=_method,
-        verbose=False,
-    )
-    if cropped.n_times < 1:
-        raise PipelineError(
-            "empty_segment",
-            f"Pusty segment dla zadania {norm.task} i kanału {norm.channel}.",
-        )
-    data_uv = cropped.get_data()[0] * 1e6
-    reject_uv = _REJECT_EEG_VOLTS * 1e6
-    amplitude = _mean_abs_after_artifact_rejection(
-        data_uv,
-        float(cropped.info["sfreq"]),
-        reject_uv=reject_uv,
-    )
-    if amplitude is None:
-        raise PipelineError(
-            "artifact_rejection",
-            f"Segment zadania {norm.task} ({norm.channel}, {norm.band}) "
-            "został odrzucony z powodu artefaktów.",
-        )
-    return amplitude
 
 
 def run(

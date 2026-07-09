@@ -153,4 +153,7 @@ class NormsConfig:
     recommendation_rules: RecommendationRules
     category_descriptions: CategoryDescriptions
     observation_checklist: ObservationChecklist
-    amplitude_method: AmplitudeMethod = AmplitudeMethod.MEAN_ABS
+    amplitude_method: AmplitudeMethod = AmplitudeMethod.WELCH_BAND_POWER
+    reject_broadband_uv: float = 200.0
+    reject_filtered_uv: float = 100.0
+    min_clean_seconds: float = 30.0

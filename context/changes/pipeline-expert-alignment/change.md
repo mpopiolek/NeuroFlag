@@ -4,7 +4,10 @@ title: "Wyr├│wnanie pipeline NeuroFlag z metodologi─ů eksperta (QEEG / Mi
 status: implementing
 created: 2026-07-09
 updated: 2026-07-09
+updated: 2026-07-09
 pipeline_validated: 2026-07-09
+
+Wynik kalibracji: `calibration-result.md`. Plan: `plan.md`.
 ---
 
 ## Cel
