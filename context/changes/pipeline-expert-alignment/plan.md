@@ -427,11 +427,11 @@ Przeniesienie zwycięskiej konfiguracji do `pipeline.run()`, testy regresji, akt
 
 #### Automated
 
-- [x] 4.1 `python -m pytest -q`
-- [x] 4.2 `mypy app/ --strict`
-- [x] 4.3 `python -m app.main --validate-norms norms.json`
+- [x] 4.1 `python -m pytest -q` — d2aca27
+- [x] 4.2 `mypy app/ --strict` — d2aca27
+- [x] 4.3 `python -m app.main --validate-norms norms.json` — d2aca27
 
 #### Manual
 
-- [x] 4.4 probe_pipeline ADHD/depresja — amplitudes in norm scale, profile near Wskazanie centroid (RAG category informational only)
-- [x] 4.5 No regression on existing pipeline unit tests
+- [x] 4.4 probe_pipeline ADHD/depresja — amplitudes in norm scale, profile near Wskazanie centroid (RAG category informational only) — d2aca27
+- [x] 4.5 No regression on existing pipeline unit tests — d2aca27
