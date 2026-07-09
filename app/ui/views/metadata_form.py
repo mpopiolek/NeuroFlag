@@ -38,6 +38,9 @@ _ROW_AGE_SEX = 0
 _ROW_CLINICAL_LABEL = 1
 _ROW_CLINICAL_START = 2
 
+_AGE_PLACEHOLDER = "Wybierz"
+_AGE_VALUES = ("6", "7", "8", "9", "10")
+
 
 class MetadataFormView(ctk.CTkFrame):
     def __init__(
@@ -69,22 +72,25 @@ class MetadataFormView(ctk.CTkFrame):
         body = ctk.CTkScrollableFrame(card_inner, fg_color="transparent")
         body.grid(row=1, column=0, sticky="nsew")
         body.columnconfigure(0, weight=1)
+        self._body = body
 
         age_sex_frame = ctk.CTkFrame(body, fg_color="transparent")
         age_sex_frame.grid(row=_ROW_AGE_SEX, column=0, sticky="w", pady=(0, 8))
 
         w.body_label(age_sex_frame, "Wiek:").pack(side="left")
-        self._age_var = ctk.StringVar(value="6")
+        self._age_var = ctk.StringVar(value=_AGE_PLACEHOLDER)
+        self._age_var.trace_add("write", lambda *_: self._update_continue_state())
         ctk.CTkOptionMenu(
             age_sex_frame,
-            values=["6", "7", "8", "9", "10"],
+            values=[_AGE_PLACEHOLDER, *_AGE_VALUES],
             variable=self._age_var,
-            width=72,
+            width=96,
             font=t.font_body(),
         ).pack(side="left", padx=(4, 20))
 
         w.body_label(age_sex_frame, "Płeć:").pack(side="left")
-        self._sex_var = ctk.StringVar(value="Z")
+        self._sex_var = ctk.StringVar(value="")
+        self._sex_var.trace_add("write", lambda *_: self._update_continue_state())
         ctk.CTkRadioButton(
             age_sex_frame,
             text="Dziewczynka",
@@ -171,15 +177,18 @@ class MetadataFormView(ctk.CTkFrame):
             text="Zaznaczone diagnozy wykluczają udział w badaniu przesiewowym.",
             text_color=t.COLOR_ERROR,
             font=t.font_body(),
-            wraplength=t.WRAP_WIDTH,
+            wraplength=320,
             justify="left",
+            anchor="w",
         )
         self._warning_label.grid(
-            row=warning_row, column=0, sticky="w", pady=(8, 6)
+            row=warning_row, column=0, sticky="ew", pady=(8, 6)
         )
         self._warning_label.grid_remove()
 
         self._sync_scrollbar = w.bind_auto_hide_scrollbar(body)
+        body.bind("<Configure>", self._on_body_configure, add="+")
+        self.after_idle(self._sync_warning_wrap)
 
         w.context_panel(
             context_col,
@@ -195,6 +204,32 @@ class MetadataFormView(ctk.CTkFrame):
         )
 
         self._restore_from_state()
+        self._update_continue_state()
+
+    def _is_age_selected(self) -> bool:
+        return self._age_var.get() in _AGE_VALUES
+
+    def _is_sex_selected(self) -> bool:
+        return self._sex_var.get() in {Sex.Z.value, Sex.M.value}
+
+    def _update_continue_state(self) -> None:
+        blocked = (
+            not self._is_age_selected()
+            or not self._is_sex_selected()
+            or any(var.get() for var in self._exclusion_vars.values())
+        )
+        self._app_window.set_footer_primary_state("disabled" if blocked else "normal")
+
+    def _on_body_configure(self, _event: object | None = None) -> None:
+        self.after_idle(self._sync_warning_wrap)
+
+    def _sync_warning_wrap(self) -> None:
+        self._body.update_idletasks()
+        width = self._body.winfo_width()
+        if width <= 1:
+            return
+        wrap = max(200, width - 16)
+        self._warning_label.configure(wraplength=wrap)
 
     def _on_clinical_change(self) -> None:
         other_var = self._clinical_vars[ClinicalDiagnosis.OTHER]
@@ -230,10 +265,12 @@ class MetadataFormView(ctk.CTkFrame):
         any_checked = any(var.get() for var in self._exclusion_vars.values())
         if any_checked:
             self._warning_label.grid()
-            self._app_window.set_footer_primary_state("disabled")
+            self.after_idle(self._sync_warning_wrap)
+            self._sync_scrollbar()
         else:
             self._warning_label.grid_remove()
-            self._app_window.set_footer_primary_state("normal")
+            self._sync_scrollbar()
+        self._update_continue_state()
 
     def _read_other_note(self) -> str | None:
         if not self._clinical_vars[ClinicalDiagnosis.OTHER].get():
@@ -244,6 +281,8 @@ class MetadataFormView(ctk.CTkFrame):
         return str(note[:_OTHER_NOTE_MAX_LEN])
 
     def _on_continue(self) -> None:
+        if not self._is_age_selected() or not self._is_sex_selected():
+            return
         exclusions = frozenset(
             exclusion
             for exclusion, var in self._exclusion_vars.items()

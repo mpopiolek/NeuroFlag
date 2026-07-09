@@ -16,13 +16,13 @@ rozszerzenie klauzuli w PDF oraz opcjonalne czyszczenie nagłówka EDF przed ana
 
 ## Desired End State
 
-Użytkownik widzi w `MetadataFormView` stały szary blok informacyjny informujący o lokalnym trybie pracy i zakresie przetwarzanych danych. Ścieżka wybranego pliku wyświetlana jest tylko jako nazwa pliku (`path.name`). Raport PDF zawiera zdanie potwierdzające lokalny, offline charakter analizy. W `FileImportView` dostępny jest checkbox pozwalający wyczyścić dane identyfikacyjne z nagłówka EDF przed analizą (domyślnie odznaczony). Po zaznaczeniu i wykonaniu analizy `raw.info` nie zawiera imienia, ID, daty nagrania.
+Użytkownik widzi w `MetadataFormView` stały szary blok informacyjny informujący o lokalnym trybie pracy i zakresie przetwarzanych danych. Ścieżka wybranego pliku wyświetlana jest tylko jako nazwa pliku (`path.name`). Raport PDF zawiera zdanie potwierdzające lokalny, offline charakter analizy. W `FileImportView` dostępny jest checkbox pozwalający wyczyścić dane identyfikacyjne z nagłówka EDF przed analizą (domyślnie zaznaczony). Po zaznaczeniu i wykonaniu analizy `raw.info` nie zawiera imienia, ID, daty nagrania.
 
 ### Key Discoveries
 
 - `app/domain/pipeline.py:319-326` — `run()` przyjmuje `path`, `config`, `cancel_check`, `channel_overrides`, `step_delay_s`; dodanie nowego keyword-only param `anonymize_header: bool = False` nie łamie żadnego istniejącego wywołania
 - `app/ui/views/analysis.py:111-117` — jedyne miejsce wywołania `pipeline.run()` z UI; tu trzeba przekazać flagę
-- `app/ui/app_window.py:12-19` — `AppState` dataclass; dodanie `anonymize_header: bool = False` wystarczy do przekazania stanu między widokami
+- `app/ui/app_window.py:12-19` — `AppState` dataclass; pole `anonymize_header: bool = True` (UI; zmiana z `False` 2026-07-09)
 - `app/ui/views/metadata_form.py` — layout grid; blok informacyjny można dodać jako ostatni `row` przed przyciskiem „Dalej"
 - `app/ui/views/file_import.py:49-55` — `_path_label` to `CTkLabel`; `str(path)` w wierszu 103 do zamiany na `path.name`
 - `tests/unit/test_pipeline.py` — pattern tworzenia syntetycznego `mne.io.BaseRaw` jest gotowy do ponownego użycia
@@ -152,17 +152,17 @@ Checkbox w `FileImportView` pozwala użytkownikowi wyczyścić dane identyfikacy
 
 **Intent**: `AppState` jest jedynym punktem wymiany stanu między widokami — dodanie flagi tu pozwala `FileImportView` ustawić, a `AnalysisView` odczytać bez bezpośredniego powiązania widoków.
 
-**Contract**: Do `@dataclass AppState` dodaj pole `anonymize_header: bool = False`.
+**Contract**: Do `@dataclass AppState` dodaj pole `anonymize_header: bool = True` (domyślnie włączone — privacy-by-default).
 
 #### 2. Checkbox anonimizacji w FileImportView
 
 **File**: `app/ui/views/file_import.py`
 
-**Intent**: Dać użytkownikowi kontrolę nad tym, czy pola identyfikacyjne z nagłówka pliku (imię, ID pacjenta, data nagrania) zostaną wyczyszczone z pamięci przed analizą — domyślnie odznaczony, żeby nie zaskakiwać.
+**Intent**: Dać użytkownikowi kontrolę nad tym, czy pola identyfikacyjne z nagłówka pliku (imię, ID pacjenta, data nagrania) zostaną wyczyszczone z pamięci przed analizą — domyślnie zaznaczony (anonimizacja włączona), użytkownik może odznaczyć.
 
 **Contract**: Po `_path_label` (wiersz ~55) dodaj `ctk.CTkCheckBox` z tekstem `"Wyczyść dane identyfikacyjne z nagłówka pliku przed analizą"` i callback zapisujący `self._app_state.anonymize_header = bool(var.get())`. Checkbox dostępny zawsze (nie tylko po wyborze pliku). `BooleanVar` inicjalizowany z `self._app_state.anonymize_header` żeby stan przetrwał powrót „← Wróć".
 
-> **Uwaga o persystencji:** stan checkboxa persystuje w obrębie sesji aplikacji (preferencja użytkownika na czas sesji). Reset następuje dopiero przy ponownym uruchomieniu aplikacji. Zachowanie intencjonalne — PRD zakłada jednego użytkownika na urządzenie; checkbox nie jest resetowany przez „Nowe badanie".
+> **Uwaga o persystencji:** stan checkboxa persystuje w obrębie bieżącego badania (powrót „← Wróć" zachowuje wybór). Przy „Nowe badanie" (`results_grid._on_new_study`) flaga resetuje się do `True`. Reset do domyślnego przy ponownym uruchomieniu aplikacji.
 
 #### 3. Flaga anonymize_header w pipeline.run()
 
@@ -207,9 +207,9 @@ Ponieważ `_load_raw` jest prywatną funkcją, użyj `unittest.mock.patch` na `a
 
 #### Manual Verification
 
-- Checkbox widoczny w `FileImportView`, domyślnie odznaczony
-- Po zaznaczeniu i kliknięciu „Analizuj" — analiza kończy się sukcesem (wynik RAG bez regresji)
-- Powrót „← Wróć" i powrót do importu — checkbox pamięta stan (BooleanVar z AppState)
+- Checkbox widoczny w `FileImportView`, domyślnie zaznaczony
+- Po odznaczeniu i kliknięciu „Analizuj" — analiza kończy się sukcesem bez czyszczenia nagłówka
+- Powrót „← Wróć" i powrót do importu — checkbox pamięta stan w obrębie badania; „Nowe badanie" przywraca zaznaczenie
 
 **Implementation Note**: Po automated i manual verification — zmiana `eeg-file-personal-data` jest gotowa do archiwizacji.
 
@@ -284,6 +284,6 @@ Ponieważ `_load_raw` jest prywatną funkcją, użyj `unittest.mock.patch` na `a
 
 #### Manual
 
-- [ ] 3.4 Checkbox widoczny w FileImportView, domyślnie odznaczony
+- [x] 3.4 Checkbox widoczny w FileImportView, domyślnie zaznaczony — zmiana UX 2026-07-09
 - [ ] 3.5 Analiza z zaznaczonym checkboxem daje poprawny wynik RAG
 - [ ] 3.6 Stan checkboxa przetrwa cykl „← Wróć" → powrót do importu

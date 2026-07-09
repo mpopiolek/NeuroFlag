@@ -2,12 +2,17 @@ from __future__ import annotations
 
 import tkinter.messagebox
 import webbrowser
+from typing import TYPE_CHECKING
 
 import customtkinter as ctk
 
 from app.ui import info_content as content
 from app.ui import theme as t
+from app.ui.bug_report import collect_bug_report_context, open_bug_report
 from app.ui.components import widgets as w
+
+if TYPE_CHECKING:
+    from app.ui.app_window import AppWindow
 
 _STRIPE_WIDTH = 4
 
@@ -16,37 +21,37 @@ def _section_card(parent: ctk.CTkScrollableFrame, title: str) -> ctk.CTkFrame:
     card = w.surface_card(parent)
     card.pack(fill="x", pady=(0, 16))
 
-    inner = ctk.CTkFrame(card, fg_color="transparent")
-    inner.pack(fill="x", padx=0, pady=0)
-    inner.columnconfigure(1, weight=1)
+    inner = ctk.CTkFrame(card, fg_color="transparent", height=0)
+    inner.pack(fill="x")
 
     stripe = ctk.CTkFrame(
         inner,
         fg_color=t.COLOR_NAVY,
         width=_STRIPE_WIDTH,
+        height=0,
         corner_radius=0,
     )
-    stripe.grid(row=0, column=0, rowspan=2, sticky="ns")
-    stripe.grid_propagate(False)
+    stripe.pack(side="left", fill="y")
 
-    header = ctk.CTkFrame(inner, fg_color="transparent")
-    header.grid(row=0, column=1, sticky="ew", padx=(12, 16), pady=(12, 8))
+    content = ctk.CTkFrame(inner, fg_color="transparent", height=0)
+    content.pack(side="left", fill="x", expand=True, padx=(12, 16), pady=12)
 
     ctk.CTkLabel(
-        header,
+        content,
         text=title,
         font=t.font_subheading(),
         text_color=t.COLOR_NAVY,
         anchor="w",
-    ).pack(anchor="w", fill="x")
+    ).pack(anchor="w", pady=(0, 4))
 
-    body = ctk.CTkFrame(inner, fg_color="transparent")
-    body.grid(row=1, column=1, sticky="ew", padx=(12, 16), pady=(0, 12))
-    body.columnconfigure(0, weight=1)
-    return body
+    return content
 
 
-def _open_github_issue() -> None:
+def _open_github_issue(app_window: AppWindow | None = None) -> None:
+    if app_window is not None:
+        ctx = collect_bug_report_context(app_window, manual=True)
+        open_bug_report(ctx)
+        return
     try:
         webbrowser.open(content.GITHUB_NEW_ISSUE_URL)
     except OSError:
@@ -57,7 +62,12 @@ def _open_github_issue() -> None:
         )
 
 
-def build_info_content(parent: ctk.CTkScrollableFrame, *, wraplength: int) -> None:
+def build_info_content(
+    parent: ctk.CTkScrollableFrame,
+    *,
+    wraplength: int,
+    app_window: AppWindow | None = None,
+) -> None:
     """Buduje sekcje treści Informacji (współdzielone przez widok główny)."""
     body = _section_card(parent, "Produkt")
     w.body_label(
@@ -115,6 +125,6 @@ def build_info_content(parent: ctk.CTkScrollableFrame, *, wraplength: int) -> No
     w.primary_button(
         body,
         text="Zgłoś błąd na GitHubie",
-        command=_open_github_issue,
+        command=lambda: _open_github_issue(app_window),
         width=220,
     ).pack(anchor="w")

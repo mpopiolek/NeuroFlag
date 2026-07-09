@@ -3,6 +3,12 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
+from typing import Literal
+
+from app.domain.amplitude import AmplitudeMethod
+
+SegmentDetectionMode = Literal["annotations", "fallback", "not_reached", "unknown"]
+C3O1Status = Literal["present", "missing", "mapped"]
 
 
 class ExclusionDiagnosis(Enum):
@@ -143,6 +149,30 @@ class ObservationChecklist:
 
 
 @dataclass(frozen=True)
+class AnalysisDiagnostics:
+    segment_mode: SegmentDetectionMode = "unknown"
+
+
+@dataclass(frozen=True)
+class BugReportContext:
+    app_version: str
+    os_string: str
+    mne_version: str | None
+    numpy_version: str | None
+    error_code: str | None
+    error_message_pl: str | None
+    exception_type_name: str | None
+    app_step_pl: str
+    eeg_suffix: str
+    header_channel_count: int
+    c3_o1_status: C3O1Status
+    segment_mode: SegmentDetectionMode
+    anonymize_header: bool
+    norms_version: int
+    manual_report: bool
+
+
+@dataclass(frozen=True)
 class NormsConfig:
     version: int
     power_line_frequency: float
@@ -151,3 +181,7 @@ class NormsConfig:
     recommendation_rules: RecommendationRules
     category_descriptions: CategoryDescriptions
     observation_checklist: ObservationChecklist
+    amplitude_method: AmplitudeMethod = AmplitudeMethod.WELCH_BAND_POWER
+    reject_broadband_uv: float = 200.0
+    reject_filtered_uv: float = 100.0
+    min_clean_seconds: float = 30.0

@@ -4,6 +4,8 @@ import re
 from datetime import date, datetime
 
 import pytest
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.platypus import Paragraph, Spacer, Table
 from reportlab.platypus import Paragraph as ReportLabParagraph
 
 from app.domain.types import (
@@ -25,12 +27,14 @@ from app.domain.types import (
 )
 from app.reports.pdf_generator import (
     DISCLAIMER_PL,
+    _build_rag_grid_story,
     format_analysis_metadata_line,
     format_pdf_expert_footer_line,
     format_pdf_tech_footer_line,
     format_report_subtitle,
     generate_report,
 )
+from app.presentation.rag_colors import TASK_LABELS
 from app.ui.info_content import EXPERT_CONTACT, TECH_CONTACT
 
 _RULES = RecommendationRules(
@@ -233,3 +237,58 @@ def test_pdf_footer_contact_lines_in_report_story(monkeypatch: pytest.MonkeyPatc
     assert EXPERT_CONTACT.email in story_text
     assert "https://github.com/mpopiolek/NeuroFlag" in story_text
     assert TECH_CONTACT.email not in story_text
+
+
+def test_pdf_story_contains_task_section_labels(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: list[str] = []
+
+    def track_paragraph(text: str, style: object) -> object:
+        captured.append(text)
+        return ReportLabParagraph(text, style)
+
+    monkeypatch.setattr("app.reports.pdf_generator.Paragraph", track_paragraph)
+    generate_report(_METADATA, _RESULT, _CONFIG)
+    story_text = " ".join(captured)
+    for task in ("OO", "OZ", "ZP"):
+        assert TASK_LABELS[task] in story_text
+
+
+def test_pdf_story_contains_band_names_in_grid(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: list[str] = []
+
+    def track_paragraph(text: str, style: object) -> object:
+        captured.append(text)
+        return ReportLabParagraph(text, style)
+
+    monkeypatch.setattr("app.reports.pdf_generator.Paragraph", track_paragraph)
+    generate_report(_METADATA, _RESULT, _CONFIG)
+    story_text = " ".join(captured)
+    for cell in _CELLS:
+        assert cell.band in story_text
+
+
+def test_build_rag_grid_story_uses_task_sections_not_flat_grid() -> None:
+    styles = getSampleStyleSheet()
+    style_h3 = ParagraphStyle("h3_test", parent=styles["Normal"], fontSize=11)
+    style_normal = styles["Normal"]
+
+    flowables = _build_rag_grid_story(
+        _CELLS,
+        style_h3=style_h3,
+        style_normal=style_normal,
+        bold_font_name="Helvetica-Bold",
+    )
+
+    section_tables = [f for f in flowables if isinstance(f, Table)]
+    task_headings = [f for f in flowables if isinstance(f, Paragraph)]
+    section_spacers = [f for f in flowables if isinstance(f, Spacer)]
+
+    assert len(section_tables) == 3
+    assert len(task_headings) == 3
+    assert len(section_spacers) == 2
+    for table in section_tables:
+        assert len(table._colWidths) == 2  # C3 cluster | O1 cluster, not 5-col flat row

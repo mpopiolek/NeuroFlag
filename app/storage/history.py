@@ -7,7 +7,16 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
-from app.domain.types import AnalysisResult, CellResult, PatientMetadata
+from app.domain.types import AnalysisResult, CellResult, PatientMetadata, Sex
+
+_SEX_DISPLAY: dict[str, str] = {
+    Sex.Z.value: "Dziewczynka",
+    Sex.M.value: "Chłopiec",
+}
+
+
+def format_sex_display(sex: str) -> str:
+    return _SEX_DISPLAY.get(sex, sex)
 
 
 @dataclass
@@ -34,9 +43,10 @@ class StudyRecord:
             parts.append(self.birth_year)
         if self.custom_label:
             parts.append(self.custom_label)
-        if parts:
+        parts.append(format_sex_display(self.sex))
+        if self.initials or self.birth_year or self.custom_label:
             return " / ".join(parts)
-        return self.analyzed_at.strftime("%Y-%m-%d %H:%M")
+        return f"{self.age} lat, {format_sex_display(self.sex)}"
 
 
 def resolve_history_db_path() -> Path:

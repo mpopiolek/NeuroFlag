@@ -251,3 +251,46 @@ def test_load_prefers_exe_dir_norms_when_frozen(
 
     cfg = load()
     assert cfg.version == 1
+
+
+def test_load_amplitude_method_defaults_to_production_welch() -> None:
+    cfg = load(resolve_norms_path())
+    from app.domain.amplitude import AmplitudeMethod
+
+    assert cfg.amplitude_method is AmplitudeMethod.WELCH_BAND_POWER
+    assert cfg.reject_broadband_uv == pytest.approx(200.0)
+    assert cfg.reject_filtered_uv == pytest.approx(100.0)
+    assert cfg.min_clean_seconds == pytest.approx(30.0)
+
+
+def test_load_artifact_params_from_json(tmp_path: Path) -> None:
+    payload = _valid_payload()
+    payload["reject_broadband_uv"] = 150.0
+    payload["reject_filtered_uv"] = 250.0
+    payload["min_clean_seconds"] = 60.0
+    path = tmp_path / "norms.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    cfg = load(path)
+    assert cfg.reject_broadband_uv == pytest.approx(150.0)
+    assert cfg.reject_filtered_uv == pytest.approx(250.0)
+    assert cfg.min_clean_seconds == pytest.approx(60.0)
+
+
+def test_load_amplitude_method_from_json(tmp_path: Path) -> None:
+    from app.domain.amplitude import AmplitudeMethod
+
+    payload = _valid_payload()
+    payload["amplitude_method"] = "peak_to_peak_half"
+    path = tmp_path / "norms.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    cfg = load(path)
+    assert cfg.amplitude_method is AmplitudeMethod.PEAK_TO_PEAK_HALF
+
+
+def test_load_invalid_amplitude_method_raises(tmp_path: Path) -> None:
+    payload = _valid_payload()
+    payload["amplitude_method"] = "excel_magic"
+    path = tmp_path / "norms.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    with pytest.raises(NormsLoadError, match="Unknown amplitude_method"):
+        load(path)

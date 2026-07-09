@@ -13,7 +13,7 @@ Aplikacja ma działający pipeline EEG i generuje PDF z klauzulą odpowiedzialno
 
 ## Desired End State
 
-Użytkownik widzi w pierwszym ekranie aplikacji stały blok informacyjny: „Analiza odbywa się wyłącznie na tym komputerze…". Ścieżka pliku pokazuje tylko basename. PDF zawiera zdanie o lokalnym trybie. Opcjonalny checkbox „Wyczyść dane identyfikacyjne z nagłówka…" pozwala wyczyścić `subject_info` / `meas_date` z `raw.info` przed analizą.
+Użytkownik widzi w pierwszym ekranie aplikacji stały blok informacyjny: „Analiza odbywa się wyłącznie na tym komputerze…". Ścieżka pliku pokazuje tylko basename. PDF zawiera zdanie o lokalnym trybie. Checkbox „Wyczyść dane identyfikacyjne z nagłówka…" (domyślnie zaznaczony) pozwala wyczyścić `subject_info` / `meas_date` z `raw.info` przed analizą.
 
 ## Key Decisions Made
 
@@ -22,8 +22,8 @@ Użytkownik widzi w pierwszym ekranie aplikacji stały blok informacyjny: „Ana
 | Gdzie wyświetlać informację privacy | Statyczny blok w MetadataFormView | Widoczny przed każdym badaniem, bez persystencji, minimalna implementacja | Plan |
 | Ścieżka pliku w UI | Tylko basename (`path.name`) | Usuwa ekspozycję folderu z potencjalnym ID pacjenta jedną linią kodu | Research + Plan |
 | Informacja privacy w PDF | Rozszerzyć istniejący DISCLAIMER_PL | Jeden punkt edycji, czytelne dla użytkownika bez nowej sekcji | Plan |
-| Anonimizacja nagłówka | Checkbox w FileImportView, domyślnie odznaczony | Daje kontrolę użytkownikowi bez wymuszania; `raw.anonymize()` gotowe w MNE | Research (OpenQ #2) + Plan |
-| Persystencja checkboxa | Brak (reset przy nowym uruchomieniu) | Aplikacja offline, brak pliku konfiguracyjnego użytkownika | Plan |
+| Anonimizacja nagłówka | Checkbox w FileImportView, domyślnie zaznaczony | Privacy-by-default; użytkownik może odznaczyć; `raw.anonymize()` gotowe w MNE | Research (OpenQ #2) + Plan (aktualizacja 2026-07-09) |
+| Persystencja checkboxa | W obrębie badania; reset do zaznaczonego przy „Nowe badanie" | Ochrona PII domyślnie; powrót „← Wróć" zachowuje wybór użytkownika | Plan (aktualizacja 2026-07-09) |
 | DPIA / polityka prywatności producenta | Poza zakresem | Praca prawna po stronie placówki jako administratora danych | Research |
 
 ## Scope

@@ -13,5 +13,9 @@ CONTEXT_FILE_IMPORT = (
     "Wymagane kanały: C3 i O1 (układ 10–20). Nagranie powinno trwać co najmniej 8 minut "
     "i zawierać segmenty OO → OZ → ZP (lub zostanie zastosowany podział 3×3 min).\n\n"
     "Plik jest wczytywany i analizowany wyłącznie na tym komputerze — "
-    "aplikacja nie łączy się z internetem."
+    "aplikacja nie łączy się z internetem.\n\n"
+    "Dane identyfikacyjne podane w formularzu (inicjały, rok urodzenia, etykieta, wiek, płeć) "
+    "są zapisywane lokalnie w historii badań w formie zanonimizowanej — bez imion, PESEL-u "
+    "ani innych danych z nagłówka pliku EEG. Służą wyłącznie do porównywania badań tego samego "
+    "dziecka w czasie oraz — w przyszłości — do celów statystycznych w ramach placówki."
 )

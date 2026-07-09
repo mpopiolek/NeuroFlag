@@ -229,19 +229,22 @@ def _make_record(**kwargs: object) -> StudyRecord:
 
 def test_display_name_with_initials() -> None:
     rec = _make_record(initials="AN", birth_year="2018")
-    assert "AN" in rec.display_name
-    assert "2018" in rec.display_name
+    assert rec.display_name == "AN / 2018 / Dziewczynka"
 
 
 def test_display_name_with_custom_label() -> None:
     rec = _make_record(custom_label="Klasa2A")
-    assert rec.display_name == "Klasa2A"
+    assert rec.display_name == "Klasa2A / Dziewczynka"
 
 
-def test_display_name_fallback() -> None:
+def test_display_name_without_identification_includes_age_and_sex() -> None:
     rec = _make_record()
-    assert rec.display_name  # not empty
-    assert "2026" in rec.display_name  # fallback contains analysis year
+    assert rec.display_name == "8 lat, Dziewczynka"
+
+
+def test_display_name_with_boy() -> None:
+    rec = _make_record(sex="M", age=9)
+    assert rec.display_name == "9 lat, Chłopiec"
 
 
 # ---------------------------------------------------------------------------

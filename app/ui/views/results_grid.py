@@ -6,6 +6,11 @@ from typing import TYPE_CHECKING
 
 import customtkinter as ctk
 
+from app.domain.cell_layout import (
+    CHANNEL_DISPLAY_ORDER,
+    TASK_DISPLAY_ORDER,
+    cells_for_task_channel,
+)
 from app.domain.types import CellResult
 from app.ui import theme as t
 from app.ui.app_window import AppState
@@ -26,12 +31,11 @@ from app.ui.components.rag_colors import (
 if TYPE_CHECKING:
     from app.ui.app_window import AppWindow
 
-_CELL_W_MIN = 120
-_CELL_H_MIN = 80
-_CELL_W_MAX = 150
-_CELL_H_MAX = 95
-_CELL_PAD = 5
-_GRID_COLS = 5
+_CELL_W = 88
+_CELL_H = 56
+_CELL_GAP = 6
+_CHANNEL_RULE_GAP = 8
+_TASK_SECTION_PADY = 4
 
 
 class ResultsGridView(ctk.CTkFrame):
@@ -50,6 +54,7 @@ class ResultsGridView(ctk.CTkFrame):
         self._category_label: ctk.CTkLabel | None = None
         self._description_label: ctk.CTkLabel | None = None
         self._page: ctk.CTkFrame | None = None
+        self._summary_col: ctk.CTkFrame | None = None
 
         if app_state.analysis_result is None:
             container = w.page_container(self)
@@ -69,16 +74,17 @@ class ResultsGridView(ctk.CTkFrame):
         result = app_state.analysis_result
 
         page = w.page_container(self)
-        page.columnconfigure(0, weight=1)
-        page.rowconfigure(1, weight=1)
         self._page = page
 
+        summary_col, grid_col = w.two_column_body(page, left_weight=2, right_weight=3)
+        self._summary_col = summary_col
+
         cat_color = _CATEGORY_COLOR[result.category]
-        summary_card = w.surface_card(page)
-        summary_card.grid(row=0, column=0, sticky="ew", pady=(0, 16))
+        summary_card = w.surface_card(summary_col)
+        summary_card.pack(fill="both", expand=True)
 
         summary_inner = ctk.CTkFrame(summary_card, fg_color="transparent")
-        summary_inner.pack(fill="x")
+        summary_inner.pack(fill="both", expand=True)
         summary_inner.columnconfigure(1, weight=1)
 
         stripe = ctk.CTkFrame(
@@ -91,8 +97,9 @@ class ResultsGridView(ctk.CTkFrame):
         stripe.grid_propagate(False)
 
         summary_content = ctk.CTkFrame(summary_inner, fg_color="transparent")
-        summary_content.grid(row=0, column=1, sticky="ew", padx=(16, 20), pady=(16, 8))
+        summary_content.grid(row=0, column=1, sticky="nsew", padx=(16, 20), pady=(16, 16))
         summary_content.columnconfigure(0, weight=1)
+        summary_inner.rowconfigure(0, weight=1)
 
         self._category_label = ctk.CTkLabel(
             summary_content,
@@ -109,28 +116,22 @@ class ResultsGridView(ctk.CTkFrame):
             result.description,
             justify="left",
         )
-        self._description_label.grid(row=1, column=0, sticky="ew", pady=(0, 16))
+        self._description_label.grid(row=1, column=0, sticky="ew")
 
-        grid_card = w.surface_card(page)
-        grid_card.grid(row=1, column=0, sticky="nsew")
+        grid_card = w.surface_card(grid_col)
+        grid_card.pack(fill="both", expand=True)
 
         grid_inner = ctk.CTkFrame(grid_card, fg_color="transparent")
         grid_inner.pack(fill="both", expand=True, padx=12, pady=12)
 
         self._grid_frame = ctk.CTkFrame(grid_inner, fg_color="transparent")
-        self._grid_frame.pack(fill="both", expand=True)
+        self._grid_frame.pack(anchor="n", fill="x")
 
-        for col in range(_GRID_COLS):
-            self._grid_frame.columnconfigure(col, weight=1, minsize=_CELL_W_MIN + _CELL_PAD * 2)
-
-        for idx, cell in enumerate(result.cells):
-            self._make_cell(self._grid_frame, cell, row=idx // _GRID_COLS, col=idx % _GRID_COLS)
+        self._build_task_grouped_grid(self._grid_frame, result.cells)
 
         page.bind("<Configure>", self._on_page_configure, add="+")
-        self._grid_frame.bind("<Configure>", self._on_grid_configure, add="+")
-        grid_card.bind("<Configure>", self._on_grid_configure, add="+")
+        summary_col.bind("<Configure>", self._on_page_configure, add="+")
         self.after_idle(self._sync_text_wrap)
-        self.after_idle(self._update_cell_sizes)
 
         self._app_window.set_footer(
             back_text="\u2190 Nowe badanie",
@@ -141,82 +142,143 @@ class ResultsGridView(ctk.CTkFrame):
             primary_visible=True,
         )
 
-    def _on_page_configure(self, _event: object | None = None) -> None:
-        self.after_idle(self._sync_text_wrap)
+    def _build_task_grouped_grid(
+        self,
+        parent: ctk.CTkFrame,
+        cells: tuple[CellResult, ...],
+    ) -> None:
+        parent.grid_columnconfigure(0, weight=1)
+        row = 0
 
-    def _sync_text_wrap(self) -> None:
-        if self._page is None or self._category_label is None or self._description_label is None:
-            return
-        self._page.update_idletasks()
-        width = self._page.winfo_width()
-        if width <= 1:
-            return
-        wrap = max(200, width - 72)
-        self._category_label.configure(wraplength=wrap)
-        self._description_label.configure(wraplength=wrap)
+        for task_idx, task in enumerate(TASK_DISPLAY_ORDER):
+            if task_idx > 0:
+                ctk.CTkFrame(
+                    parent,
+                    height=1,
+                    fg_color=t.COLOR_BORDER,
+                    corner_radius=0,
+                ).grid(
+                    row=row,
+                    column=0,
+                    sticky="ew",
+                    pady=(_TASK_SECTION_PADY, _TASK_SECTION_PADY),
+                )
+                row += 1
 
-    def _on_grid_configure(self, _event: object | None = None) -> None:
-        self.after_idle(self._update_cell_sizes)
+            task_label = _TASK_LABELS.get(task, task)
+            w.section_title(parent, task_label).grid(
+                row=row,
+                column=0,
+                sticky="w",
+                pady=(0, 2),
+            )
+            row += 1
 
-    def _update_cell_sizes(self) -> None:
-        if self._grid_frame is None:
-            return
-        self._grid_frame.update_idletasks()
-        frame_w = self._grid_frame.winfo_width()
-        if frame_w <= 1:
-            return
-        pad_total = _CELL_PAD * 2 * _GRID_COLS
-        cell_w = (frame_w - pad_total) // _GRID_COLS
-        cell_w = max(_CELL_W_MIN, min(_CELL_W_MAX, cell_w))
-        cell_h = max(_CELL_H_MIN, min(_CELL_H_MAX, int(cell_w * 0.65)))
-        min_col = cell_w + _CELL_PAD * 2
-        for col in range(_GRID_COLS):
-            self._grid_frame.columnconfigure(col, weight=1, minsize=min_col)
-        for cell_frame in self._cell_frames:
-            cell_frame.configure(width=cell_w, height=cell_h)
+            clusters = ctk.CTkFrame(parent, fg_color="transparent")
+            clusters.grid(row=row, column=0, sticky="w")
+            cluster_col_count = len(CHANNEL_DISPLAY_ORDER) * 2 - 1
+            for col in range(cluster_col_count):
+                clusters.grid_columnconfigure(col, weight=0)
 
-    def _make_cell(
+            for channel_idx, channel in enumerate(CHANNEL_DISPLAY_ORDER):
+                channel_cells = cells_for_task_channel(cells, task, channel)
+                self._build_channel_cluster(
+                    clusters,
+                    channel,
+                    channel_cells,
+                    channel_idx=channel_idx,
+                )
+            row += 1
+
+    def _build_channel_cluster(
+        self,
+        parent: ctk.CTkFrame,
+        channel: str,
+        cells: list[CellResult],
+        *,
+        channel_idx: int,
+    ) -> None:
+        grid_col = channel_idx * 2
+        if channel_idx > 0:
+            ctk.CTkFrame(
+                parent,
+                width=1,
+                height=_CELL_H + 22,
+                fg_color=t.COLOR_BORDER,
+                corner_radius=0,
+            ).grid(
+                row=0,
+                column=channel_idx * 2 - 1,
+                rowspan=2,
+                sticky="ns",
+                padx=(_CHANNEL_RULE_GAP, _CHANNEL_RULE_GAP),
+            )
+
+        ctk.CTkLabel(
+            parent,
+            text=channel,
+            font=t.font_small(),
+            text_color=t.COLOR_TEXT_MUTED,
+        ).grid(row=0, column=grid_col, sticky="w", pady=(0, 4))
+
+        cells_row = ctk.CTkFrame(parent, fg_color="transparent")
+        cells_row.grid(row=1, column=grid_col, sticky="w")
+
+        for cell_idx, cell in enumerate(cells):
+            self._make_band_cell(
+                cells_row,
+                cell,
+                pad_right=cell_idx < len(cells) - 1,
+            )
+
+    def _make_band_cell(
         self,
         parent: ctk.CTkFrame,
         cell: CellResult,
-        row: int,
-        col: int,
+        *,
+        pad_right: bool,
     ) -> None:
         bg = _COLOR_BG[cell.color]
         fg = _COLOR_FG[cell.color]
-        task_label = _TASK_LABELS.get(cell.task, cell.task)
 
         cell_frame = ctk.CTkFrame(
             parent,
             fg_color=bg,
             corner_radius=t.CORNER_RADIUS_SM,
-            width=_CELL_W_MIN,
-            height=_CELL_H_MIN,
+            width=_CELL_W,
+            height=_CELL_H,
         )
-        cell_frame.grid(row=row, column=col, padx=_CELL_PAD, pady=_CELL_PAD, sticky="nsew")
-        cell_frame.grid_propagate(False)
+        cell_frame.pack(
+            side="left",
+            padx=(0, _CELL_GAP if pad_right else 0),
+            pady=0,
+        )
+        cell_frame.pack_propagate(False)
         self._cell_frames.append(cell_frame)
 
         ctk.CTkLabel(
             cell_frame,
-            text=cell.channel,
-            font=ctk.CTkFont(size=15, weight="bold"),
-            text_color=fg,
-        ).place(relx=0.5, rely=0.2, anchor="center")
-
-        ctk.CTkLabel(
-            cell_frame,
-            text=task_label,
-            font=t.font_caption(),
-            text_color=fg,
-        ).place(relx=0.5, rely=0.52, anchor="center")
-
-        ctk.CTkLabel(
-            cell_frame,
             text=cell.band,
-            font=t.font_small(),
+            font=ctk.CTkFont(size=14, weight="bold"),
             text_color=fg,
-        ).place(relx=0.5, rely=0.8, anchor="center")
+        ).place(relx=0.5, rely=0.5, anchor="center")
+
+    def _on_page_configure(self, _event: object | None = None) -> None:
+        self.after_idle(self._sync_text_wrap)
+
+    def _sync_text_wrap(self) -> None:
+        if self._category_label is None or self._description_label is None:
+            return
+        width_source = self._summary_col if self._summary_col is not None else self._page
+        if width_source is None:
+            return
+        width_source.update_idletasks()
+        width = width_source.winfo_width()
+        if width <= 1:
+            return
+        wrap = max(160, width - 56)
+        self._category_label.configure(wraplength=wrap)
+        self._description_label.configure(wraplength=wrap)
 
     def _on_save_pdf(self) -> None:
         if self._app_state.analysis_result is None or self._app_state.metadata is None:
@@ -257,6 +319,7 @@ class ResultsGridView(ctk.CTkFrame):
         self._app_state.eeg_path = None
         self._app_state.recording_date = None
         self._app_state.metadata = None
+        self._app_state.anonymize_header = True
         self._app_state.cancel_event.clear()
 
         from app.ui.views.metadata_form import MetadataFormView

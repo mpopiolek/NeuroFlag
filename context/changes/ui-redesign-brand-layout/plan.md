@@ -25,7 +25,7 @@ Przebudowa interfejsu NeuroFlag według **Wariantu B** z researchu: stały nagł
 
 ## Desired End State
 
-Aplikacja uruchamia się z **białym nagłówkiem** (logo NeuroFlag, stepper 1→2→3→4, przyciski Informacje i Historia), **miętowym paskiem 4 px** pod nagłówkiem i **szarym tłem** `#F7F9FC`. Kroki 1–2 pokazują formularz po lewej (60%) i panel kontekstu po prawej (40%); przy szerokości <900 px kolumny układają się pionowo. Stopka stała: Wstecz (ghost) po lewej, jeden primary CTA po prawej. Ekran wyników: lewa kolumna (kategoria w karcie z paskiem bocznym, opis, akcje), prawa (siatka 10 komórek RAG, skalowalna). Historia: chip kategorii zamiast czerwonego przycisku. Informacje: lekkie karty z lewym paskiem granatowym. Pomarańcz tylko na primary CTA; radio/checkbox/selector w granacie `#1E3A5F`.
+Aplikacja uruchamia się z **białym nagłówkiem** (logo NeuroFlag, stepper 1→2→3→4, przyciski Informacje i Historia), **miętowym paskiem 4 px** pod nagłówkiem i **szarym tłem** `#F7F9FC`. Kroki 1–2 pokazują formularz po lewej (60%) i panel kontekstu po prawej (40%); przy szerokości <900 px kolumny układają się pionowo. Stopka stała: Wstecz (ghost) po lewej, jeden primary CTA po prawej. Ekran wyników: lewa kolumna (kategoria w karcie z paskiem bocznym, opis, akcje), prawa (siatka 10 komórek RAG, skalowalna). Historia: chip kategorii zamiast czerwonego przycisku; „Usuń" w pomarańczowym akcencie (`danger_button` → `COLOR_ACCENT`). Informacje: lekkie karty z lewym paskiem granatowym. Pomarańcz na primary CTA i akcjach destruktywnych w historii; radio/checkbox/selector w granacie `#1E3A5F`.
 
 ### Weryfikacja końcowa
 
@@ -206,6 +206,8 @@ Przebudowa `AppWindow` w stały szkielet Wariantu B: nagłówek, miętowy pasek,
 
 **Addendum (impl-review 2026-07-08):** Przycisk Historia zawsze aktywny (pusty stan w `HistoryView`). Nawigacja powrotu: `open_history()` + `return_view=type(bieżący_widok)` zamiast `return_target` string.
 
+**Addendum (impl-review 2026-07-09):** Informacje jako pełnoekranowy `InfoView` (commit `90136fa`) zamiast modala — wzorzec `return_view` + `preserve_stepper=True`, spójny z Historią. `build_info_content()` w `info_dialog.py` pozostaje współdzielonym modułem treści.
+
 ---
 
 ## Phase 3: Widoki formularzy — układ dwukolumnowy
@@ -330,6 +332,10 @@ Dashboard wyników 40/60, chipy kategorii w historii, odświeżenie dialogu Info
 - PDF generuje się poprawnie po redesignie wyników
 
 **Implementation Note**: Po automated verification — potwierdzenie manualne przed Phase 5.
+
+**Addendum (impl-review 2026-07-09):** Dashboard wyników pozostaje w układzie pionowym (karta kategorii nad siatką RAG) zamiast `two_column_body` 40/60 — świadoma decyzja UX po implementacji; karty, pasek kategorii i dynamiczna siatka bez zmian.
+
+**Addendum (results-grid-layout 2026-07-09):** Dashboard 40/60 (`two_column_body` lewa 2 / prawa 3) **przywrócony** na ekranie wyników w ramach change `results-grid-layout`. Siatka RAG: Wariant A′ (sekcje po zadaniu, klastry C3|O1), nie płaska 5×2. Szczegóły: `context/changes/results-grid-layout/research.md` → sekcja „Decyzja implementacyjna”.
 
 ---
 

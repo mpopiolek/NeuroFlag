@@ -87,3 +87,11 @@ def test_validate_norms_missing_path_arg() -> None:
         cwd=ROOT,
     )
     assert result.returncode == 2
+
+
+def test_parse_debug_crash_gui() -> None:
+    from app.main import _parse_debug_crash_gui
+
+    assert _parse_debug_crash_gui([]) is False
+    assert _parse_debug_crash_gui(["--debug-crash-gui"]) is True
+    assert _parse_debug_crash_gui(["--smoke-test", "--debug-crash-gui"]) is True

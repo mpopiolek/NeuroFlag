@@ -61,6 +61,11 @@ def _parse_debug_slow_analysis(argv: list[str]) -> float:
     return delay
 
 
+def _parse_debug_crash_gui(argv: list[str]) -> bool:
+    """Wymusza RuntimeError po kliknięciu „Informacje” — QA modalu błędu GUI."""
+    return "--debug-crash-gui" in argv
+
+
 def main() -> None:
     argv = sys.argv[1:]
 
@@ -73,6 +78,7 @@ def main() -> None:
 
     smoke_test = "--smoke-test" in argv
     analysis_step_delay_s = _parse_debug_slow_analysis(argv)
+    debug_crash_gui = _parse_debug_crash_gui(argv)
     try:
         _config = norms.load()
     except NormsLoadError as exc:
@@ -80,10 +86,19 @@ def main() -> None:
         sys.exit(1)
     if smoke_test:
         sys.exit(0)
+    if debug_crash_gui:
+        print(
+            "[dev] --debug-crash-gui: kliknij „Informacje”, aby wywołać modal błędu GUI.",
+            file=sys.stderr,
+        )
     app = AppWindow(
         norms_config=_config,
         analysis_step_delay_s=analysis_step_delay_s,
+        debug_crash_gui=debug_crash_gui,
     )
+    from app.ui.exception_hooks import install_gui_exception_hooks
+
+    install_gui_exception_hooks(app)
     app.show_view(MetadataFormView)
     app.mainloop()
 

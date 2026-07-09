@@ -85,6 +85,7 @@ Dopasowanie: bez względu na wielkość liter, polskie znaki, opcjonalny prefiks
 | Fraza |
 |-------|
 | `Zadanie poznawcze` |
+| `Zadanie pozna` / `zadanie pozna` / `ZADANIE POZNA` (obcięta etykieta EDF) |
 | `Zadanie pamięciowe` / `Zadanie pamieciowe` |
 | `Matematyka poznawcza` |
 | `Matematyka` |

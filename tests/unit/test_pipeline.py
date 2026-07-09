@@ -11,6 +11,7 @@ mne = pytest.importorskip("mne")
 from app.domain.errors import AnalysisCancelledError, PipelineError
 from app.domain.norms import load, resolve_norms_path
 from app.domain.pipeline import detect_task_segments, run
+from app.domain.types import AnalysisDiagnostics
 
 
 def _synthetic_raw_with_annotations() -> mne.io.BaseRaw:
@@ -20,7 +21,7 @@ def _synthetic_raw_with_annotations() -> mne.io.BaseRaw:
     ch_names = ["C3", "O1", "EOG"]
     info = mne.create_info(ch_names, sfreq=sfreq, ch_types=["eeg", "eeg", "eog"])
     times = np.arange(n_samples, dtype=np.float64) / sfreq
-    amp_v = 50e-6  # 50 µV — poniżej progu odrzucenia 200 µV
+    amp_v = 25e-6  # 25 µV — ptp ≈ 50 µV, poniżej prod. reject_filtered=100 µV
     data = np.stack(
         [
             amp_v * np.sin(2 * np.pi * 6.0 * times),
@@ -259,27 +260,93 @@ def test_detect_task_segments_zp_extends_when_next_marker_too_soon() -> None:
     assert segments["ZP"] == (459.1, 639.1)
 
 
-def test_mean_abs_after_artifact_rejection_ignores_single_bad_second() -> None:
-    from app.domain.pipeline import _mean_abs_after_artifact_rejection
+def test_extract_clean_samples_ignores_single_bad_second() -> None:
+    from app.domain.signal_amplitude import _extract_clean_samples
 
     sfreq = 250.0
     n = int(10 * sfreq)
     clean = 30.0 * np.sin(2 * np.pi * 6.0 * np.arange(n) / sfreq)
     data = clean.copy()
-    # Jedna sekunda z dużym skokiem — nie powinna odrzucić całego segmentu.
     data[int(5 * sfreq) : int(6 * sfreq)] += 500.0
-    amp = _mean_abs_after_artifact_rejection(data, sfreq, reject_uv=200.0)
-    assert amp is not None
-    assert amp > 0.0
+    result = _extract_clean_samples(data, sfreq, reject_uv=200.0, epoch_seconds=1.0)
+    assert result is not None
+    assert result.size > 0
 
 
-def test_mean_abs_after_artifact_rejection_rejects_all_bad_windows() -> None:
-    from app.domain.pipeline import _mean_abs_after_artifact_rejection
+def test_extract_clean_samples_rejects_all_bad_windows() -> None:
+    from app.domain.signal_amplitude import _extract_clean_samples
 
     sfreq = 250.0
     n = int(3 * sfreq)
     data = 300.0 * np.sin(2 * np.pi * 2.0 * np.arange(n) / sfreq)
-    assert _mean_abs_after_artifact_rejection(data, sfreq, reject_uv=200.0) is None
+    assert _extract_clean_samples(data, sfreq, reject_uv=200.0, epoch_seconds=1.0) is None
+
+
+@patch("app.domain.pipeline._load_raw")
+def test_run_sets_segment_mode_annotations(mock_load: object) -> None:
+    mock_load.return_value = _synthetic_raw_with_annotations()
+    config = load(resolve_norms_path())
+    diag = AnalysisDiagnostics(segment_mode="unknown")
+    _amplitudes, updated = run(
+        Path("synthetic.edf"),
+        config,
+        diagnostics=diag,
+    )
+    assert updated is not None
+    assert updated.segment_mode == "annotations"
+
+
+@patch("app.domain.pipeline._load_raw")
+def test_run_sets_segment_mode_fallback(mock_load: object) -> None:
+    sfreq = 250.0
+    n_samples = int(600 * sfreq)
+    info = mne.create_info(["C3", "O1"], sfreq=sfreq, ch_types=["eeg", "eeg"])
+    raw = mne.io.RawArray(np.zeros((2, n_samples)), info)
+    mock_load.return_value = raw
+    config = load(resolve_norms_path())
+    diag = AnalysisDiagnostics(segment_mode="unknown")
+    _amplitudes, updated = run(
+        Path("synthetic.edf"),
+        config,
+        diagnostics=diag,
+    )
+    assert updated is not None
+    assert updated.segment_mode == "fallback"
+
+
+@patch("app.domain.pipeline._load_raw")
+def test_run_amplitude_method_changes_output(mock_load: object) -> None:
+    from dataclasses import replace
+
+    from app.domain.amplitude import AmplitudeMethod
+
+    mock_load.return_value = _synthetic_raw_with_annotations()
+    config = load(resolve_norms_path())
+    welch_result, _ = run(Path("synthetic.edf"), config)
+    mean_abs_config = replace(config, amplitude_method=AmplitudeMethod.MEAN_ABS)
+    mean_abs_result, _ = run(Path("synthetic.edf"), mean_abs_config)
+    assert welch_result != mean_abs_result
+
+
+@patch("app.domain.pipeline._load_raw")
+def test_run_legacy_params_regression(mock_load: object) -> None:
+    from dataclasses import replace
+
+    from app.domain.amplitude import AmplitudeMethod
+    from app.domain.signal_amplitude import LEGACY_PIPELINE_PARAMS
+
+    mock_load.return_value = _synthetic_raw_with_annotations()
+    config = load(resolve_norms_path())
+    legacy_config = replace(
+        config,
+        amplitude_method=LEGACY_PIPELINE_PARAMS.amplitude_method,
+        reject_broadband_uv=LEGACY_PIPELINE_PARAMS.reject_broadband_uv,
+        reject_filtered_uv=LEGACY_PIPELINE_PARAMS.reject_filtered_uv,
+        min_clean_seconds=LEGACY_PIPELINE_PARAMS.min_clean_seconds,
+    )
+    result, _ = run(Path("synthetic.edf"), legacy_config)
+    assert len(result) == 10
+    assert all(np.isfinite(v) for v in result)
 
 
 @patch("app.domain.pipeline._load_raw")
@@ -287,7 +354,7 @@ def test_run_returns_ten_finite_amplitudes(mock_load: object) -> None:
     # fidelity bounds: see tests/integration/test_pipeline_fidelity.py
     mock_load.return_value = _synthetic_raw_with_annotations()
     config = load(resolve_norms_path())
-    result = run(Path("synthetic.edf"), config)
+    result, _ = run(Path("synthetic.edf"), config)
     assert len(result) == 10
     assert all(np.isfinite(v) for v in result)
 

@@ -136,7 +136,7 @@ Najbliżej charakteru ulotki, najlepiej rozwiązuje pustą przestrzeń i chaos p
 #### Historia
 
 - Kategoria = **chip** (zaokrąglony label), nie przycisk „Wskazanie”
-- Edytuj: secondary; Usuń: danger outline (nie pełna czerwień obok chipa wskazania)
+- Edytuj: secondary; Usuń: pomarańczowy akcent (`COLOR_ACCENT`), jak primary CTA — nie czerwień obok chipa wskazania
 
 #### Informacje
 

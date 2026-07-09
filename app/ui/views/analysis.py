@@ -9,7 +9,7 @@ from dataclasses import dataclass
 import customtkinter as ctk
 
 from app.domain.errors import AnalysisCancelledError, PipelineError
-from app.domain.types import AnalysisResult
+from app.domain.types import AnalysisDiagnostics, AnalysisResult
 from app.ui.app_window import AppState
 
 _RODO_NOTICE = (
@@ -63,6 +63,11 @@ def persist_analysis_result(app_state: AppState, result: AnalysisResult) -> None
         )
     except Exception as exc:  # noqa: BLE001
         print(f"[historia] Błąd zapisu: {exc}", file=sys.stderr)
+        tkinter.messagebox.showwarning(
+            "Historia badań",
+            "Nie udało się zapisać badania w lokalnej historii.\n"
+            "Wynik analizy jest dostępny, ale wpis nie trafił do bazy.",
+        )
 
 
 @dataclass
@@ -88,6 +93,7 @@ class AnalysisRunner:
     def start(self) -> None:
         self._app_state.cancel_event.clear()
         self._app_state.analysis_result = None
+        self._app_state.analysis_in_progress = True
         threading.Thread(target=self._worker, daemon=True).start()
 
     def request_cancel(self) -> None:
@@ -96,45 +102,55 @@ class AnalysisRunner:
     def _worker(self) -> None:
         from app.domain import algorithm, pipeline
 
-        if self._app_state.eeg_path is None:
-            self._root.after(
-                0,
-                self._callbacks.on_error,
-                PipelineError("no_file", "Brak wybranego pliku EEG."),
-            )
-            return
-        path = self._app_state.eeg_path
-        config = self._app_state.norms_config
-
-        overrides = self._app_state.channel_overrides or None
-        error: PipelineError | None = None
-        result: AnalysisResult | None = None
         try:
-            amplitudes = pipeline.run(
-                path,
-                config,
-                cancel_check=self._app_state.cancel_event.is_set,
-                channel_overrides=overrides,
-                step_delay_s=self._app_state.analysis_step_delay_s,
-                anonymize_header=self._app_state.anonymize_header,
-            )
-            result = algorithm.classify(amplitudes, config)
-        except AnalysisCancelledError:
-            self._root.after(0, self._callbacks.on_cancelled)
-            return
-        except PipelineError as exc:
-            error = exc
-        except Exception as exc:  # noqa: BLE001
-            error = PipelineError(
-                "unexpected_error",
-                f"Nieoczekiwany b\u0142\u0105d analizy: {type(exc).__name__}",
-            )
+            if self._app_state.eeg_path is None:
+                self._root.after(
+                    0,
+                    self._callbacks.on_error,
+                    PipelineError("no_file", "Brak wybranego pliku EEG."),
+                )
+                return
+            path = self._app_state.eeg_path
+            config = self._app_state.norms_config
 
-        if error is not None:
-            self._root.after(0, self._callbacks.on_error, error)
-            return
-        if result is not None:
-            self._root.after(0, self._callbacks.on_success, result)
+            overrides = self._app_state.channel_overrides or None
+            error: PipelineError | None = None
+            result: AnalysisResult | None = None
+            diag = AnalysisDiagnostics(segment_mode="unknown")
+            self._app_state.last_analysis_diagnostics = diag
+            self._app_state.last_exception_type_name = None
+            try:
+                amplitudes, updated_diag = pipeline.run(
+                    path,
+                    config,
+                    cancel_check=self._app_state.cancel_event.is_set,
+                    channel_overrides=overrides,
+                    step_delay_s=self._app_state.analysis_step_delay_s,
+                    anonymize_header=self._app_state.anonymize_header,
+                    diagnostics=diag,
+                )
+                if updated_diag is not None:
+                    self._app_state.last_analysis_diagnostics = updated_diag
+                result = algorithm.classify(amplitudes, config)
+            except AnalysisCancelledError:
+                self._root.after(0, self._callbacks.on_cancelled)
+                return
+            except PipelineError as exc:
+                error = exc
+            except Exception as exc:  # noqa: BLE001
+                self._app_state.last_exception_type_name = type(exc).__name__
+                error = PipelineError(
+                    "unexpected_error",
+                    "Wystąpił nieoczekiwany błąd analizy.",
+                )
+
+            if error is not None:
+                self._root.after(0, self._callbacks.on_error, error)
+                return
+            if result is not None:
+                self._root.after(0, self._callbacks.on_success, result)
+        finally:
+            self._app_state.analysis_in_progress = False
 
 
 class AnalysisView(ctk.CTkFrame):

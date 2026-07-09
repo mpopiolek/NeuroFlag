@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 import customtkinter as ctk
 
 from app.domain.types import ScreeningCategory
-from app.storage.history import StudyRecord
+from app.storage.history import StudyRecord, format_sex_display
 from app.ui import theme as t
 from app.ui.app_window import AppState
 from app.ui.components import widgets as w
@@ -32,26 +32,6 @@ def _category_from_value(value: str) -> ScreeningCategory | None:
         return None
 
 
-def _back_label_for(view_class: type[ctk.CTkFrame]) -> str:
-    from app.ui.views.analysis import AnalysisView
-    from app.ui.views.channel_mapping import ChannelMappingView
-    from app.ui.views.file_import import FileImportView
-    from app.ui.views.info_view import InfoView
-    from app.ui.views.metadata_form import MetadataFormView
-    from app.ui.views.results_grid import ResultsGridView
-
-    labels: dict[type[ctk.CTkFrame], str] = {
-        MetadataFormView: "← Wróć do danych",
-        FileImportView: "← Wróć do importu",
-        ChannelMappingView: "← Wróć do mapowania",
-        AnalysisView: "← Wróć do analizy",
-        ResultsGridView: "← Wróć do wyników",
-        InfoView: "← Wróć do informacji",
-        HistoryView: "← Wróć do historii",
-    }
-    return labels.get(view_class, "← Wstecz")
-
-
 class HistoryView(ctk.CTkFrame):
     def __init__(
         self,
@@ -62,6 +42,7 @@ class HistoryView(ctk.CTkFrame):
         return_view: type[ctk.CTkFrame] | None = None,
         **kwargs: object,
     ) -> None:
+        from app.ui.navigation import back_label_for
         from app.ui.views.metadata_form import MetadataFormView
 
         super().__init__(master, **kwargs)
@@ -107,7 +88,7 @@ class HistoryView(ctk.CTkFrame):
         self._build_list()
 
         self._app_window.set_footer(
-            back_text=_back_label_for(self._return_view),
+            back_text=back_label_for(self._return_view),
             back_cmd=self._on_back,
             back_visible=True,
         )
@@ -123,6 +104,7 @@ class HistoryView(ctk.CTkFrame):
             parts.append(metadata.birth_year)
         if metadata.custom_label:
             parts.append(metadata.custom_label)
+        parts.append(format_sex_display(metadata.sex.value))
         return " / ".join(parts) if parts else ""
 
     def _build_list(self) -> None:
