@@ -30,13 +30,6 @@ LEGACY_PIPELINE_PARAMS = SignalAmplitudeParams(
     min_clean_seconds=0.0,
 )
 
-DEFAULT_PRODUCTION_PARAMS = SignalAmplitudeParams(
-    amplitude_method=AmplitudeMethod.WELCH_BAND_POWER,
-    reject_broadband_uv=200.0,
-    reject_filtered_uv=100.0,
-    min_clean_seconds=30.0,
-)
-
 # Eksport dla skryptów diagnostycznych (MNE drop_bad w V).
 LEGACY_REJECT_EEG_VOLTS = 200e-6
 

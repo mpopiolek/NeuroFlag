@@ -257,6 +257,7 @@ class ResultsGridView(ctk.CTkFrame):
         self._app_state.eeg_path = None
         self._app_state.recording_date = None
         self._app_state.metadata = None
+        self._app_state.anonymize_header = True
         self._app_state.cancel_event.clear()
 
         from app.ui.views.metadata_form import MetadataFormView

@@ -1,7 +1,7 @@
 ﻿---
 id: pipeline-expert-alignment
 title: "Wyr├│wnanie pipeline NeuroFlag z metodologi─ů eksperta (QEEG / Mitsar)"
-status: implemented
+status: impl_reviewed
 created: 2026-07-09
 updated: 2026-07-09
 pipeline_validated: 2026-07-09
@@ -11,9 +11,12 @@ Wynik kalibracji: `calibration-result.md`. Plan: `plan.md`.
 
 ## Cel
 
-Doprowadzi─ç pipeline amplitud i klasyfikacj─Ö RAG do zgodno┼Ťci z metod─ů eksperta domenowego,
-tak aby wyniki aplikacji by┼éy sp├│jne z ocen─ů kliniczn─ů na **zestawie walidacyjnym eksperta**:
-`ok_EEG.edf` (brak wskaza┼ä), `ADHD_EEG.edf` (wskazanie), `depresja_EEG.edf` (wskazanie).
+Doprowadzić pipeline amplitud i klasyfikację RAG do zgodności z metodą eksperta domenowego,
+tak aby wyniki aplikacji były spójne z oceną kliniczną na **kotwicach walidacyjnych**:
+`ADHD_EEG.edf` (wskazanie) i `depresja_EEG.edf` (wskazanie), względem centroidu kategorii
+„Wskazanie” z CSV Mitsar (N=82).
+
+`ok_EEG.edf` (brak wskazań) — plik informacyjny, **pominięty w sweepie** (flat-line C3/O1).
 
 ## Kontekst
 

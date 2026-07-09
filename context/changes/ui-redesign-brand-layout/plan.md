@@ -25,7 +25,7 @@ Przebudowa interfejsu NeuroFlag według **Wariantu B** z researchu: stały nagł
 
 ## Desired End State
 
-Aplikacja uruchamia się z **białym nagłówkiem** (logo NeuroFlag, stepper 1→2→3→4, przyciski Informacje i Historia), **miętowym paskiem 4 px** pod nagłówkiem i **szarym tłem** `#F7F9FC`. Kroki 1–2 pokazują formularz po lewej (60%) i panel kontekstu po prawej (40%); przy szerokości <900 px kolumny układają się pionowo. Stopka stała: Wstecz (ghost) po lewej, jeden primary CTA po prawej. Ekran wyników: lewa kolumna (kategoria w karcie z paskiem bocznym, opis, akcje), prawa (siatka 10 komórek RAG, skalowalna). Historia: chip kategorii zamiast czerwonego przycisku. Informacje: lekkie karty z lewym paskiem granatowym. Pomarańcz tylko na primary CTA; radio/checkbox/selector w granacie `#1E3A5F`.
+Aplikacja uruchamia się z **białym nagłówkiem** (logo NeuroFlag, stepper 1→2→3→4, przyciski Informacje i Historia), **miętowym paskiem 4 px** pod nagłówkiem i **szarym tłem** `#F7F9FC`. Kroki 1–2 pokazują formularz po lewej (60%) i panel kontekstu po prawej (40%); przy szerokości <900 px kolumny układają się pionowo. Stopka stała: Wstecz (ghost) po lewej, jeden primary CTA po prawej. Ekran wyników: lewa kolumna (kategoria w karcie z paskiem bocznym, opis, akcje), prawa (siatka 10 komórek RAG, skalowalna). Historia: chip kategorii zamiast czerwonego przycisku; „Usuń" w pomarańczowym akcencie (`danger_button` → `COLOR_ACCENT`). Informacje: lekkie karty z lewym paskiem granatowym. Pomarańcz na primary CTA i akcjach destruktywnych w historii; radio/checkbox/selector w granacie `#1E3A5F`.
 
 ### Weryfikacja końcowa
 

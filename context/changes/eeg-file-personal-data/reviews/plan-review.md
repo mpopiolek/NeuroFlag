@@ -44,4 +44,4 @@
 - **Location**: Phase 3 — Changes Required
 - **Detail**: `results_grid.py:_on_new_study()` resetuje `eeg_path`, `metadata`, `analysis_result`, `cancel_event` ale NIE `anonymize_header`. Checkbox będzie pre-zaznaczony dla kolejnego badania w tej samej sesji. Plan nie dokumentował, czy to zamierzone.
 - **Fix A ⭐ Zalecane**: Udokumentować jako intencjonalne (preferencja sesji; PRD: jeden użytkownik na urządzenie).
-- **Decision**: FIXED via Fix A — dodano notatkę o intencjonalnej persystencji do Phase 3 / Change 2.
+- **Decision**: SUPERSEDED 2026-07-09 — checkbox domyślnie zaznaczony (`AppState.anonymize_header = True`); `_on_new_study()` resetuje flagę do `True`. Powrót „← Wróć" w obrębie badania nadal zachowuje wybór użytkownika.

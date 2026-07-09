@@ -78,15 +78,15 @@ datas = [
 # ---------------------------------------------------------------------------
 excludes = [
     "tkinter.test",
-    "unittest",
-    "email",
+    # unittest — NIE wykluczać: numpy.testing (importowany przez scipy) wymaga unittest
+    # email — NIE wykluczać: pyi_rth_pkgres → pkg_resources wymaga email przy starcie .exe
     "http",
     # urllib / xml — NIE wykluczać: pyi_rth_pkgres → pkg_resources → plistlib
     # wymaga xml; pathlib importuje urllib.parse — brak powoduje crash przy starcie .exe
     "xmlrpc",
-    "pydoc",
-    "doctest",
-    "difflib",
+    # pydoc — NIE wykluczać: scipy._lib._docscrape wymaga pydoc
+    # doctest — NIE wykluczać: łańcuch scipy/stats może go importować
+    # difflib — NIE wykluczać: unittest.case (numpy.testing → scipy) wymaga difflib
     "ftplib",
     "imaplib",
     "smtplib",

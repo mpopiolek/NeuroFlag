@@ -2,6 +2,10 @@
   "version": 1,
   "description": "NeuroFlag — domyślna baza norm. Badanie N=200, wiek 6–10 lat. Wartości potwierdzone przez eksperta domenowego 2026-05-29. Zakresy pasm potwierdzone 2026-05-30.",
   "power_line_frequency": 50,
+  "amplitude_method": "welch_band_power",
+  "reject_broadband_uv": 200,
+  "reject_filtered_uv": 100,
+  "min_clean_seconds": 30,
   "recommendation_rules": {
     "indication_min_red": 5,
     "indication_max_green": 3,

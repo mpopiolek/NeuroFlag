@@ -138,8 +138,8 @@ def danger_button(
         command=command,
         width=width,
         font=t.font_small(),
-        fg_color=t.COLOR_DANGER,
-        hover_color=t.COLOR_DANGER_HOVER,
+        fg_color=t.COLOR_ACCENT,
+        hover_color=t.COLOR_ACCENT_HOVER,
     )
 
 
