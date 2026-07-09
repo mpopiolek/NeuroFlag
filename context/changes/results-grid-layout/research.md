@@ -317,3 +317,30 @@ Na górze komórki czerwone i żółte (posortowane po zadaniu), na dole zielone
 2. Czy w komórce po grupowaniu po zadaniu wystarczy **kanał + pasmo**, czy użytkownicy wolą pełną etykietę?
 3. Czy sekcja „Oczy zamknięte” (2 komórki) ma być wycentrowana, czy wyrównana do lewej jak pozostałe?
 4. Czy dodać legendę RAG na stałe pod siatką, czy tylko w „Informacje”?
+
+---
+
+## Decyzja implementacyjna (2026-07-09)
+
+Po iteracji w Canvasie (mockupy A–D i A′) użytkownik zaakceptował **Wariant A′** — rozszerzenie wariantu A o klastry kanałów C3 | O1 z pionową linią podziału.
+
+| Element | Zachowanie |
+|---------|------------|
+| Układ strony | `two_column_body(left_weight=2, right_weight=3)` → 40% lewa / 60% prawa |
+| Lewa karta | Kategoria + opis (`surface_card`, pasek RAG 4 px) |
+| Prawa karta | Siatka wyników — **ta sama wysokość** co lewa (`pack(fill="both", expand=True)`) |
+| Sekcje | 3 bloki: Oczy otwarte → Oczy zamknięte → Zadanie pamięciowe |
+| W sekcji | C3 \| O1 obok siebie; linia pionowa tuż za komórkami C3 |
+| W komórce | Tylko pasmo (np. Theta, Beta1) — bez kanału i zadania |
+| Odstępy | Sekcje w grid **bez wag wierszy**; między zadaniami cienka linia + 4 px padding |
+| Treść prawej karty | Zakotwiczona u góry (`anchor="n"`); ewentualna pusta przestrzeń pod ostatnim zadaniem |
+
+**Nie zmieniono:** kolejność `AnalysisResult.cells` (pipeline, historia, kalibracja). Sortowanie wyłącznie przy renderowaniu (`_cells_for_task_channel`, `_TASK_ORDER`, `_CHANNEL_ORDER`, `_BAND_ORDER`).
+
+**Usunięto z UI:** siatka 5×2 (`idx // 5`, `% 5`), dynamiczne skalowanie komórek (`_update_cell_sizes`, `_GRID_COLS`), `CTkScrollableFrame` w prawej karcie.
+
+**Komórki:** kompaktowe kafelki 88×56 px; `wraplength` opisu synchronizowany z szerokością lewej kolumny (`_sync_text_wrap`).
+
+**PDF:** nadal płaska siatka 2×5 w kolejności `norms.json` — poza zakresem tej zmiany.
+
+**Addendum do `ui-redesign-brand-layout/plan.md`:** dashboard 40/60 przywrócony na ekranie wyników (wcześniejszy addendum impl-review wskazywał układ pionowy).
