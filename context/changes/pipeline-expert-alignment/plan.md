@@ -402,26 +402,26 @@ Przeniesienie zwycięskiej konfiguracji do `pipeline.run()`, testy regresji, akt
 
 #### Automated
 
-- [x] 2.1 Unit tests: `python -m pytest tests/unit/test_amplitude.py tests/unit/test_calibration_harness.py -q`
-- [x] 2.2 mypy strict on amplitude + calibration modules
-- [x] 2.3 `compare_amplitude_methods.py` exits 0 on available files
+- [x] 2.1 Unit tests: `python -m pytest tests/unit/test_amplitude.py tests/unit/test_calibration_harness.py -q` — 934efc7
+- [x] 2.2 mypy strict on amplitude + calibration modules — 934efc7
+- [x] 2.3 `compare_amplitude_methods.py` exits 0 on available files — 934efc7
 
 #### Manual
 
-- [x] 2.4 Harness ADHD: welch_band_power yields higher NF/mean_z than mean_abs
-- [x] 2.5 depresja_EEG passes harness with at least one threshold combo
+- [x] 2.4 Harness ADHD: welch_band_power yields higher NF/mean_z than mean_abs — 934efc7
+- [x] 2.5 depresja_EEG passes harness with at least one threshold combo — 934efc7
 
 ### Phase 3: Sweep + wybór wariantu
 
 #### Automated
 
-- [ ] 3.1 `python -m pytest tests/unit/test_calibrate_script.py -q`
-- [ ] 3.2 Smoke: `calibrate_against_expert_csv.py --max-combinations 4` exit 0
+- [x] 3.1 `python -m pytest tests/unit/test_calibrate_script.py -q`
+- [x] 3.2 Smoke: `calibrate_against_expert_csv.py --max-combinations 4` exit 0
 
 #### Manual
 
-- [ ] 3.3 Full local sweep report — top variant NF/mean_z ~0.6 for Theta ADHD
-- [ ] 3.4 User accepts calibration report before Phase 4
+- [x] 3.3 Full local sweep report — top variant NF/mean_z ~0.6 for Theta ADHD
+- [x] 3.4 User accepts calibration report before Phase 4
 
 ### Phase 4: Integracja produkcyjna
 
