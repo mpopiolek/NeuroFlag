@@ -11,6 +11,7 @@ mne = pytest.importorskip("mne")
 from app.domain.errors import AnalysisCancelledError, PipelineError
 from app.domain.norms import load, resolve_norms_path
 from app.domain.pipeline import detect_task_segments, run
+from app.domain.types import AnalysisDiagnostics
 
 
 def _synthetic_raw_with_annotations() -> mne.io.BaseRaw:
@@ -282,6 +283,38 @@ def test_extract_clean_samples_rejects_all_bad_windows() -> None:
 
 
 @patch("app.domain.pipeline._load_raw")
+def test_run_sets_segment_mode_annotations(mock_load: object) -> None:
+    mock_load.return_value = _synthetic_raw_with_annotations()
+    config = load(resolve_norms_path())
+    diag = AnalysisDiagnostics(segment_mode="unknown")
+    _amplitudes, updated = run(
+        Path("synthetic.edf"),
+        config,
+        diagnostics=diag,
+    )
+    assert updated is not None
+    assert updated.segment_mode == "annotations"
+
+
+@patch("app.domain.pipeline._load_raw")
+def test_run_sets_segment_mode_fallback(mock_load: object) -> None:
+    sfreq = 250.0
+    n_samples = int(600 * sfreq)
+    info = mne.create_info(["C3", "O1"], sfreq=sfreq, ch_types=["eeg", "eeg"])
+    raw = mne.io.RawArray(np.zeros((2, n_samples)), info)
+    mock_load.return_value = raw
+    config = load(resolve_norms_path())
+    diag = AnalysisDiagnostics(segment_mode="unknown")
+    _amplitudes, updated = run(
+        Path("synthetic.edf"),
+        config,
+        diagnostics=diag,
+    )
+    assert updated is not None
+    assert updated.segment_mode == "fallback"
+
+
+@patch("app.domain.pipeline._load_raw")
 def test_run_amplitude_method_changes_output(mock_load: object) -> None:
     from dataclasses import replace
 
@@ -289,9 +322,9 @@ def test_run_amplitude_method_changes_output(mock_load: object) -> None:
 
     mock_load.return_value = _synthetic_raw_with_annotations()
     config = load(resolve_norms_path())
-    welch_result = run(Path("synthetic.edf"), config)
+    welch_result, _ = run(Path("synthetic.edf"), config)
     mean_abs_config = replace(config, amplitude_method=AmplitudeMethod.MEAN_ABS)
-    mean_abs_result = run(Path("synthetic.edf"), mean_abs_config)
+    mean_abs_result, _ = run(Path("synthetic.edf"), mean_abs_config)
     assert welch_result != mean_abs_result
 
 
@@ -311,7 +344,7 @@ def test_run_legacy_params_regression(mock_load: object) -> None:
         reject_filtered_uv=LEGACY_PIPELINE_PARAMS.reject_filtered_uv,
         min_clean_seconds=LEGACY_PIPELINE_PARAMS.min_clean_seconds,
     )
-    result = run(Path("synthetic.edf"), legacy_config)
+    result, _ = run(Path("synthetic.edf"), legacy_config)
     assert len(result) == 10
     assert all(np.isfinite(v) for v in result)
 
@@ -321,7 +354,7 @@ def test_run_returns_ten_finite_amplitudes(mock_load: object) -> None:
     # fidelity bounds: see tests/integration/test_pipeline_fidelity.py
     mock_load.return_value = _synthetic_raw_with_annotations()
     config = load(resolve_norms_path())
-    result = run(Path("synthetic.edf"), config)
+    result, _ = run(Path("synthetic.edf"), config)
     assert len(result) == 10
     assert all(np.isfinite(v) for v in result)
 

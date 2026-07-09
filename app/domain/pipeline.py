@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 import time
 import unicodedata
+from dataclasses import replace
 from collections.abc import Callable
 from pathlib import Path
 from types import ModuleType
@@ -18,7 +19,7 @@ from app.domain.channels import (
 from app.domain.eeg_file import validate_extension
 from app.domain.errors import AnalysisCancelledError, PipelineError
 from app.domain.signal_amplitude import compute_cell_amplitude, signal_params_from_config
-from app.domain.types import NormEntry, NormsConfig
+from app.domain.types import AnalysisDiagnostics, NormEntry, NormsConfig, SegmentDetectionMode
 
 if TYPE_CHECKING:
     import mne.io
@@ -248,19 +249,26 @@ def _fallback_segments(raw: mne.io.BaseRaw) -> dict[str, tuple[float, float]]:
     }
 
 
-def detect_task_segments(raw: mne.io.BaseRaw) -> dict[str, tuple[float, float]]:
-    """Wykrywa segmenty OO, OZ, ZP z adnotacji lub fallbacku 3×3 min."""
+def _detect_task_segments_with_mode(
+    raw: mne.io.BaseRaw,
+) -> tuple[dict[str, tuple[float, float]], SegmentDetectionMode]:
     _require_recording_duration(raw)
     segments = _segments_from_annotations(raw)
     if len(segments) == len(_TASK_ORDER):
-        return {k: segments[k] for k in _TASK_ORDER}
+        return {k: segments[k] for k in _TASK_ORDER}, "annotations"
     if not _collect_task_markers(raw):
-        return _fallback_segments(raw)
+        return _fallback_segments(raw), "fallback"
     raise PipelineError(
         "missing_task_segments",
         "Nie wykryto trzech znaczników zadań (OO, OZ, ZP) w poprawnej kolejności. "
         "Bez nich nie można wykonać analizy przesiewowej.",
     )
+
+
+def detect_task_segments(raw: mne.io.BaseRaw) -> dict[str, tuple[float, float]]:
+    """Wykrywa segmenty OO, OZ, ZP z adnotacji lub fallbacku 3×3 min."""
+    segments, _mode = _detect_task_segments_with_mode(raw)
+    return segments
 
 
 def _digitrack_annotations(
@@ -339,8 +347,12 @@ def run(
     channel_overrides: dict[str, str] | None = None,
     step_delay_s: float = 0.0,
     anonymize_header: bool = False,
-) -> tuple[float, ...]:
+    diagnostics: AnalysisDiagnostics | None = None,
+) -> tuple[tuple[float, ...], AnalysisDiagnostics | None]:
     """Ładuje plik EEG i zwraca 10 amplitud (µV) w kolejności config.norms."""
+    diag: AnalysisDiagnostics | None = None
+    if diagnostics is not None:
+        diag = replace(diagnostics, segment_mode="not_reached")
     _check_cancel(cancel_check)
     _wait_or_cancel(step_delay_s, cancel_check)
     raw = _load_raw(path)
@@ -362,7 +374,9 @@ def run(
     raw.pick(list(_REQUIRED_CHANNELS))
     _check_cancel(cancel_check)
     _wait_or_cancel(step_delay_s, cancel_check)
-    segments = detect_task_segments(raw)
+    segments, segment_mode = _detect_task_segments_with_mode(raw)
+    if diag is not None:
+        diag = replace(diag, segment_mode=segment_mode)
     amplitudes: list[float] = []
     for norm in config.norms:
         _check_cancel(cancel_check)
@@ -379,4 +393,4 @@ def run(
             "amplitude_count",
             f"Oczekiwano {len(config.norms)} amplitud, otrzymano {len(amplitudes)}.",
         )
-    return tuple(amplitudes)
+    return tuple(amplitudes), diag

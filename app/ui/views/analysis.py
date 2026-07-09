@@ -9,7 +9,7 @@ from dataclasses import dataclass
 import customtkinter as ctk
 
 from app.domain.errors import AnalysisCancelledError, PipelineError
-from app.domain.types import AnalysisResult
+from app.domain.types import AnalysisDiagnostics, AnalysisResult
 from app.ui.app_window import AppState
 
 _RODO_NOTICE = (
@@ -116,15 +116,21 @@ class AnalysisRunner:
             overrides = self._app_state.channel_overrides or None
             error: PipelineError | None = None
             result: AnalysisResult | None = None
+            diag = AnalysisDiagnostics(segment_mode="unknown")
+            self._app_state.last_analysis_diagnostics = diag
+            self._app_state.last_exception_type_name = None
             try:
-                amplitudes = pipeline.run(
+                amplitudes, updated_diag = pipeline.run(
                     path,
                     config,
                     cancel_check=self._app_state.cancel_event.is_set,
                     channel_overrides=overrides,
                     step_delay_s=self._app_state.analysis_step_delay_s,
                     anonymize_header=self._app_state.anonymize_header,
+                    diagnostics=diag,
                 )
+                if updated_diag is not None:
+                    self._app_state.last_analysis_diagnostics = updated_diag
                 result = algorithm.classify(amplitudes, config)
             except AnalysisCancelledError:
                 self._root.after(0, self._callbacks.on_cancelled)
@@ -132,9 +138,10 @@ class AnalysisRunner:
             except PipelineError as exc:
                 error = exc
             except Exception as exc:  # noqa: BLE001
+                self._app_state.last_exception_type_name = type(exc).__name__
                 error = PipelineError(
                     "unexpected_error",
-                    f"Nieoczekiwany b\u0142\u0105d analizy: {type(exc).__name__}",
+                    "Wystąpił nieoczekiwany błąd analizy.",
                 )
 
             if error is not None:

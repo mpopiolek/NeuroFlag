@@ -47,7 +47,7 @@ class InfoView(ctk.CTkFrame):
         scroll.grid_columnconfigure(0, weight=1)
         w.bind_auto_hide_scrollbar(scroll)
 
-        build_info_content(scroll, wraplength=t.WRAP_WIDTH - 80)
+        build_info_content(scroll, wraplength=t.WRAP_WIDTH - 80, app_window=self._app_window)
 
         self._app_window.set_footer(
             back_text=back_label_for(self._return_view),

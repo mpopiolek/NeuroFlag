@@ -78,7 +78,7 @@ def _probe_file(path: Path, *, show_uv: bool) -> int:
 
     try:
         t0 = time.perf_counter()
-        amplitudes = run(path, config)
+        amplitudes, _ = run(path, config)
         elapsed = time.perf_counter() - t0
     except PipelineError as exc:
         print(f"  PIPELINE: [{exc.code}] {exc.user_message_pl}")

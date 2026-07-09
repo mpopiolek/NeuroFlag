@@ -17,6 +17,8 @@ from app.domain.eeg_file import (
     read_recording_date,
 )
 from app.domain.errors import PipelineError
+from app.domain.patient_identification import resolve_birth_year
+from app.storage.history import format_sex_display
 from app.ui import context_copy
 from app.ui import theme as t
 from app.ui.app_window import AppState
@@ -26,13 +28,13 @@ from app.ui.views.analysis import format_pipeline_error
 if TYPE_CHECKING:
     from app.ui.app_window import AppWindow
 
-_ROW_TITLE = 0
-_ROW_PICK = 1
-_ROW_PATH = 2
-_ROW_ANON = 3
-_ROW_STATUS = 4
-_ROW_PROGRESS = 5
-_ROW_ID = 6
+_ROW_METADATA = 0
+_ROW_FILE_TITLE = 1
+_ROW_PICK = 2
+_ROW_PATH = 3
+_ROW_ANON = 4
+_ROW_STATUS = 5
+_ROW_PROGRESS = 6
 
 
 class FileImportView(ctk.CTkFrame):
@@ -59,8 +61,72 @@ class FileImportView(ctk.CTkFrame):
         inner.pack(fill="both", expand=True, padx=20, pady=20)
         inner.columnconfigure(0, weight=1)
 
+        self._metadata_frame = ctk.CTkFrame(
+            inner,
+            fg_color=t.COLOR_SURFACE,
+            corner_radius=t.CORNER_RADIUS,
+            border_width=1,
+            border_color=t.COLOR_BORDER,
+        )
+        w.section_title(
+            self._metadata_frame, "Dane dziecka do identyfikacji (opcjonalnie)"
+        ).grid(row=0, column=0, columnspan=2, sticky="w", padx=14, pady=(12, 8))
+
+        w.body_label(self._metadata_frame, "Wiek:").grid(
+            row=1, column=0, sticky="w", padx=(14, 12), pady=5
+        )
+        self._age_display = ctk.CTkEntry(
+            self._metadata_frame, width=72, font=t.font_body()
+        )
+        self._age_display.grid(row=1, column=1, sticky="w", pady=5, padx=(0, 14))
+
+        w.body_label(self._metadata_frame, "Płeć:").grid(
+            row=2, column=0, sticky="w", padx=(14, 12), pady=5
+        )
+        self._sex_display = ctk.CTkEntry(
+            self._metadata_frame, width=160, font=t.font_body()
+        )
+        self._sex_display.grid(row=2, column=1, sticky="w", pady=5, padx=(0, 14))
+
+        w.body_label(self._metadata_frame, "Inicjały:").grid(
+            row=3, column=0, sticky="w", padx=(14, 12), pady=5
+        )
+        self._initials_entry = ctk.CTkEntry(
+            self._metadata_frame, width=180, placeholder_text="np. AN", font=t.font_body()
+        )
+        self._initials_entry.grid(row=3, column=1, sticky="w", pady=5, padx=(0, 14))
+
+        w.body_label(self._metadata_frame, "Rok urodzenia:").grid(
+            row=4, column=0, sticky="w", padx=(14, 12), pady=5
+        )
+        birth_row = ctk.CTkFrame(self._metadata_frame, fg_color="transparent")
+        birth_row.grid(row=4, column=1, sticky="w", pady=5, padx=(0, 14))
+        self._birth_year_entry = ctk.CTkEntry(
+            birth_row, width=100, placeholder_text="np. 2018", font=t.font_body()
+        )
+        self._birth_year_entry.pack(side="left")
+        self._birth_year_conflict = ctk.CTkLabel(
+            birth_row,
+            text="",
+            font=t.font_small(),
+            text_color=t.COLOR_WARNING,
+            anchor="w",
+        )
+        self._birth_year_conflict.pack(side="left", padx=(8, 0))
+
+        w.body_label(self._metadata_frame, "Własna etykieta:").grid(
+            row=5, column=0, sticky="w", padx=(14, 12), pady=(5, 12)
+        )
+        self._custom_label_entry = ctk.CTkEntry(
+            self._metadata_frame, width=220, placeholder_text="np. klasa 2B", font=t.font_body()
+        )
+        self._custom_label_entry.grid(row=5, column=1, sticky="w", pady=(5, 12), padx=(0, 14))
+
+        self._metadata_frame.grid(row=_ROW_METADATA, column=0, sticky="ew", pady=(0, 16))
+        self._metadata_frame.grid_remove()
+
         w.section_title(inner, "Wczytaj plik EEG").grid(
-            row=_ROW_TITLE, column=0, sticky="w", pady=(0, 16)
+            row=_ROW_FILE_TITLE, column=0, sticky="w", pady=(0, 16)
         )
 
         self._load_btn = w.primary_button(
@@ -121,44 +187,6 @@ class FileImportView(ctk.CTkFrame):
         self._progress.grid_remove()
         self._progress.stop()
 
-        self._id_frame = ctk.CTkFrame(
-            inner,
-            fg_color=t.COLOR_SURFACE,
-            corner_radius=t.CORNER_RADIUS,
-            border_width=1,
-            border_color=t.COLOR_BORDER,
-        )
-        w.section_title(self._id_frame, "Identyfikacja dziecka (opcjonalnie)").grid(
-            row=0, column=0, columnspan=2, sticky="w", padx=14, pady=(12, 8)
-        )
-
-        w.body_label(self._id_frame, "Inicjały:").grid(
-            row=1, column=0, sticky="w", padx=(14, 12), pady=5
-        )
-        self._initials_entry = ctk.CTkEntry(
-            self._id_frame, width=180, placeholder_text="np. AN", font=t.font_body()
-        )
-        self._initials_entry.grid(row=1, column=1, sticky="w", pady=5, padx=(0, 14))
-
-        w.body_label(self._id_frame, "Rok urodzenia:").grid(
-            row=2, column=0, sticky="w", padx=(14, 12), pady=5
-        )
-        self._birth_year_entry = ctk.CTkEntry(
-            self._id_frame, width=100, placeholder_text="np. 2018", font=t.font_body()
-        )
-        self._birth_year_entry.grid(row=2, column=1, sticky="w", pady=5, padx=(0, 14))
-
-        w.body_label(self._id_frame, "Własna etykieta:").grid(
-            row=3, column=0, sticky="w", padx=(14, 12), pady=(5, 12)
-        )
-        self._custom_label_entry = ctk.CTkEntry(
-            self._id_frame, width=220, placeholder_text="np. klasa 2B", font=t.font_body()
-        )
-        self._custom_label_entry.grid(row=3, column=1, sticky="w", pady=(5, 12), padx=(0, 14))
-
-        self._id_frame.grid(row=_ROW_ID, column=0, sticky="ew", pady=(0, 4))
-        self._id_frame.grid_remove()
-
         w.context_panel(
             context_col,
             "Format pliku EEG",
@@ -178,7 +206,50 @@ class FileImportView(ctk.CTkFrame):
 
         self._restore_from_state()
 
+    @staticmethod
+    def _set_readonly_entry(entry: ctk.CTkEntry, value: str) -> None:
+        entry.configure(state="normal")
+        entry.delete(0, "end")
+        entry.insert(0, value)
+        entry.configure(state="disabled")
+
+    def _populate_locked_demographics(self) -> None:
+        metadata = self._app_state.metadata
+        if metadata is None:
+            return
+        self._set_readonly_entry(self._age_display, str(metadata.age))
+        self._set_readonly_entry(
+            self._sex_display, format_sex_display(metadata.sex.value)
+        )
+
+    def _apply_birth_year(
+        self,
+        header_birth_year: str | None,
+        *,
+        stored_birth_year: str | None = None,
+    ) -> None:
+        metadata = self._app_state.metadata
+        if metadata is None:
+            return
+
+        header = header_birth_year
+        if not (header and header.strip()):
+            header = stored_birth_year
+
+        year, conflict = resolve_birth_year(
+            metadata.age,
+            header,
+            self._app_state.recording_date,
+        )
+        self._birth_year_entry.delete(0, "end")
+        self._birth_year_entry.insert(0, year)
+        if conflict:
+            self._birth_year_conflict.configure(text=conflict)
+        else:
+            self._birth_year_conflict.configure(text="")
+
     def restore_import_footer(self) -> None:
+        self._app_state.last_pipeline_error = None
         self._app_window.set_footer(
             back_text="← Wróć",
             back_cmd=self._on_back,
@@ -204,7 +275,54 @@ class FileImportView(ctk.CTkFrame):
             text_color=t.COLOR_ERROR,
         )
         self._set_analyze_enabled(True)
+
+        if error.code == "unexpected_error":
+            if not hasattr(self, "_bug_report_hint_label"):
+                self._bug_report_hint_label = ctk.CTkLabel(
+                    self._status_label.master,
+                    text=(
+                        "Możesz zgłosić ten błąd deweloperowi "
+                        "przyciskiem w stopce."
+                    ),
+                    font=t.font_small(),
+                    text_color=t.COLOR_TEXT_SECONDARY,
+                    anchor="w",
+                    justify="left",
+                    wraplength=t.WRAP_WIDTH,
+                )
+            self._bug_report_hint_label.grid(
+                row=_ROW_STATUS + 1,
+                column=0,
+                sticky="w",
+                pady=(0, 8),
+            )
+            self._app_window.set_footer(
+                back_text="← Wróć",
+                back_cmd=self._on_back,
+                back_visible=True,
+                primary_text="Zgłoś błąd na GitHubie",
+                primary_cmd=self._on_report_unexpected_error,
+                primary_visible=True,
+                primary_state="normal",
+            )
+            return
+
+        if hasattr(self, "_bug_report_hint_label"):
+            self._bug_report_hint_label.grid_remove()
         self.restore_import_footer()
+
+    def _on_report_unexpected_error(self) -> None:
+        from app.ui.bug_report import collect_bug_report_context, open_bug_report
+
+        error = self._app_state.last_pipeline_error
+        if error is None or error.code != "unexpected_error":
+            return
+        ctx = collect_bug_report_context(
+            self._app_window,
+            error=error,
+            exception_type_name=self._app_state.last_exception_type_name,
+        )
+        open_bug_report(ctx)
 
     def _restore_from_state(self) -> None:
         path = self._app_state.eeg_path
@@ -228,17 +346,16 @@ class FileImportView(ctk.CTkFrame):
 
         metadata = self._app_state.metadata
         self._initials_entry.delete(0, "end")
-        self._birth_year_entry.delete(0, "end")
         self._custom_label_entry.delete(0, "end")
         if metadata is not None:
+            self._populate_locked_demographics()
             if metadata.initials:
                 self._initials_entry.insert(0, metadata.initials)
-            if metadata.birth_year:
-                self._birth_year_entry.insert(0, metadata.birth_year)
+            self._apply_birth_year(None, stored_birth_year=metadata.birth_year)
             if metadata.custom_label:
                 self._custom_label_entry.insert(0, metadata.custom_label)
 
-        self._id_frame.grid(row=_ROW_ID, column=0, sticky="ew", pady=(0, 4))
+        self._metadata_frame.grid(row=_ROW_METADATA, column=0, sticky="ew", pady=(0, 16))
         self._set_analyze_enabled(True)
 
     def _on_anonymize_change(self) -> None:
@@ -271,7 +388,7 @@ class FileImportView(ctk.CTkFrame):
             text_color=t.COLOR_TEXT_MUTED,
         )
         self._status_label.grid(row=_ROW_STATUS, column=0, sticky="w", pady=(0, 8))
-        self._id_frame.grid_remove()
+        self._metadata_frame.grid_remove()
         self._progress.grid(row=_ROW_PROGRESS, column=0, sticky="ew", pady=(0, 16))
         self._progress.start()
         self._validating = True
@@ -332,10 +449,12 @@ class FileImportView(ctk.CTkFrame):
             prior = self._app_state.eeg_path
             if prior is not None:
                 self._path_label.configure(text=prior.name, text_color=t.COLOR_TEXT)
-                self._id_frame.grid(row=_ROW_ID, column=0, sticky="ew", pady=(0, 4))
+                self._metadata_frame.grid(
+                    row=_ROW_METADATA, column=0, sticky="ew", pady=(0, 16)
+                )
                 self._set_analyze_enabled(True)
             else:
-                self._id_frame.grid_remove()
+                self._metadata_frame.grid_remove()
                 self._set_analyze_enabled(False)
             return
 
@@ -356,26 +475,29 @@ class FileImportView(ctk.CTkFrame):
                 text_color=t.COLOR_SUCCESS,
             )
 
-        self._show_identification_section(patient_info)
+        self._show_metadata_section(patient_info)
         self._set_analyze_enabled(True)
 
-    def _show_identification_section(
+    def _show_metadata_section(
         self, patient_info: tuple[str | None, str | None]
     ) -> None:
-        """Pokazuje sekcję identyfikacji. Czyści pola i pre-fill z nagłówka pliku."""
-        initials, birth_year = patient_info
+        """Pokazuje metryczkę dziecka nad sekcją pliku."""
+        self._populate_locked_demographics()
+
+        initials, header_birth_year = patient_info
 
         self._initials_entry.delete(0, "end")
         if initials:
             self._initials_entry.insert(0, initials)
 
-        self._birth_year_entry.delete(0, "end")
-        if birth_year:
-            self._birth_year_entry.insert(0, birth_year)
+        self._apply_birth_year(header_birth_year)
 
         self._custom_label_entry.delete(0, "end")
+        metadata = self._app_state.metadata
+        if metadata is not None and metadata.custom_label:
+            self._custom_label_entry.insert(0, metadata.custom_label)
 
-        self._id_frame.grid(row=_ROW_ID, column=0, sticky="ew", pady=(0, 4))
+        self._metadata_frame.grid(row=_ROW_METADATA, column=0, sticky="ew", pady=(0, 16))
 
     def _on_analyze(self) -> None:
         if not self._app_state.ready_for_analysis():

@@ -9,7 +9,7 @@ from pathlib import Path
 import customtkinter as ctk
 
 from app.domain.errors import PipelineError
-from app.domain.types import AnalysisResult, NormsConfig, PatientMetadata
+from app.domain.types import AnalysisResult, AnalysisDiagnostics, NormsConfig, PatientMetadata
 from app.storage.history import HistoryStore, resolve_history_db_path
 from app.ui import theme as ui_theme
 from app.ui.components import widgets as w
@@ -28,8 +28,11 @@ class AppState:
     channel_overrides: dict[str, str] = field(default_factory=dict)
     available_channels: list[str] = field(default_factory=list)
     analysis_step_delay_s: float = 0.0
-    anonymize_header: bool = False
+    anonymize_header: bool = True
     history_store: HistoryStore | None = None
+    last_analysis_diagnostics: AnalysisDiagnostics | None = None
+    last_exception_type_name: str | None = None
+    last_pipeline_error: PipelineError | None = None
 
     def ready_for_analysis(self) -> bool:
         return self.metadata is not None and self.eeg_path is not None
@@ -41,9 +44,11 @@ class AppWindow(ctk.CTk):
         norms_config: NormsConfig,
         *,
         analysis_step_delay_s: float = 0.0,
+        debug_crash_gui: bool = False,
     ) -> None:
         ui_theme.apply_app_theme()
         super().__init__()
+        self._debug_crash_gui = debug_crash_gui
         self.title("NeuroFlag — Badanie przesiewowe EEG")
         self.geometry("1000x720")
         self.minsize(900, 640)
@@ -135,6 +140,8 @@ class AppWindow(ctk.CTk):
         self._clear_footer()
 
     def _show_info(self) -> None:
+        if self._debug_crash_gui:
+            raise RuntimeError("DEV: test nieobsłużonego błędu GUI (--debug-crash-gui)")
         self.open_info()
 
     def open_info(self) -> None:
@@ -215,6 +222,10 @@ class AppWindow(ctk.CTk):
     def app_state(self) -> AppState:
         return self._state
 
+    @property
+    def current_view(self) -> ctk.CTkFrame | None:
+        return self._current_view
+
     def show_view(
         self,
         view_class: type[ctk.CTkFrame],
@@ -244,6 +255,7 @@ class AppWindow(ctk.CTk):
             return
         self._state.cancel_event.clear()
         self._state.analysis_result = None
+        self._state.last_pipeline_error = None
         self._clear_footer()
         self._stepper.set_active_step(3)
         self._stepper.set_completed_through(2)
@@ -276,6 +288,7 @@ class AppWindow(ctk.CTk):
 
         if result is not None:
             self._state.analysis_result = result
+            self._state.last_pipeline_error = None
             self._stepper.set_active_step(4)
             self._stepper.set_completed_through(3)
             from app.ui.views.results_grid import ResultsGridView
@@ -289,8 +302,11 @@ class AppWindow(ctk.CTk):
         self._stepper.set_completed_through(1)
         if isinstance(self._current_view, FileImportView):
             if error is not None:
+                self._state.last_pipeline_error = error
                 self._current_view.show_analysis_error(error)
             elif cancelled:
+                self._state.last_pipeline_error = None
                 self._current_view.restore_after_analysis_cancelled()
             else:
+                self._state.last_pipeline_error = None
                 self._current_view.restore_import_footer()

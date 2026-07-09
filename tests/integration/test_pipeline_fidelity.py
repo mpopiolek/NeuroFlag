@@ -65,7 +65,7 @@ def test_run_preserves_amplitude_bounds_on_clean_synthetic(
     real_norms_config: NormsConfig,
 ) -> None:
     mock_load.return_value = _synthetic_raw_with_annotations(peak_uv=30.0)
-    result = run(Path("synthetic.edf"), real_norms_config)
+    result, _ = run(Path("synthetic.edf"), real_norms_config)
     assert len(result) == 10
     assert all(_AMPLITUDE_FLOOR_UV < v < _AMPLITUDE_CEILING_UV for v in result)
 
@@ -107,7 +107,7 @@ def test_digitrack_detect_task_segments_uses_fallback_3x3() -> None:
 def test_digitrack_run_returns_ten_finite_amplitudes(
     real_norms_config: NormsConfig,
 ) -> None:
-    result = run(FIXTURE, real_norms_config)
+    result, _ = run(FIXTURE, real_norms_config)
     assert len(result) == 10
     assert all(np.isfinite(v) for v in result)
     assert any(v > 1.0 for v in result)
