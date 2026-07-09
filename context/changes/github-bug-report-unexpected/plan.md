@@ -363,44 +363,44 @@ Brak migracji danych. Istniejący flow błędów oczekiwanych bez zmian.
 
 #### Automated
 
-- [x] 1.1 `python -m pytest tests/unit/test_bug_report.py -q`
-- [x] 1.2 `mypy app/ --strict`
+- [x] 1.1 `python -m pytest tests/unit/test_bug_report.py -q` — 620a365
+- [x] 1.2 `mypy app/ --strict` — 620a365
 
 #### Manual
 
-- [x] 1.3 Body w REPL — sekcja PL bez PII
+- [x] 1.3 Body w REPL — sekcja PL bez PII — 620a365
 
 ### Phase 2: Snapshot segmentacji w pipeline
 
 #### Automated
 
-- [x] 2.1 `python -m pytest tests/unit/test_pipeline.py tests/unit/test_bug_report.py -q`
-- [x] 2.2 `mypy app/ --strict`
+- [x] 2.1 `python -m pytest tests/unit/test_pipeline.py tests/unit/test_bug_report.py -q` — 620a365
+- [x] 2.2 `mypy app/ --strict` — 620a365
 
 #### Manual
 
-- [x] 2.3 Brak regresji pipeline w pełnym `pytest -q`
+- [x] 2.3 Brak regresji pipeline w pełnym `pytest -q` — 620a365
 
 ### Phase 3: UI błędu nieoczekiwanego w analizie
 
 #### Automated
 
-- [x] 3.1 `mypy app/ --strict`
-- [x] 3.2 `python -m pytest -q`
+- [x] 3.1 `mypy app/ --strict` — 620a365
+- [x] 3.2 `python -m pytest -q` — 620a365
 
 #### Manual
 
-- [x] 3.3 Wymuszony `unexpected_error` → status + stopka → GitHub z diagnostyką
+- [x] 3.3 Wymuszony `unexpected_error` → status + stopka → GitHub z diagnostyką — 620a365
 
 ### Phase 4: Globalny excepthook + pre-fill Informacje
 
 #### Automated
 
-- [x] 4.1 `python -m pytest tests/unit/test_bug_report.py tests/unit/test_info_content.py -q`
-- [x] 4.2 `mypy app/ --strict`
+- [x] 4.1 `python -m pytest tests/unit/test_bug_report.py tests/unit/test_info_content.py -q` — 620a365
+- [x] 4.2 `mypy app/ --strict` — 620a365
 
 #### Manual
 
-- [x] 4.3 Informacje → pre-fill sesji bez kodu błędu
-- [x] 4.4 Nieobsłużony wyjątek GUI → modal + zgłoszenie (`python -m app.main --debug-crash-gui`, potem klik „Informacje”)
-- [x] 4.5 Body issue bez inicjałów i ścieżek dysku
+- [x] 4.3 Informacje → pre-fill sesji bez kodu błędu — 620a365
+- [x] 4.4 Nieobsłużony wyjątek GUI → modal + zgłoszenie (`python -m app.main --debug-crash-gui`, potem klik „Informacje”) — 620a365
+- [x] 4.5 Body issue bez inicjałów i ścieżek dysku — 620a365

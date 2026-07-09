@@ -1,7 +1,7 @@
 ---
 id: github-bug-report-unexpected
 title: "Zgłaszanie błędów nieoczekiwanych na GitHubie"
-status: impl_reviewed
+status: implemented
 created: 2026-07-09
 updated: 2026-07-09
 ---
