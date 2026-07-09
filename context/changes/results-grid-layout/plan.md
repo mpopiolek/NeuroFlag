@@ -287,23 +287,23 @@ Rozszerzyć testy o kontrakt layoutu A′ i wyprodukować raport impl-review dla
 
 #### Automated
 
-- [x] 2.1 `python -m mypy app/domain/cell_layout.py app/ui/views/results_grid.py --strict`
-- [x] 2.2 `python -m pytest tests/unit/test_cell_layout.py tests/unit/test_navigation.py -q`
+- [x] 2.1 `python -m mypy app/domain/cell_layout.py app/ui/views/results_grid.py --strict` — 2ee1768
+- [x] 2.2 `python -m pytest tests/unit/test_cell_layout.py tests/unit/test_navigation.py -q` — 2ee1768
 
 #### Manual
 
-- [x] 2.3 Smoke UI po refaktorze importu — layout identyczny
+- [x] 2.3 Smoke UI po refaktorze importu — layout identyczny — 2ee1768
 
 ### Phase 3: PDF — siatka Wariant A′
 
 #### Automated
 
-- [ ] 3.1 `python -m mypy app/reports/pdf_generator.py --strict`
-- [ ] 3.2 `python -m pytest tests/unit/test_pdf_generator.py -q`
+- [x] 3.1 `python -m mypy app/reports/pdf_generator.py --strict`
+- [x] 3.2 `python -m pytest tests/unit/test_pdf_generator.py -q`
 
 #### Manual
 
-- [ ] 3.3 PDF Wskazanie + mieszane kolory; zapis z widoku wyników
+- [x] 3.3 PDF Wskazanie + mieszane kolory; zapis z widoku wyników
 
 ### Phase 4: Testy PDF + impl-review
 

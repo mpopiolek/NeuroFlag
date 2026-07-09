@@ -12,6 +12,7 @@ from reportlab.lib.units import cm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import (
+    Flowable,
     Paragraph,
     SimpleDocTemplate,
     Spacer,
@@ -20,9 +21,15 @@ from reportlab.platypus import (
 )
 
 from app import __version__
+from app.domain.cell_layout import (
+    CHANNEL_DISPLAY_ORDER,
+    TASK_DISPLAY_ORDER,
+    cells_for_task_channel,
+)
 from app.domain.types import (
     AnalysisResult,
     CellColor,
+    CellResult,
     NormsConfig,
     PatientMetadata,
     format_clinical_diagnoses,
@@ -64,6 +71,12 @@ DISCLAIMER_PL: str = (
 _PAGE_W, _PAGE_H = A4
 _MARGIN = 2 * cm
 
+_PDF_CELL_W = 2.1 * cm
+_PDF_CELL_H = 1.4 * cm
+_PDF_CELL_GAP = 0.15 * cm
+_PDF_CHANNEL_GAP = 0.4 * cm
+_PDF_SECTION_GAP = 0.12 * cm
+
 
 def format_report_subtitle(recording_date: date | None) -> str:
     if recording_date is not None:
@@ -93,6 +106,171 @@ def format_pdf_expert_footer_line() -> str:
 
 def format_pdf_tech_footer_line() -> str:
     return GITHUB_REPO_URL
+
+
+def _cell_text_color(color: CellColor) -> colors.Color:
+    if color in (CellColor.RED, CellColor.GREEN):
+        return colors.white
+    return colors.HexColor("#1A1A1A")
+
+
+def _make_band_cell_paragraph(
+    cell: CellResult,
+    *,
+    bold_font_name: str,
+    base_style: ParagraphStyle,
+    slot_index: int,
+) -> Paragraph:
+    cell_style = ParagraphStyle(
+        f"band_cell_{cell.cell_id}_{slot_index}",
+        parent=base_style,
+        fontSize=9,
+        fontName=bold_font_name,
+        alignment=1,
+        textColor=_cell_text_color(cell.color),
+        leading=12,
+    )
+    return Paragraph(cell.band, cell_style)
+
+
+def _cluster_table_width(cell_count: int) -> float:
+    if cell_count == 0:
+        return float(_PDF_CELL_W)
+    return float(cell_count * _PDF_CELL_W + (cell_count - 1) * _PDF_CELL_GAP)
+
+
+def _build_channel_cluster_table(
+    channel: str,
+    channel_cells: list[CellResult],
+    *,
+    bold_font_name: str,
+    base_style: ParagraphStyle,
+    muted_style: ParagraphStyle,
+) -> Table:
+    if channel_cells:
+        cell_cols: list[Paragraph | str] = [
+            _make_band_cell_paragraph(
+                cell,
+                bold_font_name=bold_font_name,
+                base_style=base_style,
+                slot_index=idx,
+            )
+            for idx, cell in enumerate(channel_cells)
+        ]
+    else:
+        cell_cols = [""]
+
+    n = len(cell_cols)
+    label_row: list[Paragraph | str] = [Paragraph(channel, muted_style)]
+    if n > 1:
+        label_row.extend([""] * (n - 1))
+
+    table = Table(
+        [label_row, cell_cols],
+        colWidths=[_PDF_CELL_W] * n,
+        rowHeights=[0.45 * cm, _PDF_CELL_H],
+        hAlign="LEFT",
+    )
+
+    style_commands: list[tuple[object, ...]] = [
+        ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 0),
+        ("RIGHTPADDING", (0, 0), (-2, -1), _PDF_CELL_GAP),
+        ("RIGHTPADDING", (-1, 0), (-1, -1), 0),
+        ("TOPPADDING", (0, 0), (-1, -1), 1),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 1),
+    ]
+    for idx, cell in enumerate(channel_cells):
+        bg = colors.HexColor(RAG_COLOR_BG[cell.color])
+        style_commands.append(("BACKGROUND", (idx, 1), (idx, 1), bg))
+    table.setStyle(TableStyle(style_commands))
+    return table
+
+
+def _build_task_section_table(
+    cells: tuple[CellResult, ...],
+    task: str,
+    *,
+    bold_font_name: str,
+    base_style: ParagraphStyle,
+    muted_style: ParagraphStyle,
+) -> Table:
+    c3_cells = cells_for_task_channel(cells, task, CHANNEL_DISPLAY_ORDER[0])
+    o1_cells = cells_for_task_channel(cells, task, CHANNEL_DISPLAY_ORDER[1])
+
+    c3_table = _build_channel_cluster_table(
+        CHANNEL_DISPLAY_ORDER[0],
+        c3_cells,
+        bold_font_name=bold_font_name,
+        base_style=base_style,
+        muted_style=muted_style,
+    )
+    o1_table = _build_channel_cluster_table(
+        CHANNEL_DISPLAY_ORDER[1],
+        o1_cells,
+        bold_font_name=bold_font_name,
+        base_style=base_style,
+        muted_style=muted_style,
+    )
+
+    c3_w = _cluster_table_width(len(c3_cells))
+    o1_w = _cluster_table_width(len(o1_cells))
+
+    table = Table(
+        [[c3_table, o1_table]],
+        colWidths=[c3_w, o1_w],
+        hAlign="LEFT",
+    )
+
+    table.setStyle(
+        TableStyle(
+            [
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("LEFTPADDING", (0, 0), (-1, -1), 0),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+                ("TOPPADDING", (0, 0), (-1, -1), 0),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+                ("LEFTPADDING", (1, 0), (1, 0), _PDF_CHANNEL_GAP),
+            ]
+        )
+    )
+    return table
+
+
+def _build_rag_grid_story(
+    cells: tuple[CellResult, ...],
+    *,
+    style_h3: ParagraphStyle,
+    style_normal: ParagraphStyle,
+    bold_font_name: str,
+) -> list[Flowable]:
+    muted_style = ParagraphStyle(
+        "channel_muted",
+        parent=style_normal,
+        fontSize=8,
+        fontName=bold_font_name,
+        textColor=colors.HexColor("#666666"),
+        spaceAfter=2,
+    )
+
+    flowables: list[Flowable] = []
+    for task_idx, task in enumerate(TASK_DISPLAY_ORDER):
+        if task_idx > 0:
+            flowables.append(Spacer(1, _PDF_SECTION_GAP))
+        task_label = TASK_LABELS.get(task, task)
+        flowables.append(Paragraph(task_label, style_h3))
+        flowables.append(
+            _build_task_section_table(
+                cells,
+                task,
+                bold_font_name=bold_font_name,
+                base_style=style_normal,
+                muted_style=muted_style,
+            )
+        )
+    return flowables
+
 
 def generate_report(
     metadata: PatientMetadata,
@@ -202,53 +380,17 @@ def generate_report(
     story.append(Paragraph(result.description, style_body))
     story.append(Spacer(1, 0.4 * cm))
 
-    # ── Sekcja 2: Siatka 10 komórek RAG (2 × 5) ────────────────────────────
+    # ── Sekcja 2: Siatka 10 komórek RAG (Wariant A′) ─────────────────────────
     story.append(Paragraph("Wyniki analizy", style_h2))
     story.append(Spacer(1, 0.15 * cm))
-
-    cell_w = (_PAGE_W - 2 * _MARGIN) / 5
-    cell_h = 1.8 * cm
-
-    grid_data: list[list[Paragraph]] = [[], []]
-    for idx, cell in enumerate(result.cells):
-        task_label = TASK_LABELS.get(cell.task, cell.task)
-        if cell.color in (CellColor.RED, CellColor.GREEN):
-            fg = colors.white
-        else:
-            fg = colors.HexColor("#1A1A1A")
-        cell_style = ParagraphStyle(
-            f"cell_{idx}",
-            parent=style_normal,
-            fontSize=8,
-            fontName=_bold,
-            alignment=1,  # center
-            textColor=fg,
-            leading=11,
+    story.extend(
+        _build_rag_grid_story(
+            result.cells,
+            style_h3=style_h3,
+            style_normal=style_body,
+            bold_font_name=_bold,
         )
-        text = (
-            f"{cell.channel}<br/>"
-            f"<font size='7'>{task_label}</font><br/>"
-            f"<font size='7'>{cell.band}</font>"
-        )
-        para = Paragraph(text, cell_style)
-        grid_data[idx // 5].append(para)
-
-    grid_table = Table(
-        grid_data,
-        colWidths=[cell_w] * 5,
-        rowHeights=[cell_h, cell_h],
     )
-
-    ts = TableStyle([("GRID", (0, 0), (-1, -1), 0.5, colors.white)])
-    for idx, cell in enumerate(result.cells):
-        row, col = idx // 5, idx % 5
-        bg = colors.HexColor(RAG_COLOR_BG[cell.color])
-        ts.add("BACKGROUND", (col, row), (col, row), bg)
-        ts.add("VALIGN", (col, row), (col, row), "MIDDLE")
-        ts.add("ALIGN", (col, row), (col, row), "CENTRE")
-
-    grid_table.setStyle(ts)
-    story.append(grid_table)
     story.append(Spacer(1, 0.5 * cm))
 
     # ── Sekcja 3: Checklist "Co obserwować" ─────────────────────────────────
