@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from app.domain.amplitude import AmplitudeMethod, parse_amplitude_method
 from app.domain.types import (
     BandRange,
     CategoryDescriptions,
@@ -14,7 +15,6 @@ from app.domain.types import (
     ObservationChecklist,
     RecommendationRules,
 )
-from app.domain.amplitude import AmplitudeMethod, parse_amplitude_method
 
 REQUIRED_NORM_COUNT = 10
 

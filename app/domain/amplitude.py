@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from app.domain.types import BandRange
 
 
-class AmplitudeMethod(str, Enum):
+class AmplitudeMethod(StrEnum):
     """Metoda redukcji sygnału pasmowego do jednej amplitudy [µV] per komórka.
 
     Domyślnie ``mean_abs`` (zgodnie z PRD). Pozostałe wartości są eksperymentalne —

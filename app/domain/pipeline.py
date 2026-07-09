@@ -3,8 +3,8 @@ from __future__ import annotations
 import re
 import time
 import unicodedata
-from dataclasses import replace
 from collections.abc import Callable
+from dataclasses import replace
 from pathlib import Path
 from types import ModuleType
 from typing import TYPE_CHECKING

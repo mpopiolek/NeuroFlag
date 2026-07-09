@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import itertools
 import statistics
+from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 from app.domain.amplitude import AmplitudeMethod
 from app.domain.calibration.csv_oracle import (
@@ -245,7 +246,7 @@ def run_sweep(
     ranked = tuple(sorted(scores, key=lambda item: item.sort_key))
 
     return SweepReport(
-        timestamp=datetime.now(tz=timezone.utc),
+        timestamp=datetime.now(tz=UTC),
         csv_row_count=len(csv_rows),
         category_counts=category_distribution(csv_rows, config),
         wskazanie_centroid=wskazanie_centroid,
