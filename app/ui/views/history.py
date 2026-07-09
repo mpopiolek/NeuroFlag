@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 import customtkinter as ctk
 
 from app.domain.types import ScreeningCategory
-from app.storage.history import StudyRecord
+from app.storage.history import StudyRecord, format_sex_display
 from app.ui import theme as t
 from app.ui.app_window import AppState
 from app.ui.components import widgets as w
@@ -104,6 +104,7 @@ class HistoryView(ctk.CTkFrame):
             parts.append(metadata.birth_year)
         if metadata.custom_label:
             parts.append(metadata.custom_label)
+        parts.append(format_sex_display(metadata.sex.value))
         return " / ".join(parts) if parts else ""
 
     def _build_list(self) -> None:
