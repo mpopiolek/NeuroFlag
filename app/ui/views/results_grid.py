@@ -176,7 +176,8 @@ class ResultsGridView(ctk.CTkFrame):
 
             clusters = ctk.CTkFrame(parent, fg_color="transparent")
             clusters.grid(row=row, column=0, sticky="w")
-            for col in range(3):
+            cluster_col_count = len(CHANNEL_DISPLAY_ORDER) * 2 - 1
+            for col in range(cluster_col_count):
                 clusters.grid_columnconfigure(col, weight=0)
 
             for channel_idx, channel in enumerate(CHANNEL_DISPLAY_ORDER):
@@ -197,8 +198,8 @@ class ResultsGridView(ctk.CTkFrame):
         *,
         channel_idx: int,
     ) -> None:
-        grid_col = 0 if channel_idx == 0 else 2
-        if channel_idx == 1:
+        grid_col = channel_idx * 2
+        if channel_idx > 0:
             ctk.CTkFrame(
                 parent,
                 width=1,
@@ -207,7 +208,7 @@ class ResultsGridView(ctk.CTkFrame):
                 corner_radius=0,
             ).grid(
                 row=0,
-                column=1,
+                column=channel_idx * 2 - 1,
                 rowspan=2,
                 sticky="ns",
                 padx=(_CHANNEL_RULE_GAP, _CHANNEL_RULE_GAP),

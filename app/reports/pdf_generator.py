@@ -34,7 +34,7 @@ from app.domain.types import (
     PatientMetadata,
     format_clinical_diagnoses,
 )
-from app.ui.components.rag_colors import RAG_COLOR_BG, TASK_LABELS
+from app.presentation.rag_colors import RAG_COLOR_BG, RAG_COLOR_FG, TASK_LABELS
 from app.ui.info_content import EXPERT_CONTACT, EXPERT_CONTACT_SHORT_ROLE, GITHUB_REPO_URL
 
 _FONTS_DIR = Path(os.environ.get("WINDIR", "C:/Windows")) / "Fonts"
@@ -109,9 +109,7 @@ def format_pdf_tech_footer_line() -> str:
 
 
 def _cell_text_color(color: CellColor) -> colors.Color:
-    if color in (CellColor.RED, CellColor.GREEN):
-        return colors.white
-    return colors.HexColor("#1A1A1A")
+    return colors.HexColor(RAG_COLOR_FG[color])
 
 
 def _make_band_cell_paragraph(

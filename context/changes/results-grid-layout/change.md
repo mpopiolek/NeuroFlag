@@ -1,7 +1,7 @@
 ---
 id: results-grid-layout
 title: "Czytelniejszy układ siatki wyników RAG"
-status: implemented
+status: impl_reviewed
 created: 2026-07-09
 updated: 2026-07-09
 ---

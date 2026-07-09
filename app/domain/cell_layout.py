@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Kolejność wyświetlania komórek RAG w UI i PDF (nie kolejność pipeline)."""
+
 from collections.abc import Sequence
 
 from app.domain.types import CellResult
@@ -21,6 +23,7 @@ def cells_for_task_channel(
     task: str,
     channel: str,
 ) -> list[CellResult]:
+    """Filtruje komórki po zadaniu i kanale; sortuje pasma wg ``BAND_DISPLAY_ORDER``."""
     return sorted(
         (c for c in cells if c.task == task and c.channel == channel),
         key=_band_sort_key,

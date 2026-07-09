@@ -281,7 +281,7 @@ Rozszerzyć testy o kontrakt layoutu A′ i wyprodukować raport impl-review dla
 
 #### Manual
 
-- [ ] 1.3 Smoke UI: dashboard 40/60, sekcje bez luk, linia C3|O1
+- [x] 1.3 Smoke UI: dashboard 40/60, sekcje bez luk, linia C3|O1 — 3729d27
 
 ### Phase 2: Wspólna logika prezentacji komórek
 
