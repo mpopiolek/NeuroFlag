@@ -2,6 +2,8 @@
   "_comment": "Skopiuj ten plik jako norms.json obok neuroflag.exe. Pola _comment są opcjonalne — walidator je ignoruje. Usuń _comment przed wdrożeniem lub zostaw — nie wpływają na działanie aplikacji.",
   "version": 1,
   "power_line_frequency": 50,
+  "_amplitude_method_comment": "Opcjonalne. Domyślnie mean_abs (PRD). Eksperymentalne: rms, peak_to_peak_half, percentile_95, epoch_mean_abs — do weryfikacji z metodą eksperta.",
+  "amplitude_method": "mean_abs",
   "recommendation_rules": {
     "_comment": "Progi decyzyjne algorytmu trójstanowego. Wartości całkowite >= 0.",
     "indication_min_red": 5,

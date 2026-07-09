@@ -4,6 +4,8 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 
+from app.domain.amplitude import AmplitudeMethod
+
 
 class ExclusionDiagnosis(Enum):
     BRAIN_INJURY = "brain_injury"
@@ -151,3 +153,4 @@ class NormsConfig:
     recommendation_rules: RecommendationRules
     category_descriptions: CategoryDescriptions
     observation_checklist: ObservationChecklist
+    amplitude_method: AmplitudeMethod = AmplitudeMethod.MEAN_ABS

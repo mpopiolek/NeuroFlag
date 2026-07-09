@@ -14,6 +14,7 @@ from app.domain.types import (
     ObservationChecklist,
     RecommendationRules,
 )
+from app.domain.amplitude import AmplitudeMethod, parse_amplitude_method
 
 REQUIRED_NORM_COUNT = 10
 
@@ -314,6 +315,14 @@ def load(path: Path | None = None) -> NormsConfig:
     else:
         obs_checklist = _DEFAULT_OBSERVATION_CHECKLIST
 
+    if "amplitude_method" in data:
+        try:
+            amplitude_method = parse_amplitude_method(data["amplitude_method"])
+        except ValueError as exc:
+            raise NormsLoadError(str(exc)) from exc
+    else:
+        amplitude_method = AmplitudeMethod.MEAN_ABS
+
     return NormsConfig(
         version=_as_int(data["version"], "version"),
         power_line_frequency=_as_float(data["power_line_frequency"], "power_line_frequency"),
@@ -322,4 +331,5 @@ def load(path: Path | None = None) -> NormsConfig:
         recommendation_rules=rec_rules,
         category_descriptions=cat_desc,
         observation_checklist=obs_checklist,
+        amplitude_method=amplitude_method,
     )

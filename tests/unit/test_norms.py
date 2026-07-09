@@ -251,3 +251,30 @@ def test_load_prefers_exe_dir_norms_when_frozen(
 
     cfg = load()
     assert cfg.version == 1
+
+
+def test_load_amplitude_method_defaults_to_mean_abs() -> None:
+    cfg = load(resolve_norms_path())
+    from app.domain.amplitude import AmplitudeMethod
+
+    assert cfg.amplitude_method is AmplitudeMethod.MEAN_ABS
+
+
+def test_load_amplitude_method_from_json(tmp_path: Path) -> None:
+    from app.domain.amplitude import AmplitudeMethod
+
+    payload = _valid_payload()
+    payload["amplitude_method"] = "peak_to_peak_half"
+    path = tmp_path / "norms.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    cfg = load(path)
+    assert cfg.amplitude_method is AmplitudeMethod.PEAK_TO_PEAK_HALF
+
+
+def test_load_invalid_amplitude_method_raises(tmp_path: Path) -> None:
+    payload = _valid_payload()
+    payload["amplitude_method"] = "excel_magic"
+    path = tmp_path / "norms.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    with pytest.raises(NormsLoadError, match="Unknown amplitude_method"):
+        load(path)
