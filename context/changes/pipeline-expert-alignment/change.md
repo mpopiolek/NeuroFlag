@@ -1,9 +1,8 @@
 ﻿---
 id: pipeline-expert-alignment
 title: "Wyr├│wnanie pipeline NeuroFlag z metodologi─ů eksperta (QEEG / Mitsar)"
-status: implementing
+status: implemented
 created: 2026-07-09
-updated: 2026-07-09
 updated: 2026-07-09
 pipeline_validated: 2026-07-09
 
