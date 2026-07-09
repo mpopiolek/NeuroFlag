@@ -390,26 +390,26 @@ Przeniesienie zwycięskiej konfiguracji do `pipeline.run()`, testy regresji, akt
 
 #### Automated
 
-- [x] 1.1 Unit tests pass: `python -m pytest tests/unit/test_calibration_csv.py -q`
-- [x] 1.2 Type checking passes: `mypy app/domain/calibration/ --strict`
-- [x] 1.3 Full suite green: `python -m pytest -q`
+- [x] 1.1 Unit tests pass: `python -m pytest tests/unit/test_calibration_csv.py -q` — ce6d68d
+- [x] 1.2 Type checking passes: `mypy app/domain/calibration/ --strict` — ce6d68d
+- [x] 1.3 Full suite green: `python -m pytest -q` — ce6d68d
 
 #### Manual
 
-- [x] 1.4 Smoke load 82 CSV rows and print centroids (Wskazanie ≈ 0.63)
+- [x] 1.4 Smoke load 82 CSV rows and print centroids (Wskazanie ≈ 0.63) — ce6d68d
 
 ### Phase 2: Harness offline + Welch/PSD
 
 #### Automated
 
-- [ ] 2.1 Unit tests: `python -m pytest tests/unit/test_amplitude.py tests/unit/test_calibration_harness.py -q`
-- [ ] 2.2 mypy strict on amplitude + calibration modules
-- [ ] 2.3 `compare_amplitude_methods.py` exits 0 on available files
+- [x] 2.1 Unit tests: `python -m pytest tests/unit/test_amplitude.py tests/unit/test_calibration_harness.py -q`
+- [x] 2.2 mypy strict on amplitude + calibration modules
+- [x] 2.3 `compare_amplitude_methods.py` exits 0 on available files
 
 #### Manual
 
-- [ ] 2.4 Harness ADHD: welch_band_power yields higher NF/mean_z than mean_abs
-- [ ] 2.5 depresja_EEG passes harness with at least one threshold combo
+- [x] 2.4 Harness ADHD: welch_band_power yields higher NF/mean_z than mean_abs
+- [x] 2.5 depresja_EEG passes harness with at least one threshold combo
 
 ### Phase 3: Sweep + wybór wariantu
 

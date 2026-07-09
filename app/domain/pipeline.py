@@ -312,6 +312,11 @@ def _load_raw(path: Path) -> mne.io.BaseRaw:
     )
 
 
+def load_raw(path: Path) -> mne.io.BaseRaw:
+    """Publiczny wrapper do ładowania pliku EEG (harness offline / skrypty)."""
+    return _load_raw(path)
+
+
 def _mean_abs_after_artifact_rejection(
     data_uv: NDArray[np.floating],
     sfreq: float,

@@ -48,3 +48,29 @@ def test_compute_band_amplitude_epoch_mean_abs() -> None:
     data = np.concatenate([low, high])[np.newaxis, :]
     result = compute_band_amplitude(data, sfreq, AmplitudeMethod.EPOCH_MEAN_ABS)
     assert result == pytest.approx(10.0, rel=0.01)
+
+
+def test_compute_band_amplitude_welch_requires_band() -> None:
+    data = np.ones((1, 256))
+    with pytest.raises(ValueError, match="band is required"):
+        compute_band_amplitude(data, 256.0, AmplitudeMethod.WELCH_BAND_POWER)
+
+
+def test_compute_band_amplitude_welch_sine_higher_than_mean_abs() -> None:
+    from app.domain.types import BandRange
+
+    sfreq = 256.0
+    duration_s = 4.0
+    t = np.linspace(0, duration_s, int(sfreq * duration_s), endpoint=False)
+    amp = 15.0
+    data = (amp * np.sin(2 * np.pi * 6 * t))[np.newaxis, :]
+    band = BandRange(l_freq=4.0, h_freq=8.0)
+    mean_abs = compute_band_amplitude(data, sfreq, AmplitudeMethod.MEAN_ABS)
+    welch = compute_band_amplitude(
+        data, sfreq, AmplitudeMethod.WELCH_BAND_POWER, band=band
+    )
+    assert welch > mean_abs
+
+
+def test_parse_amplitude_method_accepts_welch() -> None:
+    assert parse_amplitude_method("welch_band_power") is AmplitudeMethod.WELCH_BAND_POWER
