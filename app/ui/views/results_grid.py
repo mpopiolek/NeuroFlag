@@ -6,6 +6,11 @@ from typing import TYPE_CHECKING
 
 import customtkinter as ctk
 
+from app.domain.cell_layout import (
+    CHANNEL_DISPLAY_ORDER,
+    TASK_DISPLAY_ORDER,
+    cells_for_task_channel,
+)
 from app.domain.types import CellResult
 from app.ui import theme as t
 from app.ui.app_window import AppState
@@ -26,33 +31,11 @@ from app.ui.components.rag_colors import (
 if TYPE_CHECKING:
     from app.ui.app_window import AppWindow
 
-_TASK_ORDER: tuple[str, ...] = ("OO", "OZ", "ZP")
-_CHANNEL_ORDER: tuple[str, ...] = ("C3", "O1")
-_BAND_ORDER: tuple[str, ...] = ("Theta", "Beta2", "Beta1", "Delta")
-
 _CELL_W = 88
 _CELL_H = 56
 _CELL_GAP = 6
 _CHANNEL_RULE_GAP = 8
 _TASK_SECTION_PADY = 4
-
-
-def _band_sort_key(cell: CellResult) -> int:
-    try:
-        return _BAND_ORDER.index(cell.band)
-    except ValueError:
-        return len(_BAND_ORDER)
-
-
-def _cells_for_task_channel(
-    cells: tuple[CellResult, ...],
-    task: str,
-    channel: str,
-) -> list[CellResult]:
-    return sorted(
-        (c for c in cells if c.task == task and c.channel == channel),
-        key=_band_sort_key,
-    )
 
 
 class ResultsGridView(ctk.CTkFrame):
@@ -167,7 +150,7 @@ class ResultsGridView(ctk.CTkFrame):
         parent.grid_columnconfigure(0, weight=1)
         row = 0
 
-        for task_idx, task in enumerate(_TASK_ORDER):
+        for task_idx, task in enumerate(TASK_DISPLAY_ORDER):
             if task_idx > 0:
                 ctk.CTkFrame(
                     parent,
@@ -191,8 +174,8 @@ class ResultsGridView(ctk.CTkFrame):
             for col in range(3):
                 clusters.grid_columnconfigure(col, weight=0)
 
-            for channel_idx, channel in enumerate(_CHANNEL_ORDER):
-                channel_cells = _cells_for_task_channel(cells, task, channel)
+            for channel_idx, channel in enumerate(CHANNEL_DISPLAY_ORDER):
+                channel_cells = cells_for_task_channel(cells, task, channel)
                 self._build_channel_cluster(
                     clusters,
                     channel,
