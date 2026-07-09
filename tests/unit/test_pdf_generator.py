@@ -31,6 +31,7 @@ from app.reports.pdf_generator import (
     format_report_subtitle,
     generate_report,
 )
+from app.ui.components.rag_colors import TASK_LABELS
 from app.ui.info_content import EXPERT_CONTACT, TECH_CONTACT
 
 _RULES = RecommendationRules(
@@ -233,3 +234,35 @@ def test_pdf_footer_contact_lines_in_report_story(monkeypatch: pytest.MonkeyPatc
     assert EXPERT_CONTACT.email in story_text
     assert "https://github.com/mpopiolek/NeuroFlag" in story_text
     assert TECH_CONTACT.email not in story_text
+
+
+def test_pdf_story_contains_task_section_labels(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: list[str] = []
+
+    def track_paragraph(text: str, style: object) -> object:
+        captured.append(text)
+        return ReportLabParagraph(text, style)
+
+    monkeypatch.setattr("app.reports.pdf_generator.Paragraph", track_paragraph)
+    generate_report(_METADATA, _RESULT, _CONFIG)
+    story_text = " ".join(captured)
+    for task in ("OO", "OZ", "ZP"):
+        assert TASK_LABELS[task] in story_text
+
+
+def test_pdf_story_contains_band_names_in_grid(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: list[str] = []
+
+    def track_paragraph(text: str, style: object) -> object:
+        captured.append(text)
+        return ReportLabParagraph(text, style)
+
+    monkeypatch.setattr("app.reports.pdf_generator.Paragraph", track_paragraph)
+    generate_report(_METADATA, _RESULT, _CONFIG)
+    story_text = " ".join(captured)
+    for cell in _CELLS:
+        assert cell.band in story_text

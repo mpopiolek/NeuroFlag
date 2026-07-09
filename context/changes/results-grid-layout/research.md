@@ -284,7 +284,7 @@ Na górze komórki czerwone i żółte (posortowane po zadaniu), na dole zielone
 - `app/ui/views/results_grid.py:29-34` — stałe siatki i rozmiaru komórek
 - `app/ui/views/results_grid.py:126-127` — mapowanie indeks → (row, col)
 - `app/ui/views/results_grid.py:178-219` — treść komórki (kanał, zadanie, pasmo)
-- `app/reports/pdf_generator.py:205-250` — ta sama logika 2×5 w PDF
+- `app/reports/pdf_generator.py` — siatka A′ w PDF (`_build_rag_grid_story`)
 - `app/domain/algorithm.py:60-74` — kolejność `cells` = kolejność `config.norms`
 - `norms.json:69-79` — kanoniczna macierz 10 kombinacji
 - `app/ui/components/rag_colors.py:17-21` — etykiety zadań PL
@@ -335,12 +335,12 @@ Po iteracji w Canvasie (mockupy A–D i A′) użytkownik zaakceptował **Warian
 | Odstępy | Sekcje w grid **bez wag wierszy**; między zadaniami cienka linia + 4 px padding |
 | Treść prawej karty | Zakotwiczona u góry (`anchor="n"`); ewentualna pusta przestrzeń pod ostatnim zadaniem |
 
-**Nie zmieniono:** kolejność `AnalysisResult.cells` (pipeline, historia, kalibracja). Sortowanie wyłącznie przy renderowaniu (`_cells_for_task_channel`, `_TASK_ORDER`, `_CHANNEL_ORDER`, `_BAND_ORDER`).
+**Nie zmieniono:** kolejność `AnalysisResult.cells` (pipeline, historia, kalibracja). Sortowanie wyłącznie przy renderowaniu (`app/domain/cell_layout.py`: `TASK_DISPLAY_ORDER`, `CHANNEL_DISPLAY_ORDER`, `BAND_DISPLAY_ORDER`, `cells_for_task_channel`).
 
 **Usunięto z UI:** siatka 5×2 (`idx // 5`, `% 5`), dynamiczne skalowanie komórek (`_update_cell_sizes`, `_GRID_COLS`), `CTkScrollableFrame` w prawej karcie.
 
 **Komórki:** kompaktowe kafelki 88×56 px; `wraplength` opisu synchronizowany z szerokością lewej kolumny (`_sync_text_wrap`).
 
-**PDF:** nadal płaska siatka 2×5 w kolejności `norms.json` — poza zakresem tej zmiany.
+**PDF:** Wariant A′ wdrożony (`e53b34b`) — sekcje zadań (OO/OZ/ZP), klastry C3|O1 obok siebie, w kafelku tylko pasmo; bez pionowej linii podziału (feedback UX 2026-07-09). Kolory RAG z `RAG_COLOR_BG`.
 
 **Addendum do `ui-redesign-brand-layout/plan.md`:** dashboard 40/60 przywrócony na ekranie wyników (wcześniejszy addendum impl-review wskazywał układ pionowy).

@@ -298,20 +298,20 @@ Rozszerzyć testy o kontrakt layoutu A′ i wyprodukować raport impl-review dla
 
 #### Automated
 
-- [x] 3.1 `python -m mypy app/reports/pdf_generator.py --strict`
-- [x] 3.2 `python -m pytest tests/unit/test_pdf_generator.py -q`
+- [x] 3.1 `python -m mypy app/reports/pdf_generator.py --strict` — e53b34b
+- [x] 3.2 `python -m pytest tests/unit/test_pdf_generator.py -q` — e53b34b
 
 #### Manual
 
-- [x] 3.3 PDF Wskazanie + mieszane kolory; zapis z widoku wyników
+- [x] 3.3 PDF Wskazanie + mieszane kolory; zapis z widoku wyników — e53b34b
 
 ### Phase 4: Testy PDF + impl-review
 
 #### Automated
 
-- [ ] 4.1 `python -m pytest -q`
-- [ ] 4.2 `python -m mypy app/ --strict`
+- [x] 4.1 `python -m pytest -q`
+- [x] 4.2 `python -m mypy app/ --strict`
 
 #### Manual
 
-- [ ] 4.3 impl-review bez CRITICAL drift; `change.md` → `implemented`
+- [x] 4.3 impl-review bez CRITICAL drift; `change.md` → `implemented`
