@@ -6,7 +6,6 @@ import customtkinter as ctk
 
 from app.domain.errors import PipelineError
 from app.domain.types import AnalysisResult
-from app.ui import theme as t
 from app.ui.app_window import AppState
 from app.ui.components import widgets as w
 from app.ui.views.analysis import AnalysisCallbacks, AnalysisRunner, persist_analysis_result
