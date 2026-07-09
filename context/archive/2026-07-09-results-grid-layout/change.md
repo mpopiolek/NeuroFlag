@@ -1,9 +1,10 @@
 ---
 id: results-grid-layout
 title: "Czytelniejszy układ siatki wyników RAG"
-status: impl_reviewed
+status: archived
 created: 2026-07-09
 updated: 2026-07-09
+archived_at: 2026-07-09T13:12:54Z
 ---
 
 > **Decyzja UX 2026-07-09:** Wariant A′ (sekcje po zadaniu + klastry C3/O1 z linią podziału, w komórce tylko pasmo) — UI wdrożony (`3729d27`); PDF i impl-review w `plan.md`. Dashboard 40/60; `_CELL_W=88` bez skalowania responsywnego.
