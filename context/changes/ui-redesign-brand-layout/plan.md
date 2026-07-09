@@ -335,6 +335,8 @@ Dashboard wyników 40/60, chipy kategorii w historii, odświeżenie dialogu Info
 
 **Addendum (impl-review 2026-07-09):** Dashboard wyników pozostaje w układzie pionowym (karta kategorii nad siatką RAG) zamiast `two_column_body` 40/60 — świadoma decyzja UX po implementacji; karty, pasek kategorii i dynamiczna siatka bez zmian.
 
+**Addendum (results-grid-layout 2026-07-09):** Dashboard 40/60 (`two_column_body` lewa 2 / prawa 3) **przywrócony** na ekranie wyników w ramach change `results-grid-layout`. Siatka RAG: Wariant A′ (sekcje po zadaniu, klastry C3|O1), nie płaska 5×2. Szczegóły: `context/changes/results-grid-layout/research.md` → sekcja „Decyzja implementacyjna”.
+
 ---
 
 ## Phase 5: UX przejść (overlay analizy, modal mapowania)
