@@ -157,7 +157,12 @@ class ResultsGridView(ctk.CTkFrame):
                     height=1,
                     fg_color=t.COLOR_BORDER,
                     corner_radius=0,
-                ).grid(row=row, column=0, sticky="ew", pady=(_TASK_SECTION_PADY, _TASK_SECTION_PADY))
+                ).grid(
+                    row=row,
+                    column=0,
+                    sticky="ew",
+                    pady=(_TASK_SECTION_PADY, _TASK_SECTION_PADY),
+                )
                 row += 1
 
             task_label = _TASK_LABELS.get(task, task)
