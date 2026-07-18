@@ -8,6 +8,7 @@ from pathlib import Path
 
 import customtkinter as ctk
 
+from app.config.settings import is_password_enabled
 from app.domain.errors import PipelineError
 from app.domain.types import AnalysisDiagnostics, AnalysisResult, NormsConfig, PatientMetadata
 from app.storage.history import HistoryStore, resolve_history_db_path
@@ -98,6 +99,14 @@ class AppWindow(ctk.CTk):
         )
         self._history_btn.pack(side="right", padx=(8, 0))
 
+        self._lock_btn = w.secondary_button(
+            header_actions,
+            text="Zablokuj",
+            command=self._on_lock,
+            width=110,
+        )
+        self._lock_btn.pack(side="right", padx=(8, 0))
+
         w.secondary_button(
             header_actions,
             text="Informacje",
@@ -138,6 +147,21 @@ class AppWindow(ctk.CTk):
             width=160,
         )
         self._clear_footer()
+        self.refresh_lock_button()
+
+    def refresh_lock_button(self) -> None:
+        if is_password_enabled():
+            self._lock_btn.pack(side="right", padx=(8, 0), before=self._history_btn)
+            self._lock_btn.configure(state="normal")
+        else:
+            self._lock_btn.pack_forget()
+
+    def _on_lock(self) -> None:
+        if not is_password_enabled():
+            return
+        from app.ui.session_lock_dialog import prompt_session_unlock
+
+        prompt_session_unlock(self)
 
     def _show_info(self) -> None:
         if self._debug_crash_gui:
@@ -248,6 +272,7 @@ class AppWindow(ctk.CTk):
         if not preserve_stepper:
             self._update_stepper_for_view(view_class)
         self._update_history_button_state()
+        self.refresh_lock_button()
 
     def start_analysis_overlay(self) -> None:
         """Uruchamia nakładkę analizy nad aktywnym widokiem (bez zmiany widoku)."""

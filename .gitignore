@@ -24,7 +24,9 @@ build/
 .DS_Store
 Thumbs.db
 
-# Test fixtures (generated, not tracked in repo)
+# Local runtime artifacts (dev)
+settings.json
+
 tests/fixtures/*.edf
 tests/fixtures/*.vhdr
 tests/fixtures/*.vmrk
