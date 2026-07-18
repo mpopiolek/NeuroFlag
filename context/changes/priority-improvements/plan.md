@@ -400,12 +400,12 @@ placówki” + brak odzyskiwania). W dev: `settings.json` w `.gitignore` (Phase 
 
 #### Automated
 
-- [x] 3.1 `python -m pytest -q` przechodzi
-- [x] 3.2 `mypy app/ --strict` przechodzi
+- [x] 3.1 `python -m pytest -q` przechodzi — 2b43af8
+- [x] 3.2 `mypy app/ --strict` przechodzi — 2b43af8
 
 #### Manual
 
-- [x] 3.3 Ustawienie hasła w Informacjach + restart wymaga hasła
-- [x] 3.4 Zmiana hasła (stare/nowe) działa przy bramce
-- [x] 3.5 Wyłączenie hasła → restart bez bramki
-- [x] 3.6 Złe obecne hasło przy zmianie/wyłączeniu — błąd, stan bez zmian
+- [x] 3.3 Ustawienie hasła w Informacjach + restart wymaga hasła — 2b43af8
+- [x] 3.4 Zmiana hasła (stare/nowe) działa przy bramce — 2b43af8
+- [x] 3.5 Wyłączenie hasła → restart bez bramki — 2b43af8
+- [x] 3.6 Złe obecne hasło przy zmianie/wyłączeniu — błąd, stan bez zmian — 2b43af8
