@@ -386,26 +386,26 @@ placówki” + brak odzyskiwania). W dev: `settings.json` w `.gitignore` (Phase 
 
 #### Automated
 
-- [x] 2.1 Pytest settings + main_cli (+ unlock helperów) przechodzi
-- [x] 2.2 mypy dla `main` / config / unlock dialog — bez nowych błędów
+- [x] 2.1 Pytest settings + main_cli (+ unlock helperów) przechodzi — 3873da9
+- [x] 2.2 mypy dla `main` / config / unlock dialog — bez nowych błędów — 3873da9
 
 #### Manual
 
-- [x] 2.3 Z hasłem: odblokowanie, złe hasło + retry, dobre → MetadataForm
-- [x] 2.4 Zamknięcie okna odblokowania kończy aplikację
-- [x] 2.5 Bez hasła: start bez bramki
-- [x] 2.6 `--smoke-test` exit 0 bez okna
+- [x] 2.3 Z hasłem: odblokowanie, złe hasło + retry, dobre → MetadataForm — 3873da9
+- [x] 2.4 Zamknięcie okna odblokowania kończy aplikację — 3873da9
+- [x] 2.5 Bez hasła: start bez bramki — 3873da9
+- [x] 2.6 `--smoke-test` exit 0 bez okna — 3873da9
 
 ### Phase 3: Password management UI — Informacje
 
 #### Automated
 
-- [ ] 3.1 `python -m pytest -q` przechodzi
-- [ ] 3.2 `mypy app/ --strict` przechodzi
+- [x] 3.1 `python -m pytest -q` przechodzi
+- [x] 3.2 `mypy app/ --strict` przechodzi
 
 #### Manual
 
-- [ ] 3.3 Ustawienie hasła w Informacjach + restart wymaga hasła
-- [ ] 3.4 Zmiana hasła (stare/nowe) działa przy bramce
-- [ ] 3.5 Wyłączenie hasła → restart bez bramki
-- [ ] 3.6 Złe obecne hasło przy zmianie/wyłączeniu — błąd, stan bez zmian
+- [x] 3.3 Ustawienie hasła w Informacjach + restart wymaga hasła
+- [x] 3.4 Zmiana hasła (stare/nowe) działa przy bramce
+- [x] 3.5 Wyłączenie hasła → restart bez bramki
+- [x] 3.6 Złe obecne hasło przy zmianie/wyłączeniu — błąd, stan bez zmian
