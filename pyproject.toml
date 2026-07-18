@@ -1,6 +1,6 @@
 [build-system]
 requires = ["setuptools>=72.0", "wheel"]
-build-backend = "setuptools.backends.legacy:build"
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "neuroflag"
@@ -10,15 +10,15 @@ requires-python = ">=3.11"
 dependencies = [
     "customtkinter==5.2.2",
     "mne==1.8.0",
-    "scipy==1.14.1",
+    "scipy==1.17.1",
     "numpy==2.2.0",
-    "reportlab==4.5.1",
-    "mypy==1.13.0",
+    "reportlab==4.2.5",
+    "mypy==2.1.0",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest==8.3.4",
+    "pytest==9.0.3",
     "pip-tools>=7.4.1",
     "ruff>=0.4.0",
     "pip-audit>=2.7.0",
@@ -39,6 +39,14 @@ python_version = "3.11"
 strict = true
 ignore_missing_imports = true
 files = ["app"]
+
+[[tool.mypy.overrides]]
+module = ["customtkinter", "customtkinter.*"]
+disallow_subclassing_any = false
+
+[[tool.mypy.overrides]]
+module = ["app.ui", "app.ui.*"]
+disallow_subclassing_any = false
 
 [tool.ruff]
 line-length = 100
