@@ -34,6 +34,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip "setuptools>=83.0"
           pip install -e ".[dev]"
+          # MNE 1.8 imports scipy.special.sph_harm (removed in SciPy 1.17+).
+          pip install --force-reinstall --no-deps "numpy==2.2.0" "scipy==1.14.1" "mne==1.8.0"
+          python -c "import scipy, mne; from scipy.special import sph_harm; print('scipy', scipy.__version__, 'mne', mne.__version__, 'sph_harm OK')"
 
       - name: Lint (ruff)
         run: |
@@ -77,6 +80,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip "setuptools>=83.0"
           pip install -e ".[dev]"
+          pip install --force-reinstall --no-deps "numpy==2.2.0" "scipy==1.14.1" "mne==1.8.0"
           pip install pyinstaller
 
       - name: Build .exe
