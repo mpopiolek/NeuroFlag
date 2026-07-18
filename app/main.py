@@ -3,9 +3,9 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+from app.config.settings import is_password_enabled
 from app.domain import norms
 from app.domain.norms import NormsLoadError, load
-from app.config.settings import is_password_enabled
 from app.ui.app_window import AppWindow
 from app.ui.views.metadata_form import MetadataFormView
 

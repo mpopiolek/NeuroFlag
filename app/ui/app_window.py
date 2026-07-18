@@ -8,10 +8,10 @@ from pathlib import Path
 
 import customtkinter as ctk
 
+from app.config.settings import is_password_enabled
 from app.domain.errors import PipelineError
 from app.domain.types import AnalysisDiagnostics, AnalysisResult, NormsConfig, PatientMetadata
 from app.storage.history import HistoryStore, resolve_history_db_path
-from app.config.settings import is_password_enabled
 from app.ui import theme as ui_theme
 from app.ui.components import widgets as w
 from app.ui.components.stepper import WorkflowStepper
