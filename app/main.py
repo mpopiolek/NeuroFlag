@@ -5,6 +5,7 @@ from pathlib import Path
 
 from app.domain import norms
 from app.domain.norms import NormsLoadError, load
+from app.config.settings import is_password_enabled
 from app.ui.app_window import AppWindow
 from app.ui.views.metadata_form import MetadataFormView
 
@@ -66,6 +67,10 @@ def _parse_debug_crash_gui(argv: list[str]) -> bool:
     return "--debug-crash-gui" in argv
 
 
+def should_prompt_unlock() -> bool:
+    return is_password_enabled()
+
+
 def main() -> None:
     argv = sys.argv[1:]
 
@@ -86,6 +91,11 @@ def main() -> None:
         sys.exit(1)
     if smoke_test:
         sys.exit(0)
+    if should_prompt_unlock():
+        from app.ui.unlock_dialog import prompt_unlock
+
+        if not prompt_unlock():
+            sys.exit(0)
     if debug_crash_gui:
         print(
             "[dev] --debug-crash-gui: kliknij „Informacje”, aby wywołać modal błędu GUI.",

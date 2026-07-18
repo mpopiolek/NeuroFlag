@@ -375,26 +375,26 @@ placówki” + brak odzyskiwania). W dev: `settings.json` w `.gitignore` (Phase 
 
 #### Automated
 
-- [x] 1.1 `python -m pytest tests/unit/test_settings.py -q` przechodzi
-- [x] 1.2 `mypy app/config --strict` przechodzi (bez nowych błędów w pakiecie)
+- [x] 1.1 `python -m pytest tests/unit/test_settings.py -q` przechodzi — 745a92c
+- [x] 1.2 `mypy app/config --strict` przechodzi (bez nowych błędów w pakiecie) — 745a92c
 
 #### Manual
 
-- [x] 1.3 Plik `settings.json` po `set_password` zawiera hash/salt, nie plaintext
+- [x] 1.3 Plik `settings.json` po `set_password` zawiera hash/salt, nie plaintext — 745a92c
 
 ### Phase 2: Unlock gate — bramka przed `AppWindow`
 
 #### Automated
 
-- [ ] 2.1 Pytest settings + main_cli (+ unlock helperów) przechodzi
-- [ ] 2.2 mypy dla `main` / config / unlock dialog — bez nowych błędów
+- [x] 2.1 Pytest settings + main_cli (+ unlock helperów) przechodzi
+- [x] 2.2 mypy dla `main` / config / unlock dialog — bez nowych błędów
 
 #### Manual
 
-- [ ] 2.3 Z hasłem: odblokowanie, złe hasło + retry, dobre → MetadataForm
-- [ ] 2.4 Zamknięcie okna odblokowania kończy aplikację
-- [ ] 2.5 Bez hasła: start bez bramki
-- [ ] 2.6 `--smoke-test` exit 0 bez okna
+- [x] 2.3 Z hasłem: odblokowanie, złe hasło + retry, dobre → MetadataForm
+- [x] 2.4 Zamknięcie okna odblokowania kończy aplikację
+- [x] 2.5 Bez hasła: start bez bramki
+- [x] 2.6 `--smoke-test` exit 0 bez okna
 
 ### Phase 3: Password management UI — Informacje
 
