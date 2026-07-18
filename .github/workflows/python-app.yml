@@ -15,15 +15,15 @@ jobs:
         python-version: [3.11]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Cache pip
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml') }}
@@ -50,3 +50,67 @@ jobs:
       - name: Run tests
         run: |
           pytest -q
+
+  build:
+    name: Build Windows .exe
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip
+        uses: actions/cache@v6
+        with:
+          path: ~\AppData\Local\pip\Cache
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+          pip install pyinstaller
+
+      - name: Build .exe
+        run: |
+          pyinstaller neuroflag.spec --clean
+
+      - name: Verify and publish dist docs beside .exe
+        shell: pwsh
+        run: |
+          $dist = "dist/neuroflag"
+          foreach ($rel in @("norms.json.template", "docs/README-norms.md")) {
+            $beside = Join-Path $dist $rel
+            if (-not (Test-Path $beside)) {
+              $internal = Join-Path $dist "_internal/$rel"
+              if (Test-Path $internal) {
+                $destDir = Split-Path $beside -Parent
+                if ($destDir -and -not (Test-Path $destDir)) {
+                  New-Item -ItemType Directory -Force -Path $destDir | Out-Null
+                }
+                Copy-Item $internal $beside -Force
+              }
+            }
+            if (-not (Test-Path $beside)) {
+              throw "Missing dist artifact beside exe: $rel"
+            }
+          }
+
+      - name: Smoke-test .exe
+        run: |
+          dist\neuroflag\neuroflag.exe --smoke-test
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: neuroflag-win64
+          path: dist\neuroflag\
+          retention-days: 30

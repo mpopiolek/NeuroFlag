@@ -23,3 +23,10 @@ build/
 # OS
 .DS_Store
 Thumbs.db
+
+# Test fixtures (generated, not tracked in repo)
+tests/fixtures/*.edf
+tests/fixtures/*.vhdr
+tests/fixtures/*.vmrk
+tests/fixtures/*.eeg
+!tests/fixtures/sample_digitrack.eeg

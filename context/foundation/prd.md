@@ -85,7 +85,7 @@ Wyższa wiedza kliniczna, pracuje w gabinecie lub poradni. Korzysta z narzędzia
 - Cały flow (metryka → import → analiza → siatka → PDF) kończy się w ≤ 10 minut
 - Jeśli zaznaczono wykluczające diagnozy (uraz/uszkodzenie mózgu, niepełnosprawność intelektualna, padaczka) — aplikacja wyświetla ostrzeżenie i blokuje analizę
 - Jeśli plik jest nieobsługiwany lub uszkodzony, użytkownik widzi czytelny komunikat błędu (nie crash)
-- Raport PDF zawiera: metrykę dziecka, datę badania, siatkę kolorową, kategorię wynikową i klauzulę ograniczenia odpowiedzialności
+- Raport PDF zawiera (w kolejności): (1) tekst wstępny z datą badania, metryką dziecka i wnioskiem słownym „Analiza wyników wskazuje na [kategoria + opis]"; (2) siatkę kolorową 10 komórek z kategorią wynikową; (3) stałą sekcję „Co obserwować" — lista/tabela kontrolna oparta na aktualnej wiedzy, niezmieniana między badaniami, skierowana do pedagoga/rodzica; (4) klauzulę ograniczenia odpowiedzialności
 - Surowe wartości µV nie są widoczne nigdzie w UI ani w raporcie
 
 ---
@@ -101,7 +101,7 @@ Wyższa wiedza kliniczna, pracuje w gabinecie lub poradni. Korzysta z narzędzia
   > Socrates: Kontrargument rozważony: „wbudowana" baza norm sugeruje brak możliwości aktualizacji. Rozwiązanie: baza norm zawsze nadpisywalna przez podmianę pliku konfiguracyjnego.
 - [new] Wizualizacja wyników jako siatka 10 kolorowych komórek (🔴/🟡/🟢) z kategorią wynikową i opisem słownym; surowe wartości µV niewidoczne dla użytkownika (FR-004)
   > Socrates: Kontrargument rozważony: „czy pedagog zrozumie siatkę kolorów?" Decyzja: FR stoi — trzy kolory są intuicyjne; legenda i opis w instrukcji PDF. Ekspert domenowy potwierdził: surowe µV NIE mogą być widoczne dla użytkownika.
-- [new] Generowanie raportu PDF z metryką dziecka, datą badania, siatką kolorową, kategorią wynikową i klauzulą ograniczenia odpowiedzialności; bez surowych wartości µV (FR-005)
+- [new] Generowanie raportu PDF bez surowych wartości µV (FR-005); raport zawiera: (1) tekst wstępny z datą, metryką i wnioskiem słownym, (2) siatkę kolorową 10 komórek z kategorią wynikową, (3) stałą sekcję „Co obserwować" — lista kontrolna wiedzy dla pedagoga/rodzica, niezmienialna między badaniami, (4) klauzulę ograniczenia odpowiedzialności
   > Socrates: Kontrargument rozważony: ryzyko odpowiedzialności prawnej jeśli raport traktowany jako dokument medyczny. Decyzja: FR stoi — raport to „narzędzie przesiewowe", nie diagnoza; klauzula wchodzi do raportu.
 - [new] Zapis wygenerowanego raportu PDF na dysk lokalny (FR-006)
 - [new] Podmiana domyślnej bazy norm przez ręczną wymianę pliku konfiguracyjnego w określonym folderze aplikacji (FR-008)
