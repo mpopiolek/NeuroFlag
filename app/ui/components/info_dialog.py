@@ -87,6 +87,8 @@ def _build_password_section(
 
     def refresh_status() -> None:
         status_label.configure(text=_password_status_text())
+        if app_window is not None:
+            app_window.refresh_lock_button()
 
     def open_password_dialog() -> None:
         if app_window is None:
