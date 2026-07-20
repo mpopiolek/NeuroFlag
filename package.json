@@ -1,0 +1,11 @@
+{
+  "private": true,
+  "devDependencies": {
+    "@mpopiolek/ai-toolkit": "^0.1.0"
+  },
+  "scripts": {
+    "ai:install": "node node_modules/@mpopiolek/ai-toolkit/install.js",
+    "ai:update": "npm update @mpopiolek/ai-toolkit && npm run ai:install",
+    "ai:uninstall": "node node_modules/@mpopiolek/ai-toolkit/uninstall.js"
+  }
+}

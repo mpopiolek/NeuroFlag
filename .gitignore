@@ -20,6 +20,9 @@ build/
 .idea/
 .vscode/
 
+# npm (ai-toolkit dev carrier)
+node_modules/
+
 # OS
 .DS_Store
 Thumbs.db
