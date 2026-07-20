@@ -148,3 +148,42 @@ Agent NIE używa --onefile dla MNE-Python (zbyt długi czas startu) — używa -
 - **Testy:** `python -m pytest -q` (zalecane na Windows, gdy `pytest` nie jest w PATH; alias `pytest -q` działa po aktywacji venv z `Scripts` w PATH)
 - **Build .exe:** `pyinstaller neuroflag.spec --clean` (plik `.spec` tworzony w trakcie implementacji)
 - Brak serwera deweloperskiego — aplikacja uruchamia się jako okno GUI
+
+<!-- BEGIN @mpopiolek/ai-toolkit -->
+## Reguły zespołowe CVGOSI (Python)
+
+Te reguły są wstrzykiwane automatycznie przez `@mpopiolek/ai-toolkit`.
+Reguły specyficzne dla projektu (domena, PRD) trzymaj **poza** tym blokiem w AGENTS.md.
+
+### Typowanie
+
+- Cały nowy kod Pythona: adnotacje typów na granicach funkcji i metod.
+- Użyj `from __future__ import annotations` dla forward references.
+- Uruchom przed commitem: `mypy app/ --strict` (lub ścieżka modułu projektu).
+- Typy domenowe jako `@dataclass` w module `types.py` — nie twórz ad hoc dict.
+- Nigdy nie używaj `Any` bez `# type: ignore[<kod>]` i uzasadnienia.
+
+### Struktura kodu
+
+- Nowy kod trafia do modułu według roli domenowej — bez `utils.py` / `helpers.py`.
+- Zależności tylko przez `pyproject.toml`; nie edytuj `requirements.txt` ręcznie.
+- Przy dodaniu zależności: przypnij wersję w pyproject.toml → `pip-compile`.
+
+### Testy
+
+- Uruchamianie: `python -m pytest -q`.
+- Nazwy testów opisują zachowanie: `test_returns_empty_when_no_segments`.
+- Każdy test ma własny setup; asercje konkretne (`==`, `pytest.approx`), nie `is not None` bez powodu.
+- Pokryj ścieżki brzegowe: puste wejście, granice, błędy.
+
+### Commity i zmiany
+
+- Przy commicie fazy stage wyłącznie pliki bieżącej zmiany — nie `git add -A`.
+- Pytania do użytkownika zadawaj po polsku.
+
+### Bezpieczeństwo
+
+- Brak sekretów w kodzie; zmienne środowiskowe tylko w dev/CI.
+- Walidacja danych wejściowych na granicach systemu (pliki, formularze).
+- SQL (jeśli dotyczy): wyłącznie parametryzowane zapytania.
+<!-- END @mpopiolek/ai-toolkit -->
