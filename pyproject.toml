@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Aplikacja desktopowa do przesiewowej analizy EEG dla dzieci 6–10 lat"
 requires-python = ">=3.11"
 dependencies = [
-    "customtkinter==5.2.2",
+    "customtkinter==6.0.0",
     "mne==1.8.0",
     "scipy==1.17.1",
     "numpy==2.2.0",
